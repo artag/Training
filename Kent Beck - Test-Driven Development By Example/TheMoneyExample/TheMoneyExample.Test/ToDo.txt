@@ -1,0 +1,9 @@
+﻿-    $5 + 10 CHF = $10 if rate is 2:1
+V    $5 * 2 = $10
+V    Make "amount" private
+V    Dollar side-effects?
+-    Money rounding?
+V    Equals()
+-    HashCode()
+-    Equal null
+-    Equal object
