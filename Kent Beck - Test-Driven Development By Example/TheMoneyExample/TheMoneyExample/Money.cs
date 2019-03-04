@@ -2,6 +2,14 @@ namespace TheMoneyExample
 {
     public abstract class Money
     {
+        protected string _currency;
+
+        public Money(int amount, string currency)
+        {
+            _currency = currency;
+            Amount = amount;
+        }
+
         public override bool Equals(object obj)
         {
             var money = (Money)obj;
@@ -15,12 +23,12 @@ namespace TheMoneyExample
 
         public static Dollar Dollar(int amount)
         {
-            return new Dollar(amount);
+            return new Dollar(amount, "USD");
         }
 
         public static Franc Franc(int amount)
         {
-            return new Franc(amount);
+            return new Franc(amount, "CHF");
         }
     }
 }
