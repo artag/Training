@@ -50,5 +50,17 @@ namespace TheMoneyExample.Test
             Assert.IsFalse(five.Equals(six));
 
         }
+
+        [TestMethod]
+        public void FiveFrancs_NotEquals_FiveDollars()
+        {
+            // Arrange
+            var fiveFrancs = new Franc(5);
+            var fiveDollars = new Dollar(5);
+
+            // Assert
+            Assert.IsFalse(fiveFrancs.Equals(fiveDollars));
+        }
     }
 }
+

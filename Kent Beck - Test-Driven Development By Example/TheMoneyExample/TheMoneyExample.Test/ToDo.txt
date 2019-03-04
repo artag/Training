@@ -11,4 +11,5 @@ V    5CHF * 2 = 10CHF
 -    Dollar/Franc duplication
 V    Common equals
 -    Common times
--    Compare Francs with Dollars
+V    Compare Francs with Dollars
+-    Currency?
