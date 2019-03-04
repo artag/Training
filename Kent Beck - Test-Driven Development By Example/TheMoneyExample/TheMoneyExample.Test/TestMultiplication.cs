@@ -12,21 +12,21 @@ namespace TheMoneyExample.Test
         public void Dollar_TestMultiplication(int amount, int multiplier, int product)
         {
             // Arrange
-            var dollars = new Dollar(amount);
+            var dollars = Money.Dollar(amount);
 
             // Assert
-            Assert.AreEqual(new Dollar(product), dollars.Times(multiplier));
+            Assert.AreEqual(Money.Dollar(product), dollars.Times(multiplier));
         }
 
         [TestMethod]
         public void Dollar_TestTwoMultiplications()
         {
             // Arrange
-            var five = new Dollar(5);
+            var five = Money.Dollar(5);
 
             // Assert
-            Assert.AreEqual(new Dollar(10), five.Times(2));
-            Assert.AreEqual(new Dollar(15), five.Times(3));
+            Assert.AreEqual(Money.Dollar(10), five.Times(2));
+            Assert.AreEqual(Money.Dollar(15), five.Times(3));
         }
 
         [TestMethod]
@@ -36,21 +36,21 @@ namespace TheMoneyExample.Test
         public void Franc_TestMultiplication(int amount, int multiplier, int product)
         {
             // Arrange
-            var francs = new Franc(amount);
+            var francs = Money.Franc(amount);
 
             // Assert
-            Assert.AreEqual(new Franc(product), francs.Times(multiplier));
+            Assert.AreEqual(Money.Franc(product), francs.Times(multiplier));
         }
 
         [TestMethod]
         public void Franc_TestTwoMultiplications()
         {
             // Arrange
-            var five = new Franc(5);
+            var five = Money.Franc(5);
 
             // Assert
-            Assert.AreEqual(new Franc(10), five.Times(2));
-            Assert.AreEqual(new Franc(15), five.Times(3));
+            Assert.AreEqual(Money.Franc(10), five.Times(2));
+            Assert.AreEqual(Money.Franc(15), five.Times(3));
         }
     }
 }

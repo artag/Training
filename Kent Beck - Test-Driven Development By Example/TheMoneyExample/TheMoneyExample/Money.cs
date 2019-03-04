@@ -1,6 +1,6 @@
 namespace TheMoneyExample
 {
-    public class Money
+    public abstract class Money
     {
         public override bool Equals(object obj)
         {
@@ -10,5 +10,17 @@ namespace TheMoneyExample
         }
 
         protected int Amount { get; set; }
+
+        public abstract Money Times(int multiplier);
+
+        public static Dollar Dollar(int amount)
+        {
+            return new Dollar(amount);
+        }
+
+        public static Franc Franc(int amount)
+        {
+            return new Franc(amount);
+        }
     }
 }

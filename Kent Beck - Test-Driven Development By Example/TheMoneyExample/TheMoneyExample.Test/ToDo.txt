@@ -13,3 +13,4 @@ V    Common equals
 -    Common times
 V    Compare Francs with Dollars
 -    Currency?
+-    Delete tests for Francs multiplication?
