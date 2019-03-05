@@ -8,9 +8,9 @@ V    Equals()
 -    Equal null
 -    Equal object
 V    5CHF * 2 = 10CHF
--    Dollar/Franc duplication
+V    Dollar/Franc duplication
 V    Common equals
--    Common times
+V    Common times
 V    Compare Francs with Dollars
 V    Currency?
--    Delete tests for Francs multiplication?
+V    Delete tests for Francs multiplication? - NO

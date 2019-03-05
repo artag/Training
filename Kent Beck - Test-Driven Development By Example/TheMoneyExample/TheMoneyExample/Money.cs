@@ -1,34 +1,42 @@
 namespace TheMoneyExample
 {
-    public abstract class Money
+    public class Money
     {
-        protected string _currency;
+        private int _amount;
 
-        public Money(int amount, string currency)
+        protected Money(int amount, string currency)
         {
-            _currency = currency;
-            Amount = amount;
+            Currency = currency;
+            _amount = amount;
+        }
+
+        public string Currency { get; }
+
+        public Money Times(int multiplier)
+        {
+            return new Money(_amount * multiplier, Currency);
+        }
+
+        public static Money Dollar(int amount)
+        {
+            return new Money(amount, "USD");
+        }
+
+        public static Money Franc(int amount)
+        {
+            return new Money(amount, "CHF");
         }
 
         public override bool Equals(object obj)
         {
             var money = (Money)obj;
-            return Amount == money.Amount &&
-                   this.GetType().Equals(obj.GetType());
+            return _amount == money._amount &&
+                   Currency == money.Currency;
         }
 
-        protected int Amount { get; set; }
-
-        public abstract Money Times(int multiplier);
-
-        public static Dollar Dollar(int amount)
+        public override string ToString()
         {
-            return new Dollar(amount, "USD");
-        }
-
-        public static Franc Franc(int amount)
-        {
-            return new Franc(amount, "CHF");
+            return _amount + " " + Currency;
         }
     }
 }
