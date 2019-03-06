@@ -6,22 +6,44 @@ namespace TheMoneyExample.Test
     public class TestAddition
     {
         [TestMethod]
-        [DataRow(5, 5, 10)]
-        [DataRow(5, 6, 11)]
-        public void Dollar_TestAddition(int augend, int addend, int sum)
-        {
-            var actualSum = Money.Dollar(augend).Plus(Money.Dollar(addend));
-            Assert.AreEqual(Money.Dollar(sum), actualSum);
-        }
-
-        [TestMethod]
         public void SimpleAdditionWithReduce()
         {
             var five = Money.Dollar(5);
-            IExpression sum = five.Plus(five);
+            var sum = five.Plus(five);
             var bank = new Bank();
             var reduced = bank.Reduce(sum, "USD");
+
             Assert.AreEqual(Money.Dollar(10), reduced);
+        }
+
+        [TestMethod]
+        public void Money_MethodPlus_ReturnsSum()
+        {
+            var five = Money.Dollar(5);
+            var result = five.Plus(five);
+            var sum = (Sum)result;
+
+            Assert.AreEqual(five, sum.Augend);
+            Assert.AreEqual(five, sum.Addend);
+        }
+
+        [TestMethod]
+        public void TestReduceSum()
+        {
+            var sum = new Sum(Money.Dollar(3), Money.Dollar(4));
+            var bank = new Bank();
+            var result = bank.Reduce(sum, "USD");
+
+            Assert.AreEqual(Money.Dollar(7), result);
+        }
+
+        [TestMethod]
+        public void TestReduceMoney()
+        {
+            var bank = new Bank();
+            var result = bank.Reduce(Money.Dollar(1), "USD");
+
+            Assert.AreEqual(Money.Dollar(1), result);
         }
     }
 }

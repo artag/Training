@@ -2,19 +2,19 @@ namespace TheMoneyExample
 {
     public class Money : IExpression
     {
-        private int _amount;
-
-        protected Money(int amount, string currency)
+        public Money(int amount, string currency)
         {
             Currency = currency;
-            _amount = amount;
+            Amount = amount;
         }
 
         public string Currency { get; }
 
+        public int Amount { get; }
+
         public Money Times(int multiplier)
         {
-            return new Money(_amount * multiplier, Currency);
+            return new Money(Amount * multiplier, Currency);
         }
 
         public static Money Dollar(int amount)
@@ -27,21 +27,26 @@ namespace TheMoneyExample
             return new Money(amount, "CHF");
         }
 
+        public IExpression Plus(Money addend)
+        {
+            return new Sum(this, addend);
+        }
+
+        public Money Reduce(string to)
+        {
+            return this;
+        }
+
         public override bool Equals(object obj)
         {
             var money = (Money)obj;
-            return _amount == money._amount &&
+            return Amount == money.Amount &&
                    Currency == money.Currency;
         }
 
         public override string ToString()
         {
-            return _amount + " " + Currency;
-        }
-
-        public Money Plus(Money addent)
-        {
-            return new Money(_amount + addent._amount, Currency);
+            return Amount + " " + Currency;
         }
     }
 }
