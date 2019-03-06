@@ -1,6 +1,6 @@
 namespace TheMoneyExample
 {
-    public class Money
+    public class Money : IExpression
     {
         private int _amount;
 
@@ -37,6 +37,11 @@ namespace TheMoneyExample
         public override string ToString()
         {
             return _amount + " " + Currency;
+        }
+
+        public Money Plus(Money addent)
+        {
+            return new Money(_amount + addent._amount, Currency);
         }
     }
 }
