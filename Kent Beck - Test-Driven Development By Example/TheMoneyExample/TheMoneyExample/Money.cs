@@ -32,9 +32,10 @@ namespace TheMoneyExample
             return new Sum(this, addend);
         }
 
-        public Money Reduce(string to)
+        public Money Reduce(Bank bank, string to)
         {
-            return this;
+            var rate = bank.Rate(Currency, to);
+            return new Money(Amount/rate, to);
         }
 
         public override bool Equals(object obj)

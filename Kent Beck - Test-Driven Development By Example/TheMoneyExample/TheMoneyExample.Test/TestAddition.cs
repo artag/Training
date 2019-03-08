@@ -8,42 +8,29 @@ namespace TheMoneyExample.Test
         [TestMethod]
         public void SimpleAdditionWithReduce()
         {
+            // Arrange
             var five = Money.Dollar(5);
-            var sum = five.Plus(five);
             var bank = new Bank();
+
+            // Act
+            var sum = five.Plus(five);
             var reduced = bank.Reduce(sum, "USD");
 
+            // Assert
             Assert.AreEqual(Money.Dollar(10), reduced);
         }
 
         [TestMethod]
         public void Money_MethodPlus_ReturnsSum()
         {
+            // Act
             var five = Money.Dollar(5);
             var result = five.Plus(five);
             var sum = (Sum)result;
 
+            // Assert
             Assert.AreEqual(five, sum.Augend);
             Assert.AreEqual(five, sum.Addend);
-        }
-
-        [TestMethod]
-        public void TestReduceSum()
-        {
-            var sum = new Sum(Money.Dollar(3), Money.Dollar(4));
-            var bank = new Bank();
-            var result = bank.Reduce(sum, "USD");
-
-            Assert.AreEqual(Money.Dollar(7), result);
-        }
-
-        [TestMethod]
-        public void TestReduceMoney()
-        {
-            var bank = new Bank();
-            var result = bank.Reduce(Money.Dollar(1), "USD");
-
-            Assert.AreEqual(Money.Dollar(1), result);
         }
     }
 }

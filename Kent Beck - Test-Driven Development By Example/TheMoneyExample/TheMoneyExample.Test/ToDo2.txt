@@ -1,6 +1,6 @@
 ﻿-    $5 + 10CHF = $10 if rate is 2:1
--    $5 + $5 = $10
+V    $5 + $5 = $10
 -    Operation $5 + $5 returns Money object
 V    Bank.Reduce(Money)
--    Reduce Money with conversion
--    Reduce(Bank, String)
+V    Reduce Money with conversion
+V    Reduce(Bank, String)
