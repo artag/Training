@@ -12,11 +12,6 @@ namespace TheMoneyExample
 
         public int Amount { get; }
 
-        public Money Times(int multiplier)
-        {
-            return new Money(Amount * multiplier, Currency);
-        }
-
         public static Money Dollar(int amount)
         {
             return new Money(amount, "USD");
@@ -25,6 +20,11 @@ namespace TheMoneyExample
         public static Money Franc(int amount)
         {
             return new Money(amount, "CHF");
+        }
+
+        public IExpression Times(int multiplier)
+        {
+            return new Money(Amount * multiplier, Currency);
         }
 
         public IExpression Plus(Money addend)

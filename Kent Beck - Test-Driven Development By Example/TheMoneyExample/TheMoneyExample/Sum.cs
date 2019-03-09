@@ -2,20 +2,25 @@ namespace TheMoneyExample
 {
     public class Sum : IExpression
     {
-        public Sum(Money augend, Money addend)
+        public Sum(IExpression augend, IExpression addend)
         {
             Augend = augend;
             Addend = addend;
         }
 
-        public Money Augend { get; }
+        public IExpression Augend { get; }
 
-        public Money Addend { get; }
+        public IExpression Addend { get; }
 
         public Money Reduce(Bank bank, string to)
         {
-            var amount = Augend.Amount + Addend.Amount;
+            var amount = Augend.Reduce(bank, to).Amount + Addend.Reduce(bank, to).Amount;
             return new Money(amount, to);
+        }
+
+        public IExpression Plus(Money addend)
+        {
+            return null;
         }
     }
 }

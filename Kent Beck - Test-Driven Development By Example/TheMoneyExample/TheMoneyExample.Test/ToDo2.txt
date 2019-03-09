@@ -4,3 +4,5 @@ V    $5 + $5 = $10
 V    Bank.Reduce(Money)
 V    Reduce Money with conversion
 V    Reduce(Bank, String)
+-    Sum.Plus
+-    IExpression.Times
