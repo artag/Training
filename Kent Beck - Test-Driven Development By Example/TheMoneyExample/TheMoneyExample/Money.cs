@@ -27,7 +27,7 @@ namespace TheMoneyExample
             return new Money(Amount * multiplier, Currency);
         }
 
-        public IExpression Plus(Money addend)
+        public IExpression Plus(IExpression addend)
         {
             return new Sum(this, addend);
         }
