@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Countdown", "Countdown\Countdown.csproj", "{567A329E-F707-4A0A-9F1B-87E86A3C16D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InputService", "InputService\InputService.csproj", "{8D2E401C-75A9-4D8F-9E1D-7ED1AAFB26B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Factorial", "Factorial\Factorial.csproj", "{0C66CCAB-6728-46E9-A121-2834E6560823}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{567A329E-F707-4A0A-9F1B-87E86A3C16D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{567A329E-F707-4A0A-9F1B-87E86A3C16D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{567A329E-F707-4A0A-9F1B-87E86A3C16D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{567A329E-F707-4A0A-9F1B-87E86A3C16D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D2E401C-75A9-4D8F-9E1D-7ED1AAFB26B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D2E401C-75A9-4D8F-9E1D-7ED1AAFB26B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D2E401C-75A9-4D8F-9E1D-7ED1AAFB26B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D2E401C-75A9-4D8F-9E1D-7ED1AAFB26B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C66CCAB-6728-46E9-A121-2834E6560823}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C66CCAB-6728-46E9-A121-2834E6560823}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C66CCAB-6728-46E9-A121-2834E6560823}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C66CCAB-6728-46E9-A121-2834E6560823}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
