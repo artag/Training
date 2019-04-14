@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicProgramming", "DynamicProgramming\DynamicProgramming.csproj", "{07AAB704-22EB-4AEA-A3D7-9BF79320BDEA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicProgramming.App", "DynamicProgramming.App\DynamicProgramming.App.csproj", "{92CB1B31-B384-4F58-87B5-860F7E5D22D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicProgramming.Test", "DynamicProgramming.Test\DynamicProgramming.Test.csproj", "{28EB48C3-B43A-4298-B2BB-D921C2E6E13F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{07AAB704-22EB-4AEA-A3D7-9BF79320BDEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07AAB704-22EB-4AEA-A3D7-9BF79320BDEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07AAB704-22EB-4AEA-A3D7-9BF79320BDEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07AAB704-22EB-4AEA-A3D7-9BF79320BDEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92CB1B31-B384-4F58-87B5-860F7E5D22D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92CB1B31-B384-4F58-87B5-860F7E5D22D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92CB1B31-B384-4F58-87B5-860F7E5D22D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92CB1B31-B384-4F58-87B5-860F7E5D22D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28EB48C3-B43A-4298-B2BB-D921C2E6E13F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28EB48C3-B43A-4298-B2BB-D921C2E6E13F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28EB48C3-B43A-4298-B2BB-D921C2E6E13F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28EB48C3-B43A-4298-B2BB-D921C2E6E13F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
