@@ -1,51 +1,40 @@
-﻿using System;
-
-namespace Gcd
+﻿namespace Gcd
 {
     public class CommonDivisor
     {
         public static int FindRecursiveWay(int x, int y)
         {
-            if (x > y)
-            {
-                var remainder = x % y;
-                if (remainder == 0)
-                    return y;
+            if (x == y)
+                return x;
 
-                return FindRecursiveWay(remainder, y);
-            }
-            else
-            {
-                var remainder = y % x;
-                if (remainder == 0)
-                    return x;
+            var a = x < y ? x : y;
+            var b = x < y ? y : x;
 
-                return FindRecursiveWay(remainder, x);
-            }
+            var remainder = b % a;
+
+            return remainder == 0
+                ? a
+                : FindRecursiveWay(remainder, a);
         }
 
         public static int FindIterativeWay(int x, int y)
         {
-            while (true)
+            if (x == y)
+                return x;
+
+            var a = x < y ? x : y;
+            var b = x < y ? y : x;
+
+            var remainder = 1;
+            while (remainder != 0)
             {
-                if (x > y)
-                {
-                    var remainder = x % y;
-                    if (remainder == 0)
-                        return y;
+                remainder = a % b;
 
-                    x = remainder;
-                }
-                else
-                {
-                    var remainder = y % x;
-                    if (remainder == 0)
-                        return x;
-
-                    y = x;
-                    x = remainder;
-                }
+                a = b;
+                b = remainder;
             }
+
+            return a;
         }
     }
 }
