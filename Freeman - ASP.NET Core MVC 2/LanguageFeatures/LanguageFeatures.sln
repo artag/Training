@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanguageFeatures", "LanguageFeatures\LanguageFeatures.csproj", "{AA35234C-DC78-4194-9806-3B3E03260E9D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA35234C-DC78-4194-9806-3B3E03260E9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA35234C-DC78-4194-9806-3B3E03260E9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA35234C-DC78-4194-9806-3B3E03260E9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA35234C-DC78-4194-9806-3B3E03260E9D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

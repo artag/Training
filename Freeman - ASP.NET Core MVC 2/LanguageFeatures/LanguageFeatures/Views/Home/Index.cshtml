@@ -1,0 +1,55 @@
+@model IEnumerable<string>
+
+@{ Layout = null;}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Language Features</title>
+</head>
+<body>
+<div>
+    <ul>
+        @foreach (var str in Model)
+        {
+            <li>@str</li>
+        }
+    </ul>
+</div>
+<div>
+    <a href='@Url.Action("GetProducts", "Home")'>Get Products</a>
+</div>
+<div>
+    <a href='@Url.Action("GetNames", "Home")'>Get Names</a>
+</div>
+<div>
+    <a href='@Url.Action("GetProductsAsDictionaryKeys", "Home")'>Get Products As Dictionary Keys</a>
+</div>
+<div>
+    <a href='@Url.Action("CalculateDecimalNumbers", "Home")'>Calculate Decimal Numbers</a>
+</div>
+<div>
+    <a href='@Url.Action("CalculateDecimalNumbers2", "Home")'>Calculate Decimal Numbers 2</a>
+</div>
+<div>
+    <a href='@Url.Action("TestExtensionMethods", "Home")'>Extension Methods</a>
+</div>
+<div>
+    <a href='@Url.Action("EnumerableFilter1", "Home")'>Filters. By Extension Methods</a>
+</div>
+<div>
+    <a href='@Url.Action("EnumerableFilter2", "Home")'>Common Filters. By Extension Methods</a>
+</div>
+<div>
+    <a href='@Url.Action("LinqExample", "Home")'>Simple LINQ Example</a>
+</div>
+<div>
+    <a href='@Url.Action("AnonymousTypes", "Home")'>Anonymous Types</a>
+</div>
+<div>
+    <a href='@Url.Action("GetPageLengthAsync", "Home")'>Get Page Length Asynchronously</a>
+</div>
+</body>
+</html>
