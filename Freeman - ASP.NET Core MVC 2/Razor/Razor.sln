@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Razor", "Razor\Razor.csproj", "{5EE765FA-9EA5-47D2-B3A4-899333A5A048}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5EE765FA-9EA5-47D2-B3A4-899333A5A048}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EE765FA-9EA5-47D2-B3A4-899333A5A048}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EE765FA-9EA5-47D2-B3A4-899333A5A048}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EE765FA-9EA5-47D2-B3A4-899333A5A048}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
