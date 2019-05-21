@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using SportsStore.Models;
 
 namespace SportsStore.Controllers
@@ -9,6 +10,12 @@ namespace SportsStore.Controllers
 
         public ProductController(IProductRepository repository) => _repository = repository;
 
-        public IActionResult List() => View(_repository.Products);
+        public int PageSize { get; set; } = 4;
+
+        public ViewResult List(int productPage = 1) =>
+            View(_repository.Products
+                .OrderBy(product => product.ProductID)
+                .Skip((productPage - 1) * PageSize)
+                .Take(PageSize));
     }
 }
