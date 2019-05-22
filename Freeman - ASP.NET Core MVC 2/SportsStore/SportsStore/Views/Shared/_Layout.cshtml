@@ -3,11 +3,21 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet"
+          href="~/node_modules/bootstrap/dist/css/bootstrap.min.css"/>
     <title>Sports Store</title>
 </head>
 <body>
-    <div>
+<nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">SPORTS STORE</a>
+</nav>
+<div class="row m-1 p-1">
+    <div id="categories" class="col-3">
+        Put something useful here later
+    </div>
+    <div class="col-9">
         @RenderBody()
     </div>
+</div>
 </body>
 </html>

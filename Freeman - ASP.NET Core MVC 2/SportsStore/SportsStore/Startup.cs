@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SportsStore.Models;
+using WorkingWithVisualStudioTests.Middleware;
 
 namespace SportsStore
 {
@@ -30,6 +31,7 @@ namespace SportsStore
             app.UseDeveloperExceptionPage();
             app.UseStatusCodePages();
             app.UseStaticFiles();
+            app.UseNodeModules(env.ContentRootPath);
             app.UseMvc(
                 routes =>
                 {
