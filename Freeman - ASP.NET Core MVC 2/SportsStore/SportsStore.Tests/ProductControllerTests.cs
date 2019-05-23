@@ -55,9 +55,13 @@ namespace SportsStore.Tests
             controller.PageSize = 3;
 
             // Act
-            var result = 
+            var result = controller.List("Cat2", 1).ViewData.Model as ProductsListViewModel;
+            var products = result.Products.ToArray();
 
             // Assert
+            Assert.Equal(2, products.Length);
+            Assert.True(products[0].Name == "P2" && products[0].Category == "Cat2");
+            Assert.True(products[1].Name == "P4" && products[1].Category == "Cat2");
         }
 
         private Product[] Products { get; } = new Product[]
