@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet"
           href="~/node_modules/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet"
+          href="~/node_modules/font-awesome/css/font-awesome.css"/>
     <title>Sports Store</title>
 </head>
 <body>
 <nav class="navbar navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">SPORTS STORE</a>
+        <a class="navbar-brand" href="#">SPORTS STORE</a>
+        <div class="col-4 text-right">
+            @await Component.InvokeAsync("CartSummary")
+        </div>
 </nav>
 <div class="row m-1 p-1">
     <div id="categories" class="col-3">
