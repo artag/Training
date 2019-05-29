@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,9 +20,17 @@ namespace SportsStore
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            var sqlServerOptions = Configuration["Data:SportsStoreProducts:ConnectionString"];
+            var sportsStoreDbOptions = Configuration["Data:SportsStoreProducts:ConnectionString"];
             services.AddDbContext<ApplicationDbContext>(
-                options => options.UseSqlServer(sqlServerOptions));
+                options => options.UseSqlServer(sportsStoreDbOptions));
+
+            var identityDbOptions = Configuration["Data:SportsStoreIdentity:ConnectionString"];
+            services.AddDbContext<AppIdentityDbContext>(
+                options => options.UseSqlServer(identityDbOptions));
+            services.AddIdentity<IdentityUser, IdentityRole>()
+                .AddEntityFrameworkStores<AppIdentityDbContext>()
+                .AddDefaultTokenProviders();
+
             services.AddTransient<IProductRepository, EFProductRepository>();
             services.AddScoped<Cart>(serviceProvider => SessionCart.GetCart(serviceProvider));
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -39,6 +48,7 @@ namespace SportsStore
             app.UseStaticFiles();
             app.UseNodeModules(env.ContentRootPath);
             app.UseSession();
+            app.UseAuthentication();
             app.UseMvc(
                 routes =>
                 {
@@ -68,6 +78,7 @@ namespace SportsStore
                 });
 
             SeedData.EnsurePopulated(app);
+            IdentitySeedData.EnsurePopulated(app);
         }
     }
 }

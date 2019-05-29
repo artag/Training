@@ -42,3 +42,18 @@ dotnet ef migrations add ShippedOrders
 
 Миграция будет применена автоматически, когда приложение запустится и в классе `SeedData`
 произойдет обращение к методу `Migrate()`.
+
+
+### Миграция для базы данных `Identity`
+Создание новой миграции для базы данных `Identity`:
+```
+dotnet ef migrations add Initial --context AppIdentityDbContext
+```
+
+`--context` используется для указания имени класса контекста, ассоциированного с базой данных,
+с которой необходимо работать.
+
+Создание новой базы данных и запуск программы миграции:
+```
+dotnet ef database update --context AppIdentityDbContext
+```
