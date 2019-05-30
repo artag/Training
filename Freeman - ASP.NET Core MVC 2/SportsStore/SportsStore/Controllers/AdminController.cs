@@ -49,5 +49,13 @@ namespace SportsStore.Controllers
 
             return RedirectToAction("Index");
         }
+
+        // Кнопка для начального заполнения данными в Production.
+        [HttpPost]
+        public IActionResult SeedDatabase()
+        {
+            SeedData.EnsurePopulated(HttpContext.RequestServices);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -7,10 +8,15 @@ namespace SportsStore.Models
 {
     public static class SeedData
     {
-        public static void EnsurePopulated(IApplicationBuilder app)
+        // Использовалось ранее, в Development.
+        //public static void EnsurePopulated(IApplicationBuilder app)
+        public static void EnsurePopulated(IServiceProvider services)
         {
-            var context = app.ApplicationServices.GetRequiredService<ApplicationDbContext>();
-            context.Database.Migrate();
+            // Использовалось ранее, в Development.
+            //var context = app.ApplicationServices.GetRequiredService<ApplicationDbContext>();
+            //context.Database.Migrate();
+
+            var context = services.GetRequiredService<ApplicationDbContext>();
             if (!context.Products.Any())
             {
                 var productsToAdd = new[]
