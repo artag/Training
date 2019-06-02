@@ -1,0 +1,29 @@
+@model Dictionary<string, string>
+
+@{ Layout = null; }
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Result</title>
+</head>
+
+<body>
+<table>
+    @foreach (var kvp in Model)
+    {
+        <tr>
+            <th>
+                <b>@kvp.Key</b>
+            </th>
+            <td>
+                @kvp.Value
+            </td>
+        </tr>
+    }
+</table>
+
+</body>
+</html>
