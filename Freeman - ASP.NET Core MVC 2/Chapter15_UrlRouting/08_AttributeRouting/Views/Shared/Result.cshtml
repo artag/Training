@@ -1,0 +1,31 @@
+@model Result
+
+@{ Layout = null; }
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Routing</title>
+</head>
+
+<body>
+<table>
+    <tr>
+        <th><b>Controller:</b></th> <td>@Model.Controller</td>
+    </tr>
+    <tr>
+        <th><b>Action:</b></th> <td>@Model.Action</td>
+    </tr>
+
+    @foreach (var key in Model.Data.Keys)
+    {
+        <tr>
+            <th>@key :</th><td>@Model.Data[key]</td>
+        </tr>
+    }
+
+</table>
+</body>
+</html>
