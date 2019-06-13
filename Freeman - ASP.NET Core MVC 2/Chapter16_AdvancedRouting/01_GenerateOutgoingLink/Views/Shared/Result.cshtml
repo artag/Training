@@ -1,0 +1,64 @@
+@model Result
+
+@{ Layout = null; }
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Routing</title>
+</head>
+
+<body>
+<table>
+    <tr>
+        <th><b>Controller:</b></th> <td>@Model.Controller</td>
+    </tr>
+    <tr>
+        <th><b>Action:</b></th> <td>@Model.Action</td>
+    </tr>
+
+    @foreach (var key in Model.Data.Keys)
+    {
+        <tr>
+            <th>@key :</th><td>@Model.Data[key]</td>
+        </tr>
+    }
+
+</table>
+
+<div>
+    <a asp-action="CustomVariable">This is an outgoing URL</a>
+</div>
+<div>
+    <a asp-controller="Admin" asp-action="Index">
+        This targets another controller Admin
+    </a>
+</div>
+<div>
+    <a asp-controller="Customer" asp-action="Index">
+        This targets another controller Customer with attribute Route
+    </a>
+</div>
+<div>
+    <a asp-controller="Home" asp-action="CustomVariable" asp-route-id="Hello">
+        This target to controller=Home, action=Custom Variable with id=Hello
+    </a>
+</div>
+<div>
+    <a asp-controller="Home" asp-action="Index" asp-route-id="Hello"
+       asp-protocol="https"
+       asp-host="myserver.mydomain.com"
+       asp-fragment="myFragment">
+        This target to fully qualified URL
+    </a>
+</div>
+<div>
+    <a asp-route="out">
+        This target to generated URL from a specific route
+    </a>
+</div>
+
+</body>
+</html>
