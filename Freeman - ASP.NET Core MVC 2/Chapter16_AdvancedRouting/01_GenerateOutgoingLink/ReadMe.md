@@ -97,7 +97,8 @@ routes.MapRoute(
     template: "outbound/{controller=Home}/{action=Index}");
 ```
 
-Пример генерации URL из специфического маршрута (используется маршрут с именем "out"):
+Пример генерации URL из специфического маршрута (используется маршрут с именем "out",
+см. `View/Shared/Result.cshtml`):
 ```html
 <a asp-route="out">
     This target to generated URL from a specific route
@@ -112,4 +113,37 @@ routes.MapRoute(
 <a asp-route="out" asp-controller="Home" asp-action="Index">
     This target to generated URL from a specific route
 </a>
+```
+
+
+## Генерирование URL (без ссылок)
+
+Пример можно найти в `View/Shared/Result.cshtml`:
+```html
+<p>URL: @Url.Action("CustomVariable", "Home", new { id = "HelloWorld" })</p>
+```
+
+Результат виден на экране как обычный текст ():
+```
+URL: /App/DoCustomVariable?id=HelloWorld
+```
+
+* `Url.Action()` используется для создания URL напрямую.
+* 1-й аргумент - указывается метод действия
+* 2-й аргумент - указывается контроллер
+* 3-й аргумент - указывается значения для любых переменных сегментов
+
+
+## Генерирование URL в методах действий
+
+Пример использования `Url.Action()` (см. в `AdminController.GenerateUrl()`):
+```cs
+...
+public ViewResult GenerateUrl(int id)
+{
+    ...
+    result.Data["Url"] = Url.Action("GenerateUrl", "Admin", new { id = 100 });
+    ...
+}
+...
 ```

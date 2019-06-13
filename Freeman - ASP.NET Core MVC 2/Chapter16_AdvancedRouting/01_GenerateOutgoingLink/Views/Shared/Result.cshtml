@@ -60,5 +60,14 @@
     </a>
 </div>
 
+<div>
+    <p>URL: @Url.Action("CustomVariable", "Home", new { id = "HelloWorld" })</p>
+</div>
+<div>
+    <a asp-controller="Admin" asp-action="GenerateUrl">
+        This target to controller=Admin, action=GenerateUrl. Get generated URL as dictionary item
+    </a>
+</div>
+
 </body>
 </html>
