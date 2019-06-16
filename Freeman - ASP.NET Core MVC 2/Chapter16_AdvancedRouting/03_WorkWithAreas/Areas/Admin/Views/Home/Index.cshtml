@@ -1,0 +1,42 @@
+@model Person[]
+
+@{ Layout = null; }
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Areas</title>
+</head>
+
+<body>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>City</th>
+    </tr>
+
+    @foreach (var person in Model)
+    {
+        <tr>
+            <td><b>@person.Name</b></td>
+            <td>@person.City</td>
+        </tr>
+    }
+</table>
+
+<div>
+    <a asp-controller="Home" asp-action="Index">
+        Link to Home controller in Admin area
+    </a>
+</div>
+
+<div>
+    <a asp-area="" asp-controller="Home" asp-action="Index">
+        Link to Home controller in main (root) area
+    </a>
+</div>
+
+</body>
+</html>
