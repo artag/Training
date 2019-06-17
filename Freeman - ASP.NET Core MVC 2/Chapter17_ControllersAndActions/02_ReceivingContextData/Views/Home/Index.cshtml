@@ -1,0 +1,39 @@
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{ Layout = null; }
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Controllers and Actions</title>
+</head>
+
+<body>
+<div>
+    <a asp-controller="Derived" asp-action="Index">Derived.Index()</a>
+</div>
+
+<div>
+    <a asp-controller="Derived" asp-action="Headers">Derived.Headers()</a>
+</div>
+
+<div>
+    <a href="/Poco/Index">Poco.Index()</a>
+</div>
+
+<div>
+    <a href="/Poco/Headers">Poco.Headers()</a>
+</div>
+
+<div>
+    <a asp-controller="Input" asp-action="IndexFirst">Input.IndexFirst()</a>
+</div>
+
+<div>
+    <a asp-controller="Input" asp-action="IndexSecond">Input.IndexSecond()</a>
+</div>
+
+</body>
+</html>

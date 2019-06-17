@@ -1,0 +1,28 @@
+@{ Layout = null;}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Controllers and Actions</title>
+</head>
+
+<body>
+<form method="post" asp-controller="Input" asp-action="ReceiveFormFirst">
+    <div>
+        <label for="name">Name:</label>
+        <input name="name"/>
+    </div>
+    <div>
+        <label for="city">City:</label>
+        <input name="city"/>
+    </div>
+
+    <div>
+        <button type="submit">Submit</button>
+    </div>
+</form>
+
+</body>
+</html>

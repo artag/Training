@@ -1,0 +1,32 @@
+@model IDictionary<string, string>
+
+@{ Layout = null; }
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Controllers and Actions</title>
+</head>
+
+<body>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Value</th>
+    </tr>
+
+    @foreach (var key in Model.Keys)
+    {
+        <tr>
+            <td>@key</td>
+            <td>@Model[key]</td>
+        </tr>
+    }
+
+</table>
+
+</body>
+
+</html>
