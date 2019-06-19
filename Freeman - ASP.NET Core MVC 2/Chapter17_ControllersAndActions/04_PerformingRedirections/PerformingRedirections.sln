@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformingRedirections", "PerformingRedirections\PerformingRedirections.csproj", "{675B8655-9335-4B4F-BB2E-84D6DD6DF835}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformingRedirections.Tests", "PerformingRedirections.Tests\PerformingRedirections.Tests.csproj", "{B7434709-2C7B-4ADE-BD9C-DE17B34DECEA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{675B8655-9335-4B4F-BB2E-84D6DD6DF835}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{675B8655-9335-4B4F-BB2E-84D6DD6DF835}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{675B8655-9335-4B4F-BB2E-84D6DD6DF835}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{675B8655-9335-4B4F-BB2E-84D6DD6DF835}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7434709-2C7B-4ADE-BD9C-DE17B34DECEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7434709-2C7B-4ADE-BD9C-DE17B34DECEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7434709-2C7B-4ADE-BD9C-DE17B34DECEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7434709-2C7B-4ADE-BD9C-DE17B34DECEA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
