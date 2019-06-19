@@ -1,0 +1,57 @@
+@{ Layout = "_Layout"; }
+
+<div>
+    <h2>Responses Examples</h2>
+</div>
+<div>
+    <a asp-controller="Input" asp-action="ToNotRecommendedResponse">
+        Input.ToNotRecommendedResponse()
+    </a>
+</div>
+
+<div>
+    <a asp-controller="Input" asp-action="ToCustomHtmlResult">
+        Input.ToCustomHtmlResult()
+    </a>
+</div>
+
+<div>
+    <a asp-controller="Input" asp-action="ToSendViewResult">
+        Input.ToSendViewResult()
+    </a>
+</div>
+
+<hr/>
+
+<div>
+    <h2>Passing data from action to view</h2>
+    <h3>Via models</h3>
+</div>
+
+<div>
+    <a asp-controller="Model" asp-action="SendToUntypedView">
+        Model.SendToUntypedView()
+    </a>
+</div>
+
+<div>
+    <a asp-controller="Model" asp-action="SendToTypedView">
+        Model.SendToTypedView()
+    </a>
+</div>
+
+<div>
+    <a asp-controller="Model" asp-action="SendStringToView">
+        Model.SendStringToView()
+    </a>
+</div>
+
+<div>
+    <h3>Via ViewBag</h3>
+</div>
+
+<div>
+    <a asp-controller="ViewBag" asp-action="SendViewBagToView">
+        ViewBag.SendViewBagToView()
+    </a>
+</div>

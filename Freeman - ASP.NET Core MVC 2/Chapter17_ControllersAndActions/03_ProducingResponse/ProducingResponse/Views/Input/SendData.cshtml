@@ -1,0 +1,16 @@
+@{ Layout = "_Layout"; }
+
+<form method="post" asp-controller="Response" asp-action=@ViewBag.DistantAction>
+    <div>
+        <label for="name">Name:</label>
+        <input name="name"/>
+    </div>
+    <div>
+        <label for="city">City:</label>
+        <input name="city"/>
+    </div>
+
+    <div>
+        <button type="submit">Submit</button>
+    </div>
+</form>
