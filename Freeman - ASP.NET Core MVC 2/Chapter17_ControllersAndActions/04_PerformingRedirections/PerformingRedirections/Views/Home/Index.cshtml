@@ -1,2 +1,16 @@
 @{ Layout = "_Layout"; }
 
+<div>
+    <h3>Redirecting to a Literal URL</h3>
+    <a asp-controller="Redirection" asp-action="Redirect">
+        Redirection.Redirect()
+    </a>
+    <h3>Redirecting to a Routing System URL</h3>
+    <a asp-controller="Redirection" asp-action="RedirectToRoute">
+        Redirection.RedirectToRoute()
+    </a>
+    <h3>Redirecting to an Action Method</h3>
+    <a asp-controller="Redirection" asp-action="RedirectToAction">
+        Redirection.RedirectToAction()
+    </a>
+</div>
