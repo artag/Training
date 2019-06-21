@@ -6,13 +6,13 @@ namespace PerformingRedirections.Tests
     public class RedirectToRouteTests
     {
         [Fact]
-        public void Redirect()
+        public void Redirection()
         {
             // Arrange
             var controller = new RedirectionController();
 
             // Act
-            var result = controller.RedirectToRoute();
+            var result = controller.ActionRedirectToRoute();
 
             // Assert
             Assert.False(result.Permanent);

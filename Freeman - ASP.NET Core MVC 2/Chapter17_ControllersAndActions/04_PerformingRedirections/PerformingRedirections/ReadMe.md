@@ -20,13 +20,15 @@
 
 ## Перенаправление на буквальный URL
 
-Наиболее базовый способ перенапраления браузера - вызов `Redirect()`
+Наиболее базовый способ перенаправления браузера - вызов `Redirect()`
 (см. пример в `Controllers/RedirectionController`):
 ```cs
 ...
-public RedirectResult Redirect() => Redirect("/Redirection/LiteralUrl");
+public RedirectResult ActionRedirect() =>
+    Redirect("/Redirection/LiteralUrl");
 
-public ViewResult LiteralUrl() => View("Result", $"Result from {nameof(LiteralUrl)}");
+public ViewResult LiteralUrl() =>
+    View("Result", $"Result from {nameof(LiteralUrl)}");
 ...
 ```
 
@@ -34,7 +36,7 @@ public ViewResult LiteralUrl() => View("Result", $"Result from {nameof(LiteralUr
 
 Постоянное перенаправление будет выглядеть так:
 ```cs
-public RedirectResult Redirect() => RedirectPermanent("/Redirection/LiteralUrl");
+public RedirectResult ActionRedirect() => RedirectPermanent("/Redirection/LiteralUrl");
 ```
 
 
@@ -49,7 +51,7 @@ public void Redirection()
     var controller = new RedirectionController();
 
     // Act
-    var result = controller.Redirect();
+    var result = controller.ActionRedirect();
 
     // Assert
     Assert.Equal("/Redirection/LiteralUrl", result.Url);
@@ -64,18 +66,18 @@ public void Redirection()
 Пример (см. `Controllers/RedirectionController`):
 ```cs
 ...
- public RedirectToRouteResult RedirectToRoute()
- {
-     var route = new
-     {
-         controller = "Redirection", action = "RoutedRedirection", id = "MyID"
-     };
+public RedirectToRouteResult ActionRedirectToRoute()
+{
+    var route = new
+    {
+        controller = "Redirection", action = "RoutedRedirection", id = "MyID"
+    };
 
-     return RedirectToRoute(route);
- }
+    return RedirectToRoute(route);
+}
 
- public ViewResult RoutedRedirection() =>
-     View("Result", $"Result from {nameof(RoutedRedirection)}");
+public ViewResult RoutedRedirection() =>
+    View("Result", $"Result from {nameof(RoutedRedirection)}");
 ...
 ```
 
@@ -90,13 +92,13 @@ public void Redirection()
 
 ```cs
 [Fact]
-public void Redirect()
+public void Redirection()
 {
     // Arrange
     var controller = new RedirectionController();
 
     // Act
-    var result = controller.RedirectToRoute();
+    var result = controller.ActionRedirectToRoute();
 
     // Assert
     Assert.False(result.Permanent);
@@ -113,10 +115,11 @@ public void Redirect()
 Пример (см. `Controllers/RedirectionController`):
 ```cs
 ...
-public RedirectToActionResult RedirectToAction() =>
+public RedirectToActionResult ActionRedirectToAction() =>
     RedirectToAction(nameof(ActionRedirection));
 
 public ViewResult ActionRedirection() =>
     View("Result", $"Result from {nameof(ActionRedirection)}");
 ...
 ```
+

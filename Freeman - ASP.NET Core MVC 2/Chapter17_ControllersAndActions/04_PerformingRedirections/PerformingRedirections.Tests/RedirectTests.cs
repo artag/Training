@@ -12,7 +12,7 @@ namespace PerformingRedirections.Tests
             var controller = new RedirectionController();
 
             // Act
-            var result = controller.Redirect();
+            var result = controller.ActionRedirect();
 
             // Assert
             Assert.Equal("/Redirection/LiteralUrl", result.Url);

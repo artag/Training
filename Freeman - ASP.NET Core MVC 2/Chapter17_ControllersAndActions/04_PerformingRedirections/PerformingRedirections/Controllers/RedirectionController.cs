@@ -4,11 +4,16 @@ namespace PerformingRedirections.Controllers
 {
     public class RedirectionController : Controller
     {
-        public RedirectResult Redirect() => Redirect("/Redirection/LiteralUrl");
+        // Пример вызова Redirect()
+        public RedirectResult ActionRedirect() =>
+            Redirect("/Redirection/LiteralUrl");
 
-        public ViewResult LiteralUrl() => View("Result", $"Result from {nameof(LiteralUrl)}");
+        public ViewResult LiteralUrl() =>
+            View("Result", $"Result from {nameof(LiteralUrl)}");
 
-        public RedirectToRouteResult RedirectToRoute()
+
+        // Пример вызова RedirectToRoute()
+        public RedirectToRouteResult ActionRedirectToRoute()
         {
             var route = new
             {
@@ -21,7 +26,9 @@ namespace PerformingRedirections.Controllers
         public ViewResult RoutedRedirection() =>
             View("Result", $"Result from {nameof(RoutedRedirection)}");
 
-        public RedirectToActionResult RedirectToAction() =>
+
+        // Пример вызова RedirectToAction()
+        public RedirectToActionResult ActionRedirectToAction() =>
             RedirectToAction(nameof(ActionRedirection));
 
         public ViewResult ActionRedirection() =>
