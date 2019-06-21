@@ -123,3 +123,41 @@ public ViewResult ActionRedirection() =>
 ...
 ```
 
+Если указан только метод действия, то предполагается, что он относится к текущему контроллеру.
+Если надо перенаправить на метод другого контроллера, то:
+(см. `Controllers/RedirectionController` и `Controllers/OtherController`):
+```cs
+...
+public RedirectToActionResult OtherActionRedirectToAction()
+{
+    var action = nameof(OtherController.ActionRedirection);
+    var controller = nameof(OtherController).Replace("Controller", "");
+
+    return RedirectToAction(action, controller);
+}
+...
+```
+
+```cs
+public ViewResult ActionRedirection() =>
+    View("Result", $"Result from {nameof(OtherController)}.{nameof(ActionRedirection)}");
+```
+
+
+## Модульное тестирование. Перенаправление на метод действия
+
+```cs
+[Fact]
+public void Redirection()
+{
+    // Arrange
+    var controller = new RedirectionController();
+
+    // Act
+    var result = controller.ActionRedirectToAction();
+
+    // Assert
+    Assert.False(result.Permanent);
+    Assert.Equal("ActionRedirection", result.ActionName);
+}
+```

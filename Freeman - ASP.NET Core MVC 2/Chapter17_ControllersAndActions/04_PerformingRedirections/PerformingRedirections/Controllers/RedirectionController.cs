@@ -33,5 +33,14 @@ namespace PerformingRedirections.Controllers
 
         public ViewResult ActionRedirection() =>
             View("Result", $"Result from {nameof(ActionRedirection)}");
+
+        // Пример вызова RedirectToAction() на метод другого контроллера
+        public RedirectToActionResult OtherActionRedirectToAction()
+        {
+            var action = nameof(OtherController.ActionRedirection);
+            var controller = nameof(OtherController).Replace("Controller", "");
+
+            return RedirectToAction(action, controller);
+        }
     }
 }
