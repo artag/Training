@@ -9,13 +9,22 @@
 вместе с кодом перенаправления.
 
 Для выполнения перенаправления могут применяться и другие результаты действий:
+* `RedirectResult`
+  * Метод класса Controller - `Redirect()` и `RedirectPermanent()`.
+  * Описание: Посылает ответ с кодом состояния HTTP 301 или 302, выполняя перенаправление клиента.
+    на новый URL
 
-| Имя                      | Метод класса Controller | Описание                      | Описание                                                                                         |
-| ------------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `RedirectResult`         | `Redirect()` и `RedirectPermanent()`                    | Посылает ответ с кодом состояния HTTP 301 или 302, выполняя перенаправление клиента на новый URL |
-| `LocalRedirectResult`    | `LocalRedirect()` и `LocalRedirectPermanent()`          | Выполняет перенаправление клиента на локальный URL                                               |
-| `RedirectToActionResult` | `RedirectToAction()` и `RedirectionToActionPermanent()` | Выполняет перенаправление клиента на указанное действие или контроллер                           |
-| `RedirectToRouteResult`  | `RedirectToRoute()` и `RedirectToRoutePermanent()`      | Выполняет перенаправление клиента на URL, сгенерированный из специфического маршрута             |
+* `LocalRedirectResult`
+  * Метод класса Controller: `LocalRedirect()` и `LocalRedirectPermanent()`.
+  * Описание: Выполняет перенаправление клиента на локальный URL.
+
+* `RedirectToActionResult`
+  * Метод класса Controller - `RedirectToAction()` и `RedirectionToActionPermanent()`
+  * Описание: Выполняет перенаправление клиента на указанное действие или контроллер.
+
+* `RedirectToRouteResult`
+  * Метод класса Controller - `RedirectToRoute()` и `RedirectToRoutePermanent()`
+  * Описание: Выполняет перенаправление клиента на URL, сгенерированный из специфического маршрута.
 
 
 ## Перенаправление на буквальный URL
