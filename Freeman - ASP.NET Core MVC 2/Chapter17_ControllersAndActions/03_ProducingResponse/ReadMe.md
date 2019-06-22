@@ -109,7 +109,7 @@ public ViewResult SendViewResult(string name, string city) =>
 `/Views/Shared/<Имя представления>.cshtml`
 
 
-### Модульное тестирование. Визуализация представления.
+### Модульное тестирование. Визуализация представления
 
 Пример см. в `ActionTests`:
 ```cs
@@ -221,7 +221,7 @@ public ViewResult SendStringToView() => View((object)"Hello, World");
 ```
 
 
-### Модульное тестирование. Объекты модели представления.
+### Модульное тестирование. Объекты модели представления
 
 Проверка типа модели. Пример см. в `SendingModelTests`:
 ```cs
@@ -269,7 +269,7 @@ public ViewResult SendViewBagToView()
 ```
 
 
-### Модульное тестирование. Объект ViewBag.
+### Модульное тестирование. Объект ViewBag
 
 Пример см. в `SendingViewBagTests`:
 ```cs
