@@ -1,0 +1,43 @@
+@{ Layout = "_Layout"; }
+
+<div>
+    <h2>Look at Json Content</h2>
+    <a asp-controller="Json" asp-action="Index">
+        JsonController.Index()
+    </a>
+</div>
+
+<div>
+    <h2>Look at ContentResult with MIME json</h2>
+    <a asp-controller="Content" asp-action="Index">
+        ContentController.Index()
+    </a>
+</div>
+
+<div>
+    <h2>Look at ObjectResult</h2>
+    <a asp-controller="ObjectResult" asp-action="Index">
+        ObjectResultController.Index()
+    </a>
+</div>
+
+<div>
+    <h2>Look at VirtualFileResult</h2>
+    <a asp-controller="VirtualFileResult" asp-action="Index">
+        VirtualFileResultController.Index()
+    </a>
+</div>
+
+<div>
+    <h2>Look at StatusCodeResult</h2>
+    <div>
+        <a asp-controller="StatusCode" asp-action="Index">
+            StatusCodeController.Index()
+        </a>
+    </div>
+    <div>
+        <a asp-controller="StatusCode" asp-action="MuchBetter">
+            StatusCodeController.MuchBetter()
+        </a>
+    </div>
+</div>

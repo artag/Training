@@ -15,6 +15,7 @@ namespace ReturningDifferentContent
         {
             app.UseDeveloperExceptionPage();
             app.UseStatusCodePages();
+            app.UseStaticFiles();
             app.UseMvcWithDefaultRoute();
         }
     }

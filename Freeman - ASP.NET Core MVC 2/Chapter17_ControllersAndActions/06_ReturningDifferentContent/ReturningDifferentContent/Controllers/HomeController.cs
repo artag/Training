@@ -4,6 +4,6 @@ namespace ReturningDifferentContent.Controllers
 {
     public class HomeController : Controller
     {
-        public RedirectToActionResult Index() => RedirectToAction("Index", "Json");
+        public ViewResult Index() => View("Index");
     }
 }
