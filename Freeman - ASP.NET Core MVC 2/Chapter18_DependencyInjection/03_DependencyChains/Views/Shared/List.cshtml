@@ -1,0 +1,43 @@
+@model IEnumerable<Product>
+
+@{ Layout = "_Layout"; }
+
+@if (ViewData.Count > 0)
+{
+    <table>
+        @foreach (var kvp in ViewData)
+        {
+            <tr>
+                <td>@kvp.Key</td><td>@kvp.Value</td>
+            </tr>
+        }
+    </table>
+}
+
+<table>
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Price</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    @if (Model == null)
+    {
+        <tr>
+            <td colspan="3">No Model Data</td>
+        </tr>
+    }
+    else
+    {
+        foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Name</td>
+                <td>@string.Format("{0:C2}", product.Price)</td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
