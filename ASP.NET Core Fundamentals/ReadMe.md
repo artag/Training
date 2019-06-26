@@ -21,7 +21,16 @@ dotnet aspnet-codegenerator razorpage List Empty -udl -outDir Pages\Restaurants\
 Добавление строки `Message` в конфигурационный файл `appsettings.json`.
 Добавление в `ListModel` чтения строки из конфигурационного файла.
 
-07. Создание нового проекта `OdeToFood.Core` для Enitities.
+07. Создание нового проекта `OdeToFood.Core` для Entities.
 Создание класса `Restaurant` и перечисления `CuisineType`.
 
 08. Создание нового проекта `OdeToFood.Data` для доступа к данным.
+Создание интерфейса `IRestaurantData` и его реализации `InMemoryRestaurantData`.
+
+09. Регистрация `IRestaurantData` и `InMemoryRestaurantData` в `Startup.ConfigureServices()`
+Добавлена передача `IRestaurantData` через конструктор `ListModel` (в `Pages/Restaurants/List.cshtml`).
+
+10. Добавление свойства `Restaurants` в класс `ListModel` и инициализация этого свойства.
+
+11. Добавление таблицы в `Pages/Restaurants/List.cshtml`, используя данные из `Restaurants`
+класса `ListModel`.
