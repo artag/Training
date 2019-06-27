@@ -36,9 +36,14 @@ namespace OdeToFood.Data
             };
         }
 
-        public IEnumerable<Restaurant> GetAll() =>
+        public IEnumerable<Restaurant> GetRestaurantsByName(string name = null) =>
             _restaurants
                 .OrderBy(restaurant => restaurant.Name)
+                .Where(restaurant => string.IsNullOrEmpty(name) ||
+                                     restaurant.Name.ToLower().StartsWith(name.ToLower()))
                 .Select(restaurant => restaurant);
+
+        public Restaurant GetById(int id) =>
+            _restaurants.SingleOrDefault(restaurant => restaurant.Id == id);
     }
 }

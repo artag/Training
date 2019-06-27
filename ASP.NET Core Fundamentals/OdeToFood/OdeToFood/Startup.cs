@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OdeToFood.Data;
+using OdeToFood.Middleware;
 
 namespace OdeToFood
 {
@@ -49,6 +50,7 @@ namespace OdeToFood
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseNodeModules(env.ContentRootPath);
             app.UseCookiePolicy();
 
             app.UseMvc();
