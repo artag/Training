@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Filters</title>
+</head>
+
+<body>
+<div>
+    <a asp-controller="Home" asp-action="GenerateException" asp-route-id="7">
+        Calling HomeController.GenerateException() without exception.
+    </a>
+</div>
+<div>
+    <a asp-controller="Home" asp-action="GenerateException">
+        Calling HomeController.GenerateException() with ArgumentNullException.
+    </a>
+</div>
+<div>
+    <a asp-controller="Home" asp-action="GenerateException" asp-route-id="42">
+        Calling HomeController.GenerateException() with ArgumentOutOfRangeException.
+    </a>
+</div>
+</body>
+</html>
