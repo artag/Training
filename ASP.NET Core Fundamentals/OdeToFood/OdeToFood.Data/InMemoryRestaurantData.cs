@@ -45,5 +45,23 @@ namespace OdeToFood.Data
 
         public Restaurant GetById(int id) =>
             _restaurants.SingleOrDefault(restaurant => restaurant.Id == id);
+
+        public Restaurant Update(Restaurant updatedRestaurant)
+        {
+            var restaurant = GetById(updatedRestaurant.Id);
+            if (restaurant != null)
+            {
+                restaurant.Name = updatedRestaurant.Name;
+                restaurant.Location = updatedRestaurant.Location;
+                restaurant.Cuisine = updatedRestaurant.Cuisine;
+            }
+
+            return restaurant;
+        }
+
+        public int Commit()
+        {
+            return 0;
+        }
     }
 }

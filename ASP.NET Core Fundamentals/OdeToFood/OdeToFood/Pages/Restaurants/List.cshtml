@@ -31,10 +31,19 @@
                    asp-route-restaurantId="@restaurant.Id">
                     <i class="fa fa-search-plus"></i>
                 </a>
+                <a class="btn btn-lg"
+                   asp-page="./Edit"
+                   asp-route-restaurantId="@restaurant.Id">
+                    <i class="fa fa-edit"></i>
+                </a>
             </td>
         </tr>
     }
 </table>
+
+<a asp-page="./Edit" class="btn btn-primary">Add New</a>
+
+<hr/>
 
 <div>
     @Model.Message

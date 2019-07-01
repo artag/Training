@@ -254,3 +254,190 @@ public void OnGet(int restaurantId)
 
 1. Модификация `DetailModel.OnGet()`. Добавление проверки на `null` и добавление `RedirectToPage`.
 2. Создание `NotFound` Page.
+
+
+## 04. Editing Data with Razor Pages
+
+*Добавление функциональности для создания и редактирования ресторана*.
+
+
+### 04_02. Creating the Restaurant Edit Page
+
+*Добавление кнопки на `List.cshtml` для редактирования ресторана и добавление новой
+страницы `Edit.cshtml`*.
+
+1. Добавление кнопки на `List.cshtml` для редактирования ресторана. (Рядом с кнопкой Details).
+
+2. Добавление новой страницы `/Pages/Restaurants/Edit.cshtml*.
+Для `Edit.cshtml.cs`:
+Здесь в `OnGet()` будет в виде параметра передаваться `id` редактируемого ресторана:
+```cs
+public IActionResult OnGet(int restaurantId)
+{
+    Restaurant = _restaurantData.GetById(restaurantId);
+    if (Restaurant == null)
+    {
+        return RedirectToPage("./NotFound");
+    }
+
+    return Page();
+}
+```
+
+Для `Edit.cshtml.cs` добавление:
+```html
+@page "{restaurantId:int}"
+...
+```
+
+
+### 04_03. Building an Edit Form with Tag Helpers
+
+*Добавление полей ввода в `Edit.cshtml` (для редактирования деталей ресторана)*.
+
+Особенности:
+* Скрытое поле для id:
+```html
+<input type="hidden" asp-for="Restaurant.Id"/>`
+```
+
+* Для редактирования `Name` и `Location`:
+```html
+<div class="form-group">
+    <label asp-for="Restaurant.Name"></label>
+    <input asp-for="Restaurant.Name" class="form-control" />
+</div>
+```
+
+* Для выбора `Cuisine` - выпадающий список.
+```html
+<div class="form-group">
+    <label asp-for="Restaurant.Cuisine"></label>
+    <select asp-for="Restaurant.Cuisine" class="form-control"
+            asp-items="Model.Cuisines"></select>
+</div>
+```
+
+`select` - выпадающий список, `asp-items` - элементы в выпадающем списке
+(все элементы перечисления `CuisineType`.
+
+Для `Edit.cshtml.cs`:
+1. Добавление зависимости класса от `IHtmlHelper`.
+2. Ввод свойства `public IEnumerable<SelectListItem> Cuisines { get; set; }` - для выбора
+`CuisineType`.
+3. Инициализация поля в OnGet(), используя `IHtmlHelper`:
+```cs
+public IActionResult OnGet(int restaurantId)
+{
+    Cuisines = _htmlHelper.GetEnumSelectList<CuisineType>();
+    ...
+}
+```
+
+
+### 04_04. Model Binding an HTTP POST Operation
+
+*Добавление операции POST нажатии на кнопку `Save` в `Edit.cshtml`*.
+
+1. Изменение `IRestaurantData`. Добавление:
+* `Restaurant Update(Restaurant updatedRestaurant);`
+* `int Commit();` - метод для сохранения изменений в БД (в `InMemoryRestaurantData` не исаользуется)
+
+2. Реализация добавленных методов в `InMemoryRestaurantData`.
+
+3. Добавление `OnPost` в `Edit.cshtml.cs`:
+```cs
+public IActionResult OnPost()
+{
+    _restaurantData.Update(Restaurant);
+    _restaurantData.Commit();
+    return Page();
+}
+```
+
+И установка атрибута для свойства `Restaurant` (вкл. поддержки для передачи в POST):
+```cs
+[BindProperty]
+public Restaurant Restaurant { get; set; }
+```
+
+Есть несколько недочетов после нажатия на кнопку `Save` в `Edit.cshtml`:
+1. Пропадание типа кухни в выпадающем списке.
+2. Нет валидации вводимых данных (проверка и отображение предупреждений на форме).
+
+
+### 04_05. Adding Validation Checks
+
+*Исправление недочетов, оставшихся из предыдущего пункта*.
+
+Пропадание типа кухни в выпадающем списке лечится добавлением установки значения для свойства
+`Cuisines` в `Edit.OnPost()`:
+```cs
+public IActionResult OnPost()
+{
+    Cuisines = _htmlHelper.GetEnumSelectList<CuisineType>();
+    ...
+}
+```
+
+
+#### Добавление валидации
+Валидацию данных можно добавить так:
+1. Либо добавив руками кучу проверок в `Edit.OnPost()` (не рекомендуется!).
+
+2.1 Добавить в класс `Restaurant` нужные атрибуты, которые задают ограничения на вводимые данные.
+(*Примечание: можно также в `Restaurant` реализовать `IValidatableObject` (в видео не показано)*).
+
+
+### 04_06. Using Model State and Showing Validation Errors
+
+*Продолжение реализации валидации, оставшейся из предыдущего пункта*.
+
+2.2 В `Edit.OnPost()` добавляется проверка статуса `ModelState` - это словарь, содержащий данные
+о валидности данных модели.
+
+Можно обратиться напрямую: `ModelState["Location"]...` или как в видео:
+```cs
+if (ModelState.IsValid)
+{
+    ...
+}
+```
+
+#### Добавление валидации на форму
+
+Для проверямых полей ввода добавляется следущее (элемент `span` - подпись снизу):
+```html
+<input asp-for="Restaurant.Name" class="form-control" />
+<span asp-validation-for="Restaurant.Name" class="text-danger" ></span>
+```
+
+Проблема: возможность повторной отправки POST при обновлении страницы.
+
+
+### 04_07. Following the POST-GET-REDIRECT Pattern
+
+*Решение повторной отправки POST - использование паттерна POST-GET-REDIRECT*.
+
+При успешном сохранении данных в `Edit.OnPost()` добавляется Redirect на `Detail.cshtml`:
+```cs
+public IActionResult OnPost()
+{
+    if (ModelState.IsValid)
+    {
+        _restaurantData.Update(Restaurant);
+        _restaurantData.Commit();
+        return RedirectToPage("./Detail", new { restaurantId = Restaurant.Id });
+    }
+
+    Cuisines = _htmlHelper.GetEnumSelectList<CuisineType>();
+    return Page();
+}
+```
+
+
+### 04_08. Building a Create Restaurant Page
+
+*Построение страницы для создания новой страницы (на самом деле используя `Edit.cshtml`)*.
+
+1.
