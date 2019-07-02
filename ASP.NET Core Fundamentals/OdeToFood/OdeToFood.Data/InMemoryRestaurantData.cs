@@ -59,6 +59,13 @@ namespace OdeToFood.Data
             return restaurant;
         }
 
+        public Restaurant Add(Restaurant newRestaurant)
+        {
+            _restaurants.Add(newRestaurant);
+            newRestaurant.Id = _restaurants.Max(r => r.Id) + 1;
+            return newRestaurant;
+        }
+
         public int Commit()
         {
             return 0;

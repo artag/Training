@@ -440,4 +440,74 @@ public IActionResult OnPost()
 
 *Построение страницы для создания новой страницы (на самом деле используя `Edit.cshtml`)*.
 
-1.
+1. Добавление в `List.cshtml` ссылки в виде кнопки на `Edit.cshtml`.
+
+2. Добавление в `Edit` возможность приема Nullable int id.
+2.1. В `Edit.cshtml` - сверху:
+```html
+@page "{restaurantId:int?}"
+...
+```
+
+Если урл заканчивается на `/Edit`, то будет редактирование для новой страницы, если на `/Edit/1`, 
+то будет редактирование уже существующего ресторана.
+
+2.2. Модификация `Edit.OnGet()`:
+```cs
+public IActionResult OnGet(int? restaurantId)
+{
+    Cuisines = _htmlHelper.GetEnumSelectList<CuisineType>();
+
+    Restaurant = restaurantId.HasValue
+        ? _restaurantData.GetById(restaurantId.Value)   // Редактирование существующего ресторана
+        : new Restaurant();                             // Создание нового ресторана
+
+    if (Restaurant == null)
+    {
+        return RedirectToPage("./NotFound");
+    }
+
+    return Page();
+}
+```
+
+
+### 04_09. Adding Create to the Data Access Service
+
+*Изменение интерфейса `IRestaurantData`. Добавление нового метода `Add`*.
+
+1. Добавление нового метода в `IRestaurantData`: `Restaurant Add(Restaurant newRestaurant);`.
+2. Добавление нового метода в `InMemoryRestaurantData`.
+
+
+### 04_10. Handling Create vs. Update Logic
+
+*Модификация `OnPost()` метода для возможности подтверждения редактирования/создания страницы*.
+
+
+### 04_11. Confirming the Last Operation
+
+*Добавление подтверждения сохранения, используя `TempData`*.
+
+1. Добавление создания `TempData["Message"]` в `Edit.OnPost()`.
+
+2. Добавление свойства в `Detail.cshtml.cs`:
+```cs
+[TempData]
+public string Message { get; set; }
+```
+
+3. Добавление показа сообщения в случае наличия этого сообщения в `Detail.cshtml`:
+```html
+...
+@if (Model.Message != null)
+{
+    <div class="alert alert-info">
+        @Model.Message
+    </div>
+}
+...
+```
+
+
+
