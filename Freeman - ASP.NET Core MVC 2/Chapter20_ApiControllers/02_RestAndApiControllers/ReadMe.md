@@ -307,3 +307,55 @@ Invoke-RestMethod http://localhost:5000/api/reservation/2 -Method DELETE
 
 ## Использование контроллера API в браузере
 
+В браузере для работы с API обычно используются запросы `Ajax` (Asynchronous JavaScript and XML).
+Делать запросы Ajax проще всего с использованием библиотеки `jQuery`.
+
+Что надо дополнительно сделать:
+1. Добавить в проект пакет `jQuery`.
+В данном примере, в `package.json`, добавлена соответствующая строка.
+
+2. В `wwwroot/js` добален `client.js`:
+```js
+$(document).ready(function () {
+
+    $("form").submit(function (e) {
+        e.preventDefault();
+        $.ajax({
+            url: "api/reservation",
+            contentType: "application/json",
+            method: "POST",
+            data: JSON.stringify({
+                clientName: this.elements["ClientName"].value,
+                location: this.elements["Location"].value
+            }),
+            success: function (data) {
+                addTableRow(data);
+            }
+        })
+    });
+});
+
+var addTableRow = function (reservation) {
+    $("table tbody").append(
+        "<tr>" +
+        "<td>" + reservation.reservationId + "</td>" +
+        "<td>" + reservation.ClientName + "</td>" +
+        "<td>" + reservation.Location +"</td>" +
+        "</tr>");
+}
+```
+
+Когда пользователь отправляет форму в браузере, файл JavaScript создает ответ, кодирует данные формы
+как JSON и отправляет их серверу с применением HTTP-запроса POST.
+
+Данные, возвращаемые сервером, автоматически разбираются `jQuery` и затем используются для
+добавления строки в HTML-таблицу.
+
+3. В файл компоновки `_Layout.cshtml` добавлено включение элементов `script` для `jQuery` и `client.js`:
+```html
+<head>
+    ...
+    <script src="~/node_modules/jquery/dist/jquery.jquery.min.js"></script>
+    <script src="js/client.js"></script>
+</head>
+```
