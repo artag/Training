@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+</head>
+
+<body>
+
+    @RenderSection("Header")
+
+    <div>
+        This is part of the layout
+    </div>
+
+    @RenderSection("Body")
+
+    <div>
+        This is part of the layout
+    </div>
+
+    @if (IsSectionDefined("Footer"))
+    {
+        @RenderSection("Footer")
+    }
+    else
+    {
+        <h2>No footer section</h2>
+    }
+
+    <div>
+        This is part of the layout
+    </div>
+
+</body>
+</html>
