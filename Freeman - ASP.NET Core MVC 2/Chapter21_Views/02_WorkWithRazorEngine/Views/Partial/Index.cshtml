@@ -1,0 +1,28 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Razor</title>
+</head>
+
+<body>
+<div>
+    This is the Index View of Partial Controller.
+</div>
+
+<hr />
+
+@Html.Partial("MyPartial")
+
+<hr />
+
+@Html.Partial("MyStronglyTypedPartial", new string[] { "Apple", "Orange", "Pear"})
+
+</body>
+
+</html>

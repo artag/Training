@@ -236,3 +236,124 @@ This is a list of fruit names:
 
 
 ## Использование частичных представлений
+
+**Частичные представления** - отдельные файлы представлений, содержащие фрагменты дескрипторов и
+разметку, которые могут быть включены в другие представления.
+
+
+### Создание частичного представления
+
+Пример страницы частичного представления (`Views/Partial/MyPartial.cshtml`):
+```html
+<div>
+    <div>
+        This is the message from the partial view.
+    </div>
+    <div>
+        <a asp-action="Index">This is a link to the Index action</a>
+    </div>
+</div>
+```
+
+
+### Применение частичного представления
+
+Пример применения частичного представления (`Views/Partial/Index.cshtml`):
+```html
+...
+<body>
+    <div>
+        This is the Index View of Partial Controller.
+    </div>
+
+    @Html.Partial("MyPartial")
+    ...
+</body>
+...
+```
+
+`Partial()` - расширяющий метод, применяемый к свойству `Html`. Методу `Partial()` передается
+аргумент, указывающий имя частичного представления, содержимое которого вставляется в вывод,
+отправляемый клиенту.
+
+
+## Использование строго типизированных частичных представлений
+
+Пример строго типизированного частичного представления (из `Views/Partial/MyStronglyTypedPartial.cshtml`):
+```html
+@model IEnumerable<string>
+
+<div>
+    This is message from the partial view.
+    <ul>
+        @foreach (var str in Model)
+        {
+            <li>@str</li>
+        }
+    </ul>
+</div>
+```
+
+Его применение (из `Views/Partial/Index.cshtml`):
+```html
+...
+<body>
+    ...
+    @Html.Partial("MyStronglyTypedPartial", new string[] { "Apple", "Orange", "Pear"})
+    ...
+</body>
+...
+```
+
+
+## Добавление содержимого JSON в представления
+
+Содержимое JSON часто включается в представления с целью снабжения кода JavaScript клиентской
+стороны данными, которые могут применяться при динамической генерации содержимого.
+
+Пример (из `Views/Json/Index.cshtml`):
+```html
+...
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Razor</title>
+
+    <script id="jsonData" type="application/json">
+        @Json.Serialize(new string[] { "Apple", "Orange", "Pear" })
+    </script>
+    
+    <script asp-src-include="lib/jquery/*.min.js"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var list = $("#list")
+            JSON.parse($("#jsonData").text()).forEach(function(val) {
+                console.log("Val: " + val);
+                list.append($("<li>").text(val));
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div>
+        This is the List View
+    </div>
+
+    <div>
+        <ul id="list"></ul>
+    </div>
+</body>
+</html>
+```
+
+Выражение `@Json.Serialize` принимает объект и сериализирует его в JSON:
+```html
+<script id="jsonData" type="application/json">
+    @Json.Serialize(new string[] { "Apple", "Orange", "Pear" })
+</script>
+```
+
+Чтобы работать с данными JSON, добавляется библиотека `jQuery` и встраиваемый код JavaScript,
+который применяет ее для разбора данных JSON и динамически создает HTML-элементы.
