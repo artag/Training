@@ -85,10 +85,10 @@ services.Configure<RazorViewEngineOptions>(
 
 После запуска появится exception с перечнем мест, где производился поиск представления:
 ```
-/Views/Home/_Layout.cshtml
-/Views/Common/_Layout.cshtml
-/Pages/Common/_Layout.cshtml
-/Views/Legacy/Home/_Layout/View.cshtml
+/Views/Expander/MyView.cshtml
+/Views/Common/MyView.cshtml
+/Pages/Common/MyView.cshtml
+/Views/Legacy/Expander/MyView/View.cshtml
 ```
 
 Напомню, места по умолчанию, где производится поиск представления:
@@ -101,3 +101,94 @@ services.Configure<RazorViewEngineOptions>(
 
 ## Выбор специфических представлений для запросов
 
+Каждый раз, когда Razor требуется представление, он вызывает метод `PopulateValues()`,
+передавая `ViewLocationExpanderContext` для данных контекста.
+
+Свойства `ViewLocationExpanderContext`:
+* `ActionContext` - возвращает `ActionContext`. Описывает метод действия, запросивший представление,
+включает детали запроса и ответа.
+
+* `ViewName` - возвращает имя представления, которое запросил метод действия.
+
+* `ControllerName` - возвращает имя контроллера, который содержит метод действия.
+
+* `AreaName` - возвращает имя области, содержащей контроллер, если области были определены.
+
+* `IsMainPage` - возвращает `false`, если Razor ищет частичное представление,
+`true` - в противном случае.
+
+* `Values` - возвращает `IDictionary<string, string>`, к которому расширитель местоположений
+представлений добавляет пары "ключ-значение", уникально идентифицирующие категорию запроса
+(см. далее).
+
+Пример (из `Infrastructure/ColorExpander.cs`):
+```cs
+public class ColorExpander : IViewLocationExpander
+{
+    private static Dictionary<string, string> Colors = new Dictionary<string, string>
+    {
+        ["red"] = "Red", ["green"] = "Green", ["blue"] = "Blue",
+    };
+
+    public void PopulateValues(ViewLocationExpanderContext context)
+    {
+        var routeValues = context.ActionContext.RouteData.Values;
+
+        if (routeValues.ContainsKey("id") &&
+            Colors.TryGetValue(routeValues["id"] as string, out string color) &&
+            !string.IsNullOrEmpty(color))
+        {
+            context.Values["color"] = color;
+        }
+    }
+
+    public IEnumerable<string> ExpandViewLocations(
+        ViewLocationExpanderContext context, IEnumerable<string> viewLocations)
+    {
+        context.Values.TryGetValue("color", out var color);
+        foreach (var location in viewLocations)
+        {
+            if (!string.IsNullOrEmpty(color))
+            {
+                yield return location.Replace("{0}", color);
+            }
+            else
+            {
+                yield return location;
+            }
+        }
+    }
+}
+```
+
+`PopulateValues()` использует `ActionContext` для получения данных маршрутизации и ищет значение
+сегмента `id` в URL. Если есть сегмент `id` и его значением является `red`, `green` или `blue`,
+тогда расширитель местоположений представлений добавляет в словарь `Values` ключ `color`.
+
+`ExpandViewLocations()` генерирует набор мест с учетом наличия ключа `color` в словаре `Values`.
+
+Включение в использование класса `ColorExpander` (в `Startup.ConfigureServices()`):
+```cs
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddMvc();
+    services.Configure<RazorViewEngineOptions>(
+        options =>
+        {
+            options.ViewLocationExpanders.Add(new SimpleExpander());
+            options.ViewLocationExpanders.Add(new ColorExpander());
+        });
+}
+```
+
+Порядок регистрации расширителей местоположений представлений важен, т.к. каждый расширитель передает
+следующему набор маршрутов.
+
+Теперь, запустив с URL вида `https://localhost:44343/Expander/Index/blue` можно получить такие
+маршруты поиска:
+```
+/Views/Expander/Blue.cshtml
+/Views/Common/Blue.cshtml
+/Pages/Common/Blue.cshtml
+/Views/Legacy/Expander/Blue/View.cshtml
+```
