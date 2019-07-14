@@ -3,9 +3,37 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    <link rel="stylesheet"
+          href="~/node_modules/bootstrap/dist/css/bootstrap.min.css"/>
 </head>
 
-<body>
+<body class="m-1 p-1">
+<div class="bg-primary m-1 p-1">
+    <div class="row text-white">
+        <div class="col col-7">
+            <h1>Products</h1>
+        </div>
+    </div>
+    <div class="row text-white">
+        <div class="col col-lg-2">
+            Using POCO returns string: <br />
+            @await Component.InvokeAsync("Poco")
+        </div>
+        <div class="col col-lg-2">
+            Using CitySummary returns string: <br />
+            @await Component.InvokeAsync(nameof(CitySummary))
+        </div>
+        <div class="col col-lg-2">
+            Using CitySummary returns View: <br />
+            @await Component.InvokeAsync(nameof(CitySummaryView))
+        </div>
+    </div>
+</div>
+
+<div class="m-1 p-1">
+    @RenderBody()
+</div>
 
 </body>
 </html>

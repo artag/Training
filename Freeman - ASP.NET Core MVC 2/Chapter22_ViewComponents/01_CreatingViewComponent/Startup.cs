@@ -1,4 +1,5 @@
 ﻿using CreatingViewComponent.Middleware;
+using CreatingViewComponent.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,9 @@ namespace CreatingViewComponent
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IProductRepository, MemoryProductRepository>();
+            services.AddSingleton<ICityRepository, MemoryCityRepository>();
+            services.AddMvc();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
