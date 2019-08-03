@@ -1,3 +1,6 @@
+# Использование списка в виде стека
+# Используется append() и pop()
+
 stack = []
 stack.append('abc')
 stack.append('def')
@@ -9,6 +12,9 @@ while len(stack) > 0:
     print('Popped:', popped)
     print('Stack:', stack)
 print('\n---\n')
+
+# Использование списка в виде очереди
+# Используется append() и pop(0)
 
 queue = []
 queue.append('abc')
