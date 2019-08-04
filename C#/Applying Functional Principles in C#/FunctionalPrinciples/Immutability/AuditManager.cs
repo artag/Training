@@ -37,14 +37,9 @@ namespace Immutability
 
         public IReadOnlyList<FileAction> RemoveMentionsAbout(string visitorName, FileContent[] directoryFiles)
         {
-            var result = new List<FileAction>();
-            foreach (var file in directoryFiles)
-            {
-                var action = RemoveMentionsIn(file, visitorName);
-                result.Add(action);
-            }
-
-            return result;
+            return directoryFiles
+                .Select(file => RemoveMentionsIn(file, visitorName))
+                .ToList();
 
             ////foreach (var fileName in Directory.GetFiles(directoryName))
             ////{
