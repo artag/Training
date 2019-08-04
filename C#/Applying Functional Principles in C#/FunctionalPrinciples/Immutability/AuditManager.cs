@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -13,21 +14,24 @@ namespace Immutability
             _maxEntriesPerFile = maxEntriesPerFile;
         }
 
-        public void AddRecord(string currentFile, string visitorName, DateTime timeOfVisit)
+        public FileAction AddRecord(FileContent currentFile, string visitorName, DateTime timeOfVisit)
         {
-            var lines = File.ReadAllLines(currentFile);
+            var entries = Parse(currentFile.Content); 
 
-            if (lines.Length < _maxEntriesPerFile)
+            if (entries.Count < _maxEntriesPerFile)
             {
-                var lastIndex = int.Parse(lines.Last().Split(';')[0]);
-                var newLine = (lastIndex + 1) + ';' + visitorName + ';' + timeOfVisit.ToString("s");
-                File.AppendAllLines(currentFile, new[] { newLine });
+                entries.Add(new AuditEntry(entries.Count + 1, visitorName, timeOfVisit));
+                var newContent = Serialize(entries);
+
+                return new FileAction(currentFile.FileName, ActionType.Update, newContent);
             }
             else
             {
-                var newLine = "1;" + visitorName + ";" + timeOfVisit.ToString("s");
-                var newFileName = GetNewFileName(currentFile);
-                File.WriteAllLines(newFileName, new[] { newLine });
+                var entry = new AuditEntry(1, visitorName, timeOfVisit);
+                var newContent = Serialize(new[] {entry});
+                var newFileName = GetNewFileName(currentFile.FileName);
+
+                return new FileAction(newFileName, ActionType.Create, newContent);
             }
         }
 
@@ -52,6 +56,26 @@ namespace Immutability
                     File.Move(tempFile, fileName);
                 }
             }
+        }
+
+        private List<AuditEntry> Parse(IEnumerable<string> content)
+        {
+            var result = new List<AuditEntry>();
+
+            foreach (var line in content)
+            {
+                var data = line.Split(';');
+                result.Add(new AuditEntry(int.Parse(data[0]), data[1], DateTime.Parse(data[2])));
+            }
+
+            return result;
+        }
+
+        private string[] Serialize(IEnumerable<AuditEntry> entries)
+        {
+            return entries
+                .Select(entry => entry.Number + ';' + entry.Visitor + ';' + entry.TimeOfVisit.ToString("s"))
+                .ToArray();
         }
 
         private string GetNewFileName(string existingFileName)
