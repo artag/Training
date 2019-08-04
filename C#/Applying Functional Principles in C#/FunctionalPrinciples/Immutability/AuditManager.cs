@@ -42,26 +42,6 @@ namespace Immutability
                 .Where(action => action.HasValue)
                 .Select(action => action.Value)
                 .ToList();
-
-            ////foreach (var fileName in Directory.GetFiles(directoryName))
-            ////{
-            ////    var tempFile = Path.GetTempFileName();
-            ////    var linesToKeep = File
-            ////        .ReadLines(fileName)
-            ////        .Where(line => !line.Contains(visitorName))
-            ////        .ToList();
-
-            ////    if (linesToKeep.Count == 0)
-            ////    {
-            ////        File.Delete(fileName);
-            ////    }
-            ////    else
-            ////    {
-            ////        File.WriteAllLines(tempFile, linesToKeep);
-            ////        File.Delete(fileName);
-            ////        File.Move(tempFile, fileName);
-            ////    }
-            ////}
         }
 
         private FileAction? RemoveMentionsIn(FileContent file, string visitorName)
