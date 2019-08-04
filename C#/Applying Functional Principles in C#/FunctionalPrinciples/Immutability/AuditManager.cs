@@ -64,7 +64,7 @@ namespace Immutability
 
             foreach (var line in content)
             {
-                var data = line.Split(';');
+                var data = line.Split(";");
                 result.Add(new AuditEntry(int.Parse(data[0]), data[1], DateTime.Parse(data[2])));
             }
 
@@ -74,14 +74,14 @@ namespace Immutability
         private string[] Serialize(IEnumerable<AuditEntry> entries)
         {
             return entries
-                .Select(entry => entry.Number + ';' + entry.Visitor + ';' + entry.TimeOfVisit.ToString("s"))
+                .Select(entry => entry.Number + ";" + entry.Visitor + ";" + entry.TimeOfVisit.ToString("s"))
                 .ToArray();
         }
 
         private string GetNewFileName(string existingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(existingFileName);
-            var index = int.Parse(fileName.Split('_')[1]);
+            var index = int.Parse(fileName.Split("_")[1]);
             return "Audit_" + (index + 1) + ".txt";
         }
     }
