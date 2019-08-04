@@ -71,6 +71,11 @@ namespace Immutability
                 .Select((entry, index) => new AuditEntry(index + 1, entry.Visitor, entry.TimeOfVisit))
                 .ToList();
 
+            if (newContent.Count == 0)
+            {
+                return new FileAction(file.FileName, ActionType.Delete, new string[0]);
+            }
+
             return new FileAction(file.FileName, ActionType.Update, Serialize(newContent));
         }
 

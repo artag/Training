@@ -68,5 +68,21 @@ namespace Immutability.Tests
                 "2;Jack Rich;2016-04-06T17:00:00"
             }, action[0].Content);
         }
+
+        [Fact]
+        public void RemoveMentionsAbout_removes_whole_file_if_it_doesnt_contain_anything_else()
+        {
+            var manager = new AuditManager(10);
+            var file = new FileContent("Audit_1.txt", new[]
+            {
+                "1;Peter Peterson;2016-04-06T16:30:00"
+            });
+
+            var action = manager.RemoveMentionsAbout("Peter Peterson", new[] { file });
+
+            Assert.Equal(1, action.Count);
+            Assert.Equal("Audit_1.txt", action[0].FileName);
+            Assert.Equal(ActionType.Delete, action[0].Type);
+        }
     }
 }
