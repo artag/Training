@@ -35,27 +35,48 @@ namespace Immutability
             }
         }
 
-        public void RemoveMentionsAbout(string visitorName, string directoryName)
+        public IReadOnlyList<FileAction> RemoveMentionsAbout(string visitorName, FileContent[] directoryFiles)
         {
-            foreach (var fileName in Directory.GetFiles(directoryName))
+            var result = new List<FileAction>();
+            foreach (var file in directoryFiles)
             {
-                var tempFile = Path.GetTempFileName();
-                var linesToKeep = File
-                    .ReadLines(fileName)
-                    .Where(line => !line.Contains(visitorName))
-                    .ToList();
-
-                if (linesToKeep.Count == 0)
-                {
-                    File.Delete(fileName);
-                }
-                else
-                {
-                    File.WriteAllLines(tempFile, linesToKeep);
-                    File.Delete(fileName);
-                    File.Move(tempFile, fileName);
-                }
+                var action = RemoveMentionsIn(file, visitorName);
+                result.Add(action);
             }
+
+            return result;
+
+            ////foreach (var fileName in Directory.GetFiles(directoryName))
+            ////{
+            ////    var tempFile = Path.GetTempFileName();
+            ////    var linesToKeep = File
+            ////        .ReadLines(fileName)
+            ////        .Where(line => !line.Contains(visitorName))
+            ////        .ToList();
+
+            ////    if (linesToKeep.Count == 0)
+            ////    {
+            ////        File.Delete(fileName);
+            ////    }
+            ////    else
+            ////    {
+            ////        File.WriteAllLines(tempFile, linesToKeep);
+            ////        File.Delete(fileName);
+            ////        File.Move(tempFile, fileName);
+            ////    }
+            ////}
+        }
+
+        private FileAction RemoveMentionsIn(FileContent file, string visitorName)
+        {
+            var entries = Parse(file.Content);
+
+            var newContent = entries
+                .Where(entry => entry.Visitor != visitorName)
+                .Select((entry, index) => new AuditEntry(index + 1, entry.Visitor, entry.TimeOfVisit))
+                .ToList();
+
+            return new FileAction(file.FileName, ActionType.Update, Serialize(newContent));
         }
 
         private List<AuditEntry> Parse(IEnumerable<string> content)

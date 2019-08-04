@@ -45,5 +45,28 @@ namespace Immutability.Tests
                 "1;Tom Tomson;2016-04-06T17:30:00"
             }, action.Content);
         }
+
+        [Fact]
+        public void RemoveMentionsAbout_removes_mentions_from_files_in_the_directory()
+        {
+            var manager = new AuditManager(10);
+            var file = new FileContent("Audit_1.txt", new[]
+            {
+                "1;Peter Peterson;2016-04-06T16:30:00",
+                "2;Jane Doe;2016-04-06T16:40:00",
+                "3;Jack Rich;2016-04-06T17:00:00"
+            });
+
+            var action = manager.RemoveMentionsAbout("Peter Peterson", new[] { file });
+
+            Assert.Equal(1, action.Count);
+            Assert.Equal("Audit_1.txt", action[0].FileName);
+            Assert.Equal(ActionType.Update, action[0].Type);
+            Assert.Equal(new[]
+            {
+                "1;Jane Doe;2016-04-06T16:40:00",
+                "2;Jack Rich;2016-04-06T17:00:00"
+            }, action[0].Content);
+        }
     }
 }
