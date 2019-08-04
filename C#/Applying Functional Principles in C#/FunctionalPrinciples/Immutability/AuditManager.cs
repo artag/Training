@@ -39,6 +39,8 @@ namespace Immutability
         {
             return directoryFiles
                 .Select(file => RemoveMentionsIn(file, visitorName))
+                .Where(action => action.HasValue)
+                .Select(action => action.Value)
                 .ToList();
 
             ////foreach (var fileName in Directory.GetFiles(directoryName))
@@ -62,7 +64,7 @@ namespace Immutability
             ////}
         }
 
-        private FileAction RemoveMentionsIn(FileContent file, string visitorName)
+        private FileAction? RemoveMentionsIn(FileContent file, string visitorName)
         {
             var entries = Parse(file.Content);
 
@@ -70,6 +72,12 @@ namespace Immutability
                 .Where(entry => entry.Visitor != visitorName)
                 .Select((entry, index) => new AuditEntry(index + 1, entry.Visitor, entry.TimeOfVisit))
                 .ToList();
+
+            // There is nothing to update
+            if (newContent.Count == entries.Count)
+            {
+                return null;
+            }
 
             if (newContent.Count == 0)
             {
