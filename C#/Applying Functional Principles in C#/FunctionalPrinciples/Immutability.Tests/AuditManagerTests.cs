@@ -57,16 +57,16 @@ namespace Immutability.Tests
                 "3;Jack Rich;2016-04-06T17:00:00"
             });
 
-            var action = manager.RemoveMentionsAbout("Peter Peterson", new[] { file });
+            var actions = manager.RemoveMentionsAbout("Peter Peterson", new[] { file });
 
-            Assert.Equal(1, action.Count);
-            Assert.Equal("Audit_1.txt", action[0].FileName);
-            Assert.Equal(ActionType.Update, action[0].Type);
+            Assert.Equal(1, actions.Count);
+            Assert.Equal("Audit_1.txt", actions[0].FileName);
+            Assert.Equal(ActionType.Update, actions[0].Type);
             Assert.Equal(new[]
             {
                 "1;Jane Doe;2016-04-06T16:40:00",
                 "2;Jack Rich;2016-04-06T17:00:00"
-            }, action[0].Content);
+            }, actions[0].Content);
         }
 
         [Fact]
@@ -78,11 +78,11 @@ namespace Immutability.Tests
                 "1;Peter Peterson;2016-04-06T16:30:00"
             });
 
-            var action = manager.RemoveMentionsAbout("Peter Peterson", new[] { file });
+            var actions = manager.RemoveMentionsAbout("Peter Peterson", new[] { file });
 
-            Assert.Equal(1, action.Count);
-            Assert.Equal("Audit_1.txt", action[0].FileName);
-            Assert.Equal(ActionType.Delete, action[0].Type);
+            Assert.Equal(1, actions.Count);
+            Assert.Equal("Audit_1.txt", actions[0].FileName);
+            Assert.Equal(ActionType.Delete, actions[0].Type);
         }
 
         [Fact]
@@ -94,9 +94,9 @@ namespace Immutability.Tests
                 "1;Jane Smith;2016-04-06T16:30:00"
             });
 
-            var action = manager.RemoveMentionsAbout("Peter Peterson", new[] { file });
+            var actions = manager.RemoveMentionsAbout("Peter Peterson", new[] { file });
 
-            Assert.Equal(0, action.Count);
+            Assert.Equal(0, actions.Count);
         }
     }
 }
