@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Configuration": {
+      "commandName": "Project",
+      "commandLineArgs": "/App:Name=AppNameFromCmdArgs /User:Name=UserNameFromCmdArgs",
+      "environmentVariables": {
+        "MyPrefix_User:Name": "UserNameFromEnv",
+        "MyPrefix_App:Name": "AppNameFromEnv"
+      }
+    }
+  }
+}

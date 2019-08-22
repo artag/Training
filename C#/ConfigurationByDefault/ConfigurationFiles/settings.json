@@ -1,0 +1,8 @@
+{
+  "User": {
+    "BirthDate": "2019-08-22"
+  },
+  "App": {
+    "Name": "NameFromJson"
+  },
+}
