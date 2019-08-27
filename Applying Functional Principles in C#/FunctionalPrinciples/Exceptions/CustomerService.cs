@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using OperationResult;
 
 namespace Exceptions
 {
@@ -7,15 +8,15 @@ namespace Exceptions
         public void CreateCustomer(string name)
         {
             var customer = new Customer(name);
-            bool result = SaveCustomer(customer);
+            var result = SaveCustomer(customer);
 
-            if (!result)
+            if (result.IsFailure)
             {
-                MessageBox.Show("Error connecting to the database. Please try again later.");
+                MessageBox.Show(result.Error);
             }
         }
 
-        private bool SaveCustomer(Customer customer)
+        private Result SaveCustomer(Customer customer)
         {
             try
             {
@@ -25,16 +26,16 @@ namespace Exceptions
                     context.SaveChanges();
                 }
 
-                return true;
+                return Result.Ok();
             }
             catch (DbUpdateException ex)
             {
                 // Обрабатываем только те исключения, которые можем.
                 if (ex.Message == "Unable to open the DB connection")
-                    return false;
+                    return Result.Fail("Database is off-line");
 
                 if (ex.Message.Contains("IX_Customer_Name"))
-                    return false;
+                    return Result.Fail("Customer with such name already exists");
                     
                 // Все остальные исключения - это аварийные случаи и ловятся только
                 // на самом верхнем уровне.
@@ -42,27 +43,24 @@ namespace Exceptions
             }
         }
 
-        private bool GetCustomer(int id, out Customer customer)
+        private Result<Customer> GetCustomer(int id)
         {
             try
             {
                 using (var context = new MyContext())
                 {
-                    customer = context.Customers.Single(x => x.Id == id);
+                    return Result.Ok(context.Customers.Single(x => x.Id == id));
                 }
             }
             catch (DbUpdateException ex)
             {
                 if (ex.Message == "Unable to open the DB connection")
                 {
-                    customer = null;
-                    return false;
+                    return Result.Fail<Customer>("Database is off-line");
                 }
 
                 throw;
             }
-
-            return true;
         }
     }
 }
