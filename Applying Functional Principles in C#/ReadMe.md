@@ -247,7 +247,8 @@ private void ValidateName(string name) {
 
 **Плохо:**
 
-* Исключения, если их не поймать действуют как операция goto
+* Исключения, если их не поймать действуют как операция goto (даже еще хуже - исключение может
+"перепрыгнуть" через несколько уровней стека).
 * По сигнатуре метода не понятно, что может выкинуться исключение
 
 
@@ -283,6 +284,11 @@ private string ValidateName(string name)
 }
 ```
 
+Можно сделать еще лучше: использовать вместо `string` класс `Result` или `ResultWithEnum`
+(см. далее).
+
+См. код в проекте `Exceptions`, класс `EmployeeController`
+
 ### Правила
 
 ```
@@ -292,6 +298,40 @@ private string ValidateName(string name)
 * Don’t use exceptions in situations you expect to happen
 ```
 
+Все необходимые проверки (наподобие приведенных чуть выше) выполнять на входных границах.
+Например, для ASP.NET - это уровень `Controller`:
+
+```csharp
+// Уровень контроллера. Здесь производится валидация ввода.
+public ActionResult UpdateEmployee(int employeeId, string name)
+{
+    var error = ValidateName(name);
+    if (error != string.Empty)
+        return View("Error", error);
+
+    Employee employee = GetEmployee(employeeId);
+    employee.UpdateName(name);
+}
+
+// Внутренний класс. Здесь валидация уже не требуется.
+public class Employee
+{
+    public void UpdateName(string name)
+    {
+        // Эта ситуация уже нестандартная (аварийная) - выбрасывается исключение,
+        // которое ловится на самом верхнем уровне.
+        if (name == null)
+            throw new ArgumentNullException();
+
+        // ...
+    }
+}
+```
+
+Опять же, можно сделать еще лучше: использовать вместо `string` класс `Result` или
+`ResultWithEnum` (см. далее).
+
+См. код в проекте `Exceptions`, класс `EmployeeController`
 
 ### Fail Fast Principle
 
@@ -360,8 +400,8 @@ public static void Main()
     catch (Exception ex)
     {
         LogException(ex);              // Запись в логи
-        ShowGenericApology();          // Прекращение работы
-        Environment.FailFast(null);
+        ShowGenericApology();          // Показать сообщение типа "что-то пошло не так..."
+        Environment.FailFast(null);    // Прекращение работы
     }
 }
 ```
@@ -419,6 +459,7 @@ private bool SaveCustomer(Customer customer) {
 1. Ловим исключения более избирательно
 2. Возвращаем строки с информацией об ошибке
 3. То, что не знаем как обработать, выкидываем на более верхние уровни.
+4. Добавление возвращаемого `string` вместо обычного `bool` (см. примеры выше). 
 
 ```csharp
 public void CreateCustomer(string name)
@@ -527,6 +568,8 @@ private Result<Customer> GetCustomer(int id)
 }
 ```
 
+См. пример в проекте `Exceptions`, класс `CustomerService`.
+
 <span style="color:green">"И еще лучше и еще более грамотный код. Использование класса `ResultWithEnum`"</span>
 
 Более строгая фильтрация ошибок, используя enum `ErrorType`
@@ -593,4 +636,6 @@ private Result<Customer> GetCustomer(int id)
     }
 }
 ```
+
+См. пример в проекте `Exceptions`, класс `CustomerService2`.
 
