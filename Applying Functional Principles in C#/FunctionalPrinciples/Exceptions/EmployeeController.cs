@@ -9,6 +9,7 @@ namespace Exceptions
         {
             try
             {
+                // Валидация ввода.
                 var result = ValidateName(name);
                 if (result.IsFailure)
                 {
@@ -25,6 +26,22 @@ namespace Exceptions
             }
         }
 
+        public ActionResult UpdateEmployee(int employeeId, string name)
+        {
+            // Валидация ввода.
+            var result = ValidateName(name);
+            if (result.IsFailure)
+            {
+                return View("Error", result.Error);
+            }
+
+            // Все нормально, запуск рабочего кода.
+            Employee employee = GetEmployee(employeeId);
+            employee.UpdateName(name);
+
+            return View("Success");
+        }
+
         private Result ValidateName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -34,6 +51,12 @@ namespace Exceptions
                 return Result.Fail("Name is too long");
 
             return Result.Ok();
+        }
+
+        // Mock method
+        private Employee GetEmployee(int employeeId)
+        {
+            return null;
         }
     }
 }
