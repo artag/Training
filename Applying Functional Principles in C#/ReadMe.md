@@ -1,11 +1,11 @@
 # What Is Functional Programming
 
-### Особенности:
+### РћСЃРѕР±РµРЅРЅРѕСЃС‚Рё:
 
-* Same input – same result
+* Same input вЂ“ same result
 * Information about possible inputs and outcomes
 
-<span style="color:green">"Хороший код"</span>
+<span style="color:green">"РҐРѕСЂРѕС€РёР№ РєРѕРґ"</span>
 
 ```csharp
 public double Calculate(double x, double y)
@@ -14,7 +14,7 @@ public double Calculate(double x, double y)
 }
 ```
 
-<span style="color:red">"Плохой код"</span>
+<span style="color:red">"РџР»РѕС…РѕР№ РєРѕРґ"</span>
 
 Result is always different
 
@@ -28,7 +28,7 @@ public long TicksElapsedFrom(int year)
 }
 ```
 
-<span style="color:red">"Плохой код" (Dishonest signature)</span>
+<span style="color:red">"РџР»РѕС…РѕР№ РєРѕРґ" (Dishonest signature)</span>
 
 DivideByZeroException
 
@@ -39,7 +39,7 @@ public static int Divide(int x, int y)
 }
 ```
 
-<span style="color:green">"Хороший код"</span>
+<span style="color:green">"РҐРѕСЂРѕС€РёР№ РєРѕРґ"</span>
 
 Method Signature Honesty
 
@@ -49,7 +49,7 @@ public static int Divide(int x, NonZeroInteger y)
     return x / y.Value;
 }
 
-// или
+// РёР»Рё
 
 public static int? Divide(int x, int y)
 {
@@ -60,10 +60,10 @@ public static int? Divide(int x, int y)
 }
 ```
 
-### Особенности:
+### РћСЃРѕР±РµРЅРЅРѕСЃС‚Рё:
 
 * Honest - Has precisely defined input and output
-* Referentially transparent - Doesn’t affect or refer to the global state
+* Referentially transparent - DoesnвЂ™t affect or refer to the global state
 
 
 # Refactoring to an Immutable Architecture
@@ -72,9 +72,9 @@ public static int? Divide(int x, int y)
 **State** - Data that changes over time
 **Side effect** - A change that is made to some state
 
-<span style="color:red">"Плохой код"</span>
+<span style="color:red">"РџР»РѕС…РѕР№ РєРѕРґ"</span>
 
-Есть Side effects
+Р•СЃС‚СЊ Side effects
 
 ```csharp
 public class UserProfile {
@@ -97,7 +97,7 @@ public class User {
 }
 ```
 
-<span style="color:green">"Улучшенный код"</span>
+<span style="color:green">"РЈР»СѓС‡С€РµРЅРЅС‹Р№ РєРѕРґ"</span>
 
 ```csharp
 public class UserProfile {
@@ -140,11 +140,11 @@ public class User {
 * Memory Usage
 
 ```csharp
-// Пример. Добавление нового элемента в immutable список, создает копию исходного списка
+// РџСЂРёРјРµСЂ. Р”РѕР±Р°РІР»РµРЅРёРµ РЅРѕРІРѕРіРѕ СЌР»РµРјРµРЅС‚Р° РІ immutable СЃРїРёСЃРѕРє, СЃРѕР·РґР°РµС‚ РєРѕРїРёСЋ РёСЃС…РѕРґРЅРѕРіРѕ СЃРїРёСЃРєР°
 ImmutableList<string> list = ImmutableList.Create<string>();
 ImmutableList<string> list2 = list.Add("New item");
 
-// Более грамотный пример. Использование "гибридного" immutable списка.
+// Р‘РѕР»РµРµ РіСЂР°РјРѕС‚РЅС‹Р№ РїСЂРёРјРµСЂ. РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ "РіРёР±СЂРёРґРЅРѕРіРѕ" immutable СЃРїРёСЃРєР°.
 ImmutableList<string>.Builder builder = ImmutableList.CreateBuilder<string>();
 builder.Add("Line 1");
 builder.Add("Line 2");
@@ -155,7 +155,7 @@ ImmutableList<string> immutableList = builder.ToImmutable();
 
 # How to Deal with Side Effects
 
-Command–query separation principle
+CommandвЂ“query separation principle
 
 **Command**
 * Produces side effects
@@ -165,7 +165,7 @@ Command–query separation principle
 * Side-effect free
 * Returns non-void
 
-Пример:
+РџСЂРёРјРµСЂ:
 ```csharp
 public class CustomerService {
     // Command
@@ -193,25 +193,25 @@ public class CustomerService {
 }
 ```
 
-Еще пример:
+Р•С‰Рµ РїСЂРёРјРµСЂ:
 ```csharp
 var stack = new Stack<string>();
 stack.Push("value");             // Command
 string value = stack.Pop();      // Both query and command
 ```
 
-Приложение делится на две части:
+РџСЂРёР»РѕР¶РµРЅРёРµ РґРµР»РёС‚СЃСЏ РЅР° РґРІРµ С‡Р°СЃС‚Рё:
 * Domain Logic - Generates artifacts
-* Mutating state ("внешний мир") - Uses artifacts to change the system's state
+* Mutating state ("РІРЅРµС€РЅРёР№ РјРёСЂ") - Uses artifacts to change the system's state
 
-Правила:
+РџСЂР°РІРёР»Р°:
 * Make the mutable shell as dumb as possible
-(Делать внешние mutable сервисы как можно более простыми)
+(Р”РµР»Р°С‚СЊ РІРЅРµС€РЅРёРµ mutable СЃРµСЂРІРёСЃС‹ РєР°Рє РјРѕР¶РЅРѕ Р±РѕР»РµРµ РїСЂРѕСЃС‚С‹РјРё)
 
 * Apply side effect at the end of a business transaction
-(Крайне желательно использовать mutable сервисы в конце операции)
+(РљСЂР°Р№РЅРµ Р¶РµР»Р°С‚РµР»СЊРЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ mutable СЃРµСЂРІРёСЃС‹ РІ РєРѕРЅС†Рµ РѕРїРµСЂР°С†РёРё)
 
-### Пример Audit manager (проект Immutable)
+### РџСЂРёРјРµСЂ Audit manager (РїСЂРѕРµРєС‚ Immutable)
 
 Audit manager - immutable
 Persister, Application service - mutable
@@ -219,9 +219,9 @@ Persister, Application service - mutable
 
 # Refactoring Away from Exceptions
 
-<span style="color:red">"Плохой код"</span>
+<span style="color:red">"РџР»РѕС…РѕР№ РєРѕРґ"</span>
 
-Типичный пример валидации
+РўРёРїРёС‡РЅС‹Р№ РїСЂРёРјРµСЂ РІР°Р»РёРґР°С†РёРё
 
 ```csharp
 public ActionResult CreateEmployee(string name) {
@@ -245,18 +245,18 @@ private void ValidateName(string name) {
 }
 ```
 
-**Плохо:**
+**РџР»РѕС…Рѕ:**
 
-* Исключения, если их не поймать действуют как операция goto (даже еще хуже - исключение может
-"перепрыгнуть" через несколько уровней стека).
-* По сигнатуре метода не понятно, что может выкинуться исключение
+* РСЃРєР»СЋС‡РµРЅРёСЏ, РµСЃР»Рё РёС… РЅРµ РїРѕР№РјР°С‚СЊ РґРµР№СЃС‚РІСѓСЋС‚ РєР°Рє РѕРїРµСЂР°С†РёСЏ goto (РґР°Р¶Рµ РµС‰Рµ С…СѓР¶Рµ - РёСЃРєР»СЋС‡РµРЅРёРµ РјРѕР¶РµС‚
+"РїРµСЂРµРїСЂС‹РіРЅСѓС‚СЊ" С‡РµСЂРµР· РЅРµСЃРєРѕР»СЊРєРѕ СѓСЂРѕРІРЅРµР№ СЃС‚РµРєР°).
+* РџРѕ СЃРёРіРЅР°С‚СѓСЂРµ РјРµС‚РѕРґР° РЅРµ РїРѕРЅСЏС‚РЅРѕ, С‡С‚Рѕ РјРѕР¶РµС‚ РІС‹РєРёРЅСѓС‚СЊСЃСЏ РёСЃРєР»СЋС‡РµРЅРёРµ
 
 
-<span style="color:green">"Хороший код"</span>
+<span style="color:green">"РҐРѕСЂРѕС€РёР№ РєРѕРґ"</span>
 
-1. Вместо выбрасывания исключений возвращаем строки с ошибками.
-2. Сигнатура метода выглядит уже более пристойно (хотя все еще неидеально)
-3. Срабатывание Validations это не Exceptional situation
+1. Р’РјРµСЃС‚Рѕ РІС‹Р±СЂР°СЃС‹РІР°РЅРёСЏ РёСЃРєР»СЋС‡РµРЅРёР№ РІРѕР·РІСЂР°С‰Р°РµРј СЃС‚СЂРѕРєРё СЃ РѕС€РёР±РєР°РјРё.
+2. РЎРёРіРЅР°С‚СѓСЂР° РјРµС‚РѕРґР° РІС‹РіР»СЏРґРёС‚ СѓР¶Рµ Р±РѕР»РµРµ РїСЂРёСЃС‚РѕР№РЅРѕ (С…РѕС‚СЏ РІСЃРµ РµС‰Рµ РЅРµРёРґРµР°Р»СЊРЅРѕ)
+3. РЎСЂР°Р±Р°С‚С‹РІР°РЅРёРµ Validations СЌС‚Рѕ РЅРµ Exceptional situation
 
 ```csharp
 public ActionResult CreateEmployee(string name)
@@ -284,25 +284,25 @@ private string ValidateName(string name)
 }
 ```
 
-Можно сделать еще лучше: использовать вместо `string` класс `Result` или `ResultWithEnum`
-(см. далее).
+РњРѕР¶РЅРѕ СЃРґРµР»Р°С‚СЊ РµС‰Рµ Р»СѓС‡С€Рµ: РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РІРјРµСЃС‚Рѕ `string` РєР»Р°СЃСЃ `Result` РёР»Рё `ResultWithEnum`
+(СЃРј. РґР°Р»РµРµ).
 
-См. код в проекте `Exceptions`, класс `EmployeeController`
+РЎРј. РєРѕРґ РІ РїСЂРѕРµРєС‚Рµ `Exceptions`, РєР»Р°СЃСЃ `EmployeeController`
 
-### Правила
+### РџСЂР°РІРёР»Р°
 
 ```
 * Always prefer using return values over exceptions.
 * Exceptions are for exceptional situations
 * Exceptions should signalize a bug
-* Don’t use exceptions in situations you expect to happen
+* DonвЂ™t use exceptions in situations you expect to happen
 ```
 
-Все необходимые проверки (наподобие приведенных чуть выше) выполнять на входных границах.
-Например, для ASP.NET - это уровень `Controller`:
+Р’СЃРµ РЅРµРѕР±С…РѕРґРёРјС‹Рµ РїСЂРѕРІРµСЂРєРё (РЅР°РїРѕРґРѕР±РёРµ РїСЂРёРІРµРґРµРЅРЅС‹С… С‡СѓС‚СЊ РІС‹С€Рµ) РІС‹РїРѕР»РЅСЏС‚СЊ РЅР° РІС…РѕРґРЅС‹С… РіСЂР°РЅРёС†Р°С….
+РќР°РїСЂРёРјРµСЂ, РґР»СЏ ASP.NET - СЌС‚Рѕ СѓСЂРѕРІРµРЅСЊ `Controller`:
 
 ```csharp
-// Уровень контроллера. Здесь производится валидация ввода.
+// РЈСЂРѕРІРµРЅСЊ РєРѕРЅС‚СЂРѕР»Р»РµСЂР°. Р—РґРµСЃСЊ РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ РІР°Р»РёРґР°С†РёСЏ РІРІРѕРґР°.
 public ActionResult UpdateEmployee(int employeeId, string name)
 {
     var error = ValidateName(name);
@@ -313,13 +313,13 @@ public ActionResult UpdateEmployee(int employeeId, string name)
     employee.UpdateName(name);
 }
 
-// Внутренний класс. Здесь валидация уже не требуется.
+// Р’РЅСѓС‚СЂРµРЅРЅРёР№ РєР»Р°СЃСЃ. Р—РґРµСЃСЊ РІР°Р»РёРґР°С†РёСЏ СѓР¶Рµ РЅРµ С‚СЂРµР±СѓРµС‚СЃСЏ.
 public class Employee
 {
     public void UpdateName(string name)
     {
-        // Эта ситуация уже нестандартная (аварийная) - выбрасывается исключение,
-        // которое ловится на самом верхнем уровне.
+        // Р­С‚Р° СЃРёС‚СѓР°С†РёСЏ СѓР¶Рµ РЅРµСЃС‚Р°РЅРґР°СЂС‚РЅР°СЏ (Р°РІР°СЂРёР№РЅР°СЏ) - РІС‹Р±СЂР°СЃС‹РІР°РµС‚СЃСЏ РёСЃРєР»СЋС‡РµРЅРёРµ,
+        // РєРѕС‚РѕСЂРѕРµ Р»РѕРІРёС‚СЃСЏ РЅР° СЃР°РјРѕРј РІРµСЂС…РЅРµРј СѓСЂРѕРІРЅРµ.
         if (name == null)
             throw new ArgumentNullException();
 
@@ -328,23 +328,23 @@ public class Employee
 }
 ```
 
-Опять же, можно сделать еще лучше: использовать вместо `string` класс `Result` или
-`ResultWithEnum` (см. далее).
+РћРїСЏС‚СЊ Р¶Рµ, РјРѕР¶РЅРѕ СЃРґРµР»Р°С‚СЊ РµС‰Рµ Р»СѓС‡С€Рµ: РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РІРјРµСЃС‚Рѕ `string` РєР»Р°СЃСЃ `Result` РёР»Рё
+`ResultWithEnum` (СЃРј. РґР°Р»РµРµ).
 
-См. код в проекте `Exceptions`, класс `EmployeeController`
+РЎРј. РєРѕРґ РІ РїСЂРѕРµРєС‚Рµ `Exceptions`, РєР»Р°СЃСЃ `EmployeeController`
 
 ### Fail Fast Principle
 
-Особенности:
+РћСЃРѕР±РµРЅРЅРѕСЃС‚Рё:
 
 * Stopping the current operation
 * More stable software
 
-<span style="color:red">"Плохой код"</span>
+<span style="color:red">"РџР»РѕС…РѕР№ РєРѕРґ"</span>
 
 Fail Silently
-1. Сокрытие проблемы
-2. Ловится все
+1. РЎРѕРєСЂС‹С‚РёРµ РїСЂРѕР±Р»РµРјС‹
+2. Р›РѕРІРёС‚СЃСЏ РІСЃРµ
 
 ```csharp
 public void ProcessItems(List<Item> items)
@@ -363,7 +363,7 @@ public void ProcessItems(List<Item> items)
 }
 ```
 
-<span style="color:green">"Хороший код"</span>
+<span style="color:green">"РҐРѕСЂРѕС€РёР№ РєРѕРґ"</span>
 
 Fail Fast
 
@@ -377,7 +377,7 @@ public void ProcessItems(List<Item> items)
 }
 ```
 
-### Правила:
+### РџСЂР°РІРёР»Р°:
 
 ```csharp
 * Shortening the feedback loop
@@ -387,8 +387,8 @@ public void ProcessItems(List<Item> items)
 
 ### Where to Catch Exceptions
 
-1. **Необработанные исключения** (которые не предусмотренные) ловить на самом верхнем уровне:
-Don’t put any domain logic here
+1. **РќРµРѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹Рµ РёСЃРєР»СЋС‡РµРЅРёСЏ** (РєРѕС‚РѕСЂС‹Рµ РЅРµ РїСЂРµРґСѓСЃРјРѕС‚СЂРµРЅРЅС‹Рµ) Р»РѕРІРёС‚СЊ РЅР° СЃР°РјРѕРј РІРµСЂС…РЅРµРј СѓСЂРѕРІРЅРµ:
+DonвЂ™t put any domain logic here
 
 ```csharp
 public static void Main()
@@ -399,34 +399,34 @@ public static void Main()
     }
     catch (Exception ex)
     {
-        LogException(ex);              // Запись в логи
-        ShowGenericApology();          // Показать сообщение типа "что-то пошло не так..."
-        Environment.FailFast(null);    // Прекращение работы
+        LogException(ex);              // Р—Р°РїРёСЃСЊ РІ Р»РѕРіРё
+        ShowGenericApology();          // РџРѕРєР°Р·Р°С‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ С‚РёРїР° "С‡С‚Рѕ-С‚Рѕ РїРѕС€Р»Рѕ РЅРµ С‚Р°Рє..."
+        Environment.FailFast(null);    // РџСЂРµРєСЂР°С‰РµРЅРёРµ СЂР°Р±РѕС‚С‹
     }
 }
 ```
 
-Application’s type
+ApplicationвЂ™s type
 * Stateful - Process shutdown 
 * Stateless - Operation shutdown
 
 
-2. **3-rd party library** выброс оттуда исключений
+2. **3-rd party library** РІС‹Р±СЂРѕСЃ РѕС‚С‚СѓРґР° РёСЃРєР»СЋС‡РµРЅРёР№
 
-* Ловить исключения на как можно более низком уровне.
-* Ловить только те исключения, которые мы знаем как обработать.
+* Р›РѕРІРёС‚СЊ РёСЃРєР»СЋС‡РµРЅРёСЏ РЅР° РєР°Рє РјРѕР¶РЅРѕ Р±РѕР»РµРµ РЅРёР·РєРѕРј СѓСЂРѕРІРЅРµ.
+* Р›РѕРІРёС‚СЊ С‚РѕР»СЊРєРѕ С‚Рµ РёСЃРєР»СЋС‡РµРЅРёСЏ, РєРѕС‚РѕСЂС‹Рµ РјС‹ Р·РЅР°РµРј РєР°Рє РѕР±СЂР°Р±РѕС‚Р°С‚СЊ.
 
-3. **Из нашего кода**
+3. **РР· РЅР°С€РµРіРѕ РєРѕРґР°**
 
-* Стараться не кидать исключения
-* Плюс два правила из предыдущего пункта
+* РЎС‚Р°СЂР°С‚СЊСЃСЏ РЅРµ РєРёРґР°С‚СЊ РёСЃРєР»СЋС‡РµРЅРёСЏ
+* РџР»СЋСЃ РґРІР° РїСЂР°РІРёР»Р° РёР· РїСЂРµРґС‹РґСѓС‰РµРіРѕ РїСѓРЅРєС‚Р°
 
-Пример:
+РџСЂРёРјРµСЂ:
 
-<span style="color:red">"Не очень хороший код"</span>
+<span style="color:red">"РќРµ РѕС‡РµРЅСЊ С…РѕСЂРѕС€РёР№ РєРѕРґ"</span>
 
-Проблема: `DbUpdateException` не слишком "узкое" исключение - можем поймать слишком
-много исключений различных видов.
+РџСЂРѕР±Р»РµРјР°: `DbUpdateException` РЅРµ СЃР»РёС€РєРѕРј "СѓР·РєРѕРµ" РёСЃРєР»СЋС‡РµРЅРёРµ - РјРѕР¶РµРј РїРѕР№РјР°С‚СЊ СЃР»РёС€РєРѕРј
+РјРЅРѕРіРѕ РёСЃРєР»СЋС‡РµРЅРёР№ СЂР°Р·Р»РёС‡РЅС‹С… РІРёРґРѕРІ.
 
 ```csharp
 public void CreateCustomer(string name) {
@@ -454,12 +454,12 @@ private bool SaveCustomer(Customer customer) {
 }
 ```
 
-<span style="color:green">"Более грамотный код"</span>
+<span style="color:green">"Р‘РѕР»РµРµ РіСЂР°РјРѕС‚РЅС‹Р№ РєРѕРґ"</span>
 
-1. Ловим исключения более избирательно
-2. Возвращаем строки с информацией об ошибке
-3. То, что не знаем как обработать, выкидываем на более верхние уровни.
-4. Добавление возвращаемого `string` вместо обычного `bool` (см. примеры выше). 
+1. Р›РѕРІРёРј РёСЃРєР»СЋС‡РµРЅРёСЏ Р±РѕР»РµРµ РёР·Р±РёСЂР°С‚РµР»СЊРЅРѕ
+2. Р’РѕР·РІСЂР°С‰Р°РµРј СЃС‚СЂРѕРєРё СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ РѕР± РѕС€РёР±РєРµ
+3. РўРѕ, С‡С‚Рѕ РЅРµ Р·РЅР°РµРј РєР°Рє РѕР±СЂР°Р±РѕС‚Р°С‚СЊ, РІС‹РєРёРґС‹РІР°РµРј РЅР° Р±РѕР»РµРµ РІРµСЂС…РЅРёРµ СѓСЂРѕРІРЅРё.
+4. Р”РѕР±Р°РІР»РµРЅРёРµ РІРѕР·РІСЂР°С‰Р°РµРјРѕРіРѕ `string` РІРјРµСЃС‚Рѕ РѕР±С‹С‡РЅРѕРіРѕ `bool` (СЃРј. РїСЂРёРјРµСЂС‹ РІС‹С€Рµ). 
 
 ```csharp
 public void CreateCustomer(string name)
@@ -497,22 +497,22 @@ private string SaveCustomer(Customer customer)
 }
 ```
 
-Но можно сделать лучше - возвращать не `string`, а специальные классы:
-**Result** или **ResultWithEnum** (см. решение `OperationResult`)
+РќРѕ РјРѕР¶РЅРѕ СЃРґРµР»Р°С‚СЊ Р»СѓС‡С€Рµ - РІРѕР·РІСЂР°С‰Р°С‚СЊ РЅРµ `string`, Р° СЃРїРµС†РёР°Р»СЊРЅС‹Рµ РєР»Р°СЃСЃС‹:
+**Result** РёР»Рё **ResultWithEnum** (СЃРј. СЂРµС€РµРЅРёРµ `OperationResult`)
 
-Их особенности:
+РС… РѕСЃРѕР±РµРЅРЅРѕСЃС‚Рё:
 
 * Helps keep methods honest
 * Incorporates the result of an operation with its status
 * Unified error model
 * Only for expected failures
 
-`Result` содержит строку с описанием ошибки.
+`Result` СЃРѕРґРµСЂР¶РёС‚ СЃС‚СЂРѕРєСѓ СЃ РѕРїРёСЃР°РЅРёРµРј РѕС€РёР±РєРё.
 
-Для более конкретной обработки ошибки можно использовать класс
-`ResultWithEnum`, который содержит enum `ErrorType`
+Р”Р»СЏ Р±РѕР»РµРµ РєРѕРЅРєСЂРµС‚РЅРѕР№ РѕР±СЂР°Р±РѕС‚РєРё РѕС€РёР±РєРё РјРѕР¶РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РєР»Р°СЃСЃ
+`ResultWithEnum`, РєРѕС‚РѕСЂС‹Р№ СЃРѕРґРµСЂР¶РёС‚ enum `ErrorType`
 
-<span style="color:green">"Еще более грамотный код. Использование класса `Result`"</span>
+<span style="color:green">"Р•С‰Рµ Р±РѕР»РµРµ РіСЂР°РјРѕС‚РЅС‹Р№ РєРѕРґ. РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РєР»Р°СЃСЃР° `Result`"</span>
 
 ```csharp
 public void CreateCustomer(string name)
@@ -568,11 +568,11 @@ private Result<Customer> GetCustomer(int id)
 }
 ```
 
-См. пример в проекте `Exceptions`, класс `CustomerService`.
+РЎРј. РїСЂРёРјРµСЂ РІ РїСЂРѕРµРєС‚Рµ `Exceptions`, РєР»Р°СЃСЃ `CustomerService`.
 
-<span style="color:green">"И еще лучше и еще более грамотный код. Использование класса `ResultWithEnum`"</span>
+<span style="color:green">"Р РµС‰Рµ Р»СѓС‡С€Рµ Рё РµС‰Рµ Р±РѕР»РµРµ РіСЂР°РјРѕС‚РЅС‹Р№ РєРѕРґ. РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РєР»Р°СЃСЃР° `ResultWithEnum`"</span>
 
-Более строгая фильтрация ошибок, используя enum `ErrorType`
+Р‘РѕР»РµРµ СЃС‚СЂРѕРіР°СЏ С„РёР»СЊС‚СЂР°С†РёСЏ РѕС€РёР±РѕРє, РёСЃРїРѕР»СЊР·СѓСЏ enum `ErrorType`
 
 ```csharp
 public void CreateCustomer(string name)
@@ -580,7 +580,7 @@ public void CreateCustomer(string name)
     var customer = new Customer(name);
     Result result = SaveCustomer(customer);
 
-    // Более точный показ MessageBox по сравнению с предыдущим вариантом
+    // Р‘РѕР»РµРµ С‚РѕС‡РЅС‹Р№ РїРѕРєР°Р· MessageBox РїРѕ СЃСЂР°РІРЅРµРЅРёСЋ СЃ РїСЂРµРґС‹РґСѓС‰РёРј РІР°СЂРёР°РЅС‚РѕРј
     switch (result.ErrorType)
     {
         case ErrorType.DatabaseIsOffline:
@@ -637,5 +637,5 @@ private Result<Customer> GetCustomer(int id)
 }
 ```
 
-См. пример в проекте `Exceptions`, класс `CustomerService2`.
+РЎРј. РїСЂРёРјРµСЂ РІ РїСЂРѕРµРєС‚Рµ `Exceptions`, РєР»Р°СЃСЃ `CustomerService2`.
 
