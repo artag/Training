@@ -1,6 +1,6 @@
 ﻿namespace Exceptions
 {
-    class Customer
+    public class Customer
     {
         public Customer(string name)
         {
