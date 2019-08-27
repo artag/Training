@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using OperationResult;
 
 namespace Exceptions
 {
@@ -8,10 +9,10 @@ namespace Exceptions
         {
             try
             {
-                string error = ValidateName(name);
-                if (error != string.Empty)
+                var result = ValidateName(name);
+                if (result.IsFailure)
                 {
-                    return View("Error", error);
+                    return View("Error", result.Error);
                 }
 
                 // Rest of the method
@@ -24,15 +25,15 @@ namespace Exceptions
             }
         }
 
-        private string ValidateName(string name)
+        private Result ValidateName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                return "Name cannot be empty";
+                return Result.Fail("Name cannot be empty");
 
             if (name.Length > 100)
-                return "Name is too long";
+                return Result.Fail("Name is too long");
 
-            return string.Empty;
+            return Result.Ok();
         }
     }
 }
