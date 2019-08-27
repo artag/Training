@@ -8,7 +8,12 @@ namespace Exceptions
         {
             try
             {
-                ValidateName(name);
+                string error = ValidateName(name);
+                if (error != string.Empty)
+                {
+                    return View("Error", error);
+                }
+
                 // Rest of the method
 
                 return View("Success");
@@ -19,13 +24,15 @@ namespace Exceptions
             }
         }
 
-        private void ValidateName(string name)
+        private string ValidateName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ValidationException("Name cannot be empty");
+                return "Name cannot be empty";
 
             if (name.Length > 100)
-                throw new ValidationException("Name is too long");
+                return "Name is too long";
+
+            return string.Empty;
         }
     }
 }
