@@ -29,7 +29,13 @@ namespace Exceptions
             }
             catch (DbUpdateException ex)
             {
-                return false;
+                // Обрабатываем только те исключения, которые можем.
+                if (ex.Message == "Unable to open the DB connection")
+                    return false;
+                // Все остальные исключения - это аварийные случаи и ловятся только
+                // на самом верхнем уровне.
+                else
+                    throw;
             }
         }
     }
