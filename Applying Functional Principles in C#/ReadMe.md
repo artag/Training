@@ -5,7 +5,7 @@
 * Same input – same result
 * Information about possible inputs and outcomes
 
-<span style="color:green">"Хороший код"</span>
+#### "Хороший код"
 
 ```csharp
 public double Calculate(double x, double y)
@@ -14,7 +14,7 @@ public double Calculate(double x, double y)
 }
 ```
 
-<span style="color:red">"Плохой код"</span>
+#### "Плохой код"
 
 Result is always different
 
@@ -28,7 +28,7 @@ public long TicksElapsedFrom(int year)
 }
 ```
 
-<span style="color:red">"Плохой код" (Dishonest signature)</span>
+#### "Плохой код" (Dishonest signature)
 
 DivideByZeroException
 
@@ -39,7 +39,7 @@ public static int Divide(int x, int y)
 }
 ```
 
-<span style="color:green">"Хороший код"</span>
+#### "Хороший код"
 
 Method Signature Honesty
 
@@ -69,19 +69,25 @@ public static int? Divide(int x, int y)
 # Refactoring to an Immutable Architecture
 
 **Immutability** - Inability to change data
+
 **State** - Data that changes over time
+
 **Side effect** - A change that is made to some state
 
-<span style="color:red">"Плохой код"</span>
+
+#### "Плохой код"
 
 Есть Side effects
 
 ```csharp
-public class UserProfile {
+public class UserProfile
+{
     private User _user;
     private string _address;
 
-    public void UpdateUser(int userId, string name) {
+    // Здесь side effect
+    public void UpdateUser(int userId, string name)
+    {
         _user = new User(userId, name);
     }
 }
@@ -90,26 +96,31 @@ public class User {
     public int Id { get; }
     public string Name { get; }
 
-    public User(int id, string name) {
+    public User(int id, string name)
+    {
         Id = id;
         Name = name;
     }
 }
 ```
 
-<span style="color:green">"Улучшенный код"</span>
+
+#### "Улучшенный код"
 
 ```csharp
-public class UserProfile {
+public class UserProfile
+{
     private readonly User _user;
     private readonly string _address;
 
-    public UserProfile(User user, string address) {
+    public UserProfile(User user, string address)
+    {
         _user = user;
         _address = address;
     }
 
-    public UserProfile UpdateUser(int userId, string name) {
+    public UserProfile UpdateUser(int userId, string name)
+    {
         var newUser = new User(userId, name);
         return new UserProfile(newUser, _address);
     }
@@ -126,6 +137,10 @@ public class User {
 }
 ```
 
+Пример см. также в solution `Immutability`, файл `UserProfile`.
+
+Еще один пример см. в solution `Immutability`, файл `CustomerService`.
+
 
 ### Why Does Immutability Matter?
 
@@ -136,15 +151,19 @@ public class User {
 
 ### Immutability Limitations
 
-* CPU Usage 
-* Memory Usage
+* CPU Usage - более высокая нагрузка на CPU
+* Memory Usage - более высокое использование RAM
+
+Как правило, не всегда удается полностью сделать все классы Immutable. 
+Но к этому нужно стремиться.
 
 ```csharp
-// Пример. Добавление нового элемента в immutable список, создает копию исходного списка
+// Пример. (ImmutableList доступен через Nuget)
+// Добавление нового элемента в immutable список, создает копию исходного списка.
 ImmutableList<string> list = ImmutableList.Create<string>();
 ImmutableList<string> list2 = list.Add("New item");
 
-// Более грамотный пример. Использование "гибридного" immutable списка.
+// Более грамотный пподход. Использование "гибридного" immutable списка.
 ImmutableList<string>.Builder builder = ImmutableList.CreateBuilder<string>();
 builder.Add("Line 1");
 builder.Add("Line 2");
@@ -153,54 +172,67 @@ ImmutableList<string> immutableList = builder.ToImmutable();
 ```
 
 
-# How to Deal with Side Effects
+### How to Deal with Side Effects (как бороться с побочными эффектами)
 
-Command–query separation principle
+#### Решение 1
 
-**Command**
-* Produces side effects
-* Returns void
+Command–query separation principle (CQS или CQRS). Разделение поведения на Command и Query.
 
-**Query**
-* Side-effect free
-* Returns non-void
+**Особенности Command**
+* Produces side effects (содержит побочные эффекты)
+* Returns void (возвращает void)
+
+**Особенности Query**
+* Side-effect free (не содержит побочные эффекты)
+* Returns non-void (что-то возвращает)
 
 Пример:
 ```csharp
-public class CustomerService {
+public class CustomerService
+{
     // Command
-    public void Process(string customerName, string addressString) {
+    public void Process(string customerName, string addressString)
+    {
         Address address = CreateAddress(addressString);
         Customer customer = CreateCustomer(customerName, address);
         SaveCustomer(customer);
     }
 
     // Query
-    private Address CreateAddress(string addressString) {
+    private Address CreateAddress(string addressString)
+    {
         return new Address(addressString);
     }
 
     // Query
-    private Customer CreateCustomer(string name, Address address) {
+    private Customer CreateCustomer(string name, Address address)
+    {
         return new Customer(name, address);
     }
 
     // Command
-    private void SaveCustomer(Customer customer) {
+    private void SaveCustomer(Customer customer)
+    {
         var repository = new Repository();
         repository.Save(customer);
     }
 }
 ```
 
-Еще пример:
+Еще пример. Метод действует как Command и Query одновременно:
 ```csharp
 var stack = new Stack<string>();
 stack.Push("value");             // Command
 string value = stack.Pop();      // Both query and command
 ```
 
+Не всегда удается полностью избавиться от двойного поведения методов (query and command).
+По возможности следует стремиться к разделению поведения.
+
+#### Решение 2
+
 Приложение делится на две части:
+
 * Domain Logic - Generates artifacts
 * Mutating state ("внешний мир") - Uses artifacts to change the system's state
 
@@ -211,6 +243,10 @@ string value = stack.Pop();      // Both query and command
 * Apply side effect at the end of a business transaction
 (Крайне желательно использовать mutable сервисы в конце операции)
 
+```
+Mutable Shell | --Input--> | Immutable Core | --Artifacts--> | Mutable Shell
+```
+
 ### Пример Audit manager (проект Immutable)
 
 Audit manager - immutable
@@ -219,24 +255,29 @@ Persister, Application service - mutable
 
 # Refactoring Away from Exceptions
 
-<span style="color:red">"Плохой код"</span>
+
+#### "Плохой код"
 
 Типичный пример валидации
 
 ```csharp
-public ActionResult CreateEmployee(string name) {
-    try {
+public ActionResult CreateEmployee(string name)
+{
+    try
+    {
         ValidateName(name);
         // Rest of the method
 
         return View("Success");
     }
-    catch (ValidationException ex) {
+    catch (ValidationException ex)
+    {
         return View("Error", ex.Message);
     }
 }
 
-private void ValidateName(string name) {
+private void ValidateName(string name)
+{
     if (string.IsNullOrWhiteSpace(name))
         throw new ValidationException("Name cannot be empty");
 
@@ -252,7 +293,7 @@ private void ValidateName(string name) {
 * По сигнатуре метода не понятно, что может выкинуться исключение
 
 
-<span style="color:green">"Хороший код"</span>
+#### "Хороший код"
 
 1. Вместо выбрасывания исключений возвращаем строки с ошибками.
 2. Сигнатура метода выглядит уже более пристойно (хотя все еще неидеально)
@@ -288,6 +329,7 @@ private string ValidateName(string name)
 (см. далее).
 
 См. код в проекте `Exceptions`, класс `EmployeeController`
+
 
 ### Правила
 
@@ -333,6 +375,7 @@ public class Employee
 
 См. код в проекте `Exceptions`, класс `EmployeeController`
 
+
 ### Fail Fast Principle
 
 Особенности:
@@ -340,7 +383,8 @@ public class Employee
 * Stopping the current operation
 * More stable software
 
-<span style="color:red">"Плохой код"</span>
+
+#### "Плохой код"
 
 Fail Silently
 1. Сокрытие проблемы
@@ -363,7 +407,8 @@ public void ProcessItems(List<Item> items)
 }
 ```
 
-<span style="color:green">"Хороший код"</span>
+
+#### "Хороший код"
 
 Fail Fast
 
@@ -423,22 +468,25 @@ Application’s type
 
 Пример:
 
-<span style="color:red">"Не очень хороший код"</span>
+#### "Не очень хороший код"
 
 Проблема: `DbUpdateException` не слишком "узкое" исключение - можем поймать слишком
 много исключений различных видов.
 
 ```csharp
-public void CreateCustomer(string name) {
+public void CreateCustomer(string name)
+{
     Customer customer = new Customer(name);
     bool result = SaveCustomer(customer);
 
-    if (!result) {
+    if (!result)
+    {
         MessageBox.Show("Error connecting to the database. Please try again later.");
     }
 }
 
-private bool SaveCustomer(Customer customer) {
+private bool SaveCustomer(Customer customer)
+{
     try
     {
         using (MyContext context = new MyContext()) {
@@ -454,7 +502,8 @@ private bool SaveCustomer(Customer customer) {
 }
 ```
 
-<span style="color:green">"Более грамотный код"</span>
+
+#### "Более грамотный код"
 
 1. Ловим исключения более избирательно
 2. Возвращаем строки с информацией об ошибке
@@ -512,7 +561,8 @@ private string SaveCustomer(Customer customer)
 Для более конкретной обработки ошибки можно использовать класс
 `ResultWithEnum`, который содержит enum `ErrorType`
 
-<span style="color:green">"Еще более грамотный код. Использование класса `Result`"</span>
+
+#### "Еще более грамотный код. Использование класса `Result`"
 
 ```csharp
 public void CreateCustomer(string name)
@@ -570,7 +620,8 @@ private Result<Customer> GetCustomer(int id)
 
 См. пример в проекте `Exceptions`, класс `CustomerService`.
 
-<span style="color:green">"И еще лучше и еще более грамотный код. Использование класса `ResultWithEnum`"</span>
+
+#### "И еще лучше и еще более грамотный код. Использование класса `ResultWithEnum`"
 
 Более строгая фильтрация ошибок, используя enum `ErrorType`
 
@@ -639,3 +690,33 @@ private Result<Customer> GetCustomer(int id)
 
 См. пример в проекте `Exceptions`, класс `CustomerService2`.
 
+
+### The Result Class And CQS
+
+```csharp
+// Command.
+// Not excepted to fail.
+public void Save(Customer customer)
+{
+}
+
+// Command.
+// Excepted to fail.
+public Result Save(Customer customer)
+{
+}
+
+// Query.
+// Not excepted to fail.
+public Customer GetById(long id)
+{
+}
+
+// Query.
+// Excepted to fail.
+public Result<Customer> GetById(long id)
+{
+}
+```
+
+Последний пример. Проект `Exceptions`, класс `TicketController`.
