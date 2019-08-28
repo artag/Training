@@ -5,10 +5,16 @@
         private User _user;
         private string _address;
 
-        // Здесь side effect
-        public void UpdateUser(int userId, string name)
+        public UserProfile(User user, string address)
         {
-            _user = new User(userId, name);
+            _user = user;
+            _address = address;
+        }
+
+        public UserProfile UpdateUser(int userId, string name)
+        {
+            var newUser = new User(userId, name);
+            return new UserProfile(newUser, _address);
         }
     }
 
