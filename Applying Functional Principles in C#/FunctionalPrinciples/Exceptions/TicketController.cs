@@ -1,6 +1,5 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Security;
+using OperationResult;
 
 namespace Exceptions
 {
@@ -17,52 +16,52 @@ namespace Exceptions
 
         public ActionResult BuyTicket(DateTime date, string customerName)
         {
-            // Проблемы.
-            // 1. Ловим все исключения, без разбору. Обработка одна на все исключения.
-            // 2. Ловятся исключения от нескольких методов. Будет сложно определить источник
-            // исключения. 
-            try
-            {
-                Validate(date, customerName);
-                _gateway.Reserve(date, customerName);
-                var ticket = new Ticket(date, customerName);
-                _repository.Save(ticket);
+            Result validationResult = Validate(date, customerName);
+            if (validationResult.IsFailure)
+                return View("Error", validationResult.Error);
 
-                return View("Success");
-            }
-            catch (Exception ex)
-            {
-                return View("Error", ex.Message);
-            }
+            Result reserveResult = _gateway.Reserve(date, customerName);
+            if (reserveResult.IsFailure)
+                return View("Error", reserveResult.Error);
+
+            var ticket = new Ticket(date, customerName);
+            _repository.Save(ticket);
+
+            return View("Success");
         }
 
-        private void Validate(in DateTime date, string customerName)
+        private Result Validate(in DateTime date, string customerName)
         {
-            // Проблема. Использование исключения для контроля валидации.
-            // (не отражено в сигнатуре метода, может привести к пробросу исключения
-            // на несколько уровней вверх по стеку).
             if (date.Date < DateTime.Now.Date)
-                throw new ValidationException("Cannot reserve on a past date");
+                return Result.Fail("Cannot reserve on a past date");
 
-            // Проблема. Использование исключения для контроля валидации.
-            // (не отражено в сигнатуре метода, может привести к пробросу исключения
-            // на несколько уровней вверх по стеку).
             if (string.IsNullOrWhiteSpace(customerName) || customerName.Length > 200)
-                throw new VerificationException("Incorrect customer name");
+                return Result.Fail("Incorrect customer name");
+
+            return Result.Ok();
         }
     }
 
     // Wrapper on 3rd-party library
     public class TheaterGateway
     {
-        public void Reserve(DateTime date, string customerName)
+        public Result Reserve(DateTime date, string customerName)
         {
-            var client = new TheaterApiClient();
+            try
+            {
+                var client = new TheaterApiClient();
+                client.Reserve(date, customerName);
 
-            // Проблема. Документация говорит, что метод может выкинуть два исключения:
-            // 1. HttpRequestException - if unable to connect to the API.
-            // 2. InvalidOperationException - if no ticket are available.
-            client.Reserve(date, customerName);
+                return Result.Ok();
+            }
+            catch (HttpRequestException ex)
+            {
+                return Result.Fail("Unable to connect to the theater. Please try again later.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Result.Fail("Sorry, tickets on this date are no longer available.");
+            }
         }
     }
 }
