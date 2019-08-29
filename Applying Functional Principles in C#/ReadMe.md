@@ -720,3 +720,69 @@ public Result<Customer> GetById(long id)
 ```
 
 Последний пример. Проект `Exceptions`, класс `TicketController`.
+
+
+# Avoiding Primitive Obsession
+
+Пример недостатков primitive obsession:
+```csharp
+public class User
+{
+    public string Email { get; }
+
+    public User(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            throw new ArgumentException("Email should not be empty");
+
+        email = email.Trim();
+        if (email.Length > 256)
+            throw new ArgumentException("Email is too long");
+
+        if (!email.Contains("@"))
+            throw new ArgumentException("Email is invalid");
+
+        Email = email;
+    }
+}
+```
+
+и
+
+```csharp
+public class Organization
+{
+    public string PrimaryEmail { get; }
+    public string SecondaryEmail { get; }
+
+    public Organization(string primaryEmail, string secondaryEmail)
+    {
+        Validate(primaryEmail, secondaryEmail);
+
+        PrimaryEmail = primaryEmail;
+        SecondaryEmail = secondaryEmail;
+    }
+
+    private void Validate(params string[] emails)
+    {
+        /* Perform the validation here */
+    }
+}
+```
+
+
+### Drawbacks of Primitive Obsession
+
+1. Makes code dishonest.
+
+    Из сигнатуры метода не видно, что для задания почты требуется строка
+особого вида, обладающая определенными свойствами).
+
+2. Violates the DRY principle.
+
+    Для каждого подобного почтового адреса (см. class `Organization`) требуются
+похожие проверки, что приводит к дублированию кода.
+
+
+### How to get rid of primitive obsession
+
