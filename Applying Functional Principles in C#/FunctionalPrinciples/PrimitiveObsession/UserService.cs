@@ -4,34 +4,25 @@ namespace PrimitiveObsession
 {
     public class UserService
     {
-        public void ProcessUser(string name)
+        public void ProcessUser(UserName name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException(nameof(name));
-
-            if (name.Trim().Length > 100)
+            if (name == null)
                 throw new ArgumentException(nameof(name));
 
             // Processing code
         }
 
-        public void CreateUser(string name)
+        public void CreateUser(UserName name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException(nameof(name));
-
-            if (name.Trim().Length > 100)
+            if (name == null)
                 throw new ArgumentException(nameof(name));
 
             // Creation code
         }
 
-        public void UpdateUser(string name)
+        public void UpdateUser(UserName name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException(nameof(name));
-
-            if (name.Trim().Length > 100)
+            if (name == null)
                 throw new ArgumentException(nameof(name));
 
             // Update code
