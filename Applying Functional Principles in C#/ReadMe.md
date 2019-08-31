@@ -786,3 +786,11 @@ public class Organization
 
 ### How to get rid of primitive obsession
 
+Надо "обернуть" каждый из primitive obesession в отдельный класс.
+
+Пример см. в решении `PrimitiveObsession`, класс `Email`.
+Класс `Email` унаследован от `ValueObject<T>`.
+
+Абстрактный класс `ValueObject<T>` (см. проект `PrimitiveObsession.Common`) введен для
+удобства создания таких "оберток" для primitive obsession.
+

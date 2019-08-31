@@ -7,9 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immutability", "Immutabilit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immutability.Tests", "Immutability.Tests\Immutability.Tests.csproj", "{D14EA408-7E76-4FA6-91A1-8E15FB68026B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OperationResult", "OperationResult\OperationResult.csproj", "{9D5F0BC9-683C-42F0-B6D3-55F089A060D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OperationResult", "OperationResult\OperationResult.csproj", "{9D5F0BC9-683C-42F0-B6D3-55F089A060D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exceptions", "Exceptions\Exceptions.csproj", "{2856728E-7162-40FD-B4B6-A48D6F3A13B2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Exceptions", "Exceptions\Exceptions.csproj", "{2856728E-7162-40FD-B4B6-A48D6F3A13B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrimitiveObsession", "PrimitiveObsession\PrimitiveObsession.csproj", "{74D61759-2BCA-4016-9672-68EDC7A8BA45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrimitiveObsession.Common", "PrimitiveObsession.Common\PrimitiveObsession.Common.csproj", "{7D611972-F2D7-490B-9FE1-221DAEBA5F76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +37,14 @@ Global
 		{2856728E-7162-40FD-B4B6-A48D6F3A13B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2856728E-7162-40FD-B4B6-A48D6F3A13B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2856728E-7162-40FD-B4B6-A48D6F3A13B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74D61759-2BCA-4016-9672-68EDC7A8BA45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74D61759-2BCA-4016-9672-68EDC7A8BA45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74D61759-2BCA-4016-9672-68EDC7A8BA45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74D61759-2BCA-4016-9672-68EDC7A8BA45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D611972-F2D7-490B-9FE1-221DAEBA5F76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D611972-F2D7-490B-9FE1-221DAEBA5F76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D611972-F2D7-490B-9FE1-221DAEBA5F76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D611972-F2D7-490B-9FE1-221DAEBA5F76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
