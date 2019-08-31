@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using OperationResult;
 
 namespace PrimitiveObsession
 {
@@ -18,10 +19,20 @@ namespace PrimitiveObsession
 
         public ActionResult CreateCustomer(CustomerModel customerModel)
         {
+            // Конвертация (и валидация) strings в ValueObjects. 
+            Result<CustomerName> customerNameResult = CustomerName.Create(customerModel.Name);
+            Result<Email> emailResult = Email.Create(customerModel.Email);
+
+            // Информирование пользователя о возможных ошибках в конвертации (и валидации).
+            if (customerNameResult.IsFailure)
+                ModelState.AddModelError("Name", customerNameResult.Error);
+            if (emailResult.IsFailure)
+                ModelState.AddModelError("Email", emailResult.Error);
+
             if (!ModelState.IsValid)
                 return View("Error");
 
-            var customer = new Customer(customerModel.Name, customerModel.Email);
+            var customer = new Customer(customerNameResult.Value, emailResult.Value);
             _database.Save(customer);
 
             return RedirectToAction("Index");
@@ -30,14 +41,10 @@ namespace PrimitiveObsession
 
     public class CustomerModel
     {
-        // Проблема. Дублирование проверок в CustomerModel и Customer классах.
+        // Все проверки сожержатся в классах CustomerName и Email.
+        // Проверки отсюда можно удалить.
 
-        [Required(ErrorMessage = "Name is required")]
-        [StringLength(100, ErrorMessage = "Name is too long")]
         public string Name { get; set; }
-
-        [Required(ErrorMessage = "E-mail is required")]
-        [RegularExpression(@"^(.+)@(.+)$", ErrorMessage = "Invalid e-mail address")]
         public string Email { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using OperationResult;
+﻿using System.Text.RegularExpressions;
+using OperationResult;
 using PrimitiveObsession.Common;
 
 namespace PrimitiveObsession
@@ -21,7 +22,7 @@ namespace PrimitiveObsession
             if (email.Length > 256)
                 return Result.Fail<Email>("Email is too long");
 
-            if (!email.Contains("@"))
+            if (!Regex.IsMatch(email, @"^(.+)@(.+)$"))
                 return Result.Fail<Email>("Email is invalid");
 
             return Result.Ok(new Email(email));
