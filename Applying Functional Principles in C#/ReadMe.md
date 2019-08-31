@@ -794,3 +794,141 @@ public class Organization
 Абстрактный класс `ValueObject<T>` (см. проект `PrimitiveObsession.Common`) введен для
 удобства создания таких "оберток" для primitive obsession.
 
+
+### Primitive Obsession and Defensive Programming
+
+Есть такой код. Он явно содержит primitive obsession:
+
+```csharp
+public void ProcessUser(string name)
+{
+    if (string.IsNullOrWhiteSpace(name))
+        throw new ArgumentException(nameof(name));
+
+    if (name.Trim().Length > 100)
+        throw new ArgumentException(nameof(name));
+
+    // Processing code
+}
+
+public void CreateUser(string name)
+{
+    if (string.IsNullOrWhiteSpace(name))
+        throw new ArgumentException(nameof(name));
+
+    if (name.Trim().Length > 100)
+        throw new ArgumentException(nameof(name));
+
+    // Creation code
+}
+
+public void UpdateUser(string name)
+{
+    if (string.IsNullOrWhiteSpace(name))
+        throw new ArgumentException(nameof(name));
+
+    if (name.Trim().Length > 100)
+        throw new ArgumentException(nameof(name));
+
+    // Update code
+}
+```
+
+После добавления "обертки" вокруг primitive obsession все равно во всех
+методах требуется проверка на `null`, но, зато, остальные проверки
+инкапсулированы в одном месте - классе `UserName`
+(см. в проекте `PrimitiveObsession`).
+
+```csharp
+public void ProcessUser(UserName name)
+{
+    if (name == null)
+        throw new ArgumentException(nameof(name));
+
+    // Processing code
+}
+
+public void CreateUser(UserName name)
+{
+    if (name == null)
+        throw new ArgumentException(nameof(name));
+
+    // Creation code
+}
+
+public void UpdateUser(UserName name)
+{
+    if (name == null)
+        throw new ArgumentException(nameof(name));
+
+    // Update code
+}
+```
+
+
+### Primitive Obsession. Limitations
+
+Не обязтально для каждого примитивного типа, который должен удовлетворять каким-либо правиламъ
+создавать "обертку".
+
+Например если в коде есть `moneyAmount` и оно может быть отрицательным, то этой переменной
+может подойти и обычный тип `decimal`.
+
+
+### Where to Convert Primitive Types into Value Objects?
+
+Конвертация из примитивных типов в ValueObjects (как и валидация) должна происходить на границах
+доменной модели (например, в ASP.NET контроллере):
+```
+| Outside world | -----------Validation----------> | Domain model |
+|               | --Conversion to ValueObjects --> |              |
+```
+
+Внутри Domain model классы должны работать с ValueObjects:
+```
+| Domain class | <--ValueObjects--> | Domain class |
+```
+
+На выходе из Domain model должна происходить обратная конвертация, из ValueObject в
+примитивный тип:
+```
+| Domain model | --Conversion to primitive --> | Outside world |
+```
+
+#### Примеры
+
+**Двойная и ненужная конвертация (плохой код)**
+
+```csharp
+public void Process(string oldEmail, string newEmail)
+{
+    Result<Email> oldEmailResult = Email.Create(oldEmail);
+    Result<Email> newEmailResult = Email.Create(newEmail);
+
+    if (oldEmailResult.IsFailure || newEmailResult.IsFailure)
+        return;
+
+    string oldEmailValue = oldEmailResult.Value;
+    Customer customer = GetCustomerByEmail(oldEmail);
+    customer.Email = newEmail;
+}
+```
+
+**Если внутри доменной модели работать только с ValueObjects (хороший код)**
+
+```csharp
+public void Process(Email oldEmail, Email newEmail)
+{
+    Customer customer = GetCustomerByEmail(oldEmail);
+    customer.Email = newEmail;
+}
+```
+
+
+**Большой пример** использования `ValueObject` смотреть в проекте `PrimitiveObsession`,
+классы `CustomerController` и `Customer`.
+
+Используются ValueObjects: классы `Email` и `CustomerName`.
+
+Используемые общие базовые классы: `Result` и `ValueObject`.
+
