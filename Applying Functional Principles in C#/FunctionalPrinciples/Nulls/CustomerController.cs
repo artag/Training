@@ -1,4 +1,5 @@
-﻿using OperationResult;
+﻿using Nulls.Common;
+using OperationResult;
 
 namespace Nulls
 {
@@ -18,14 +19,12 @@ namespace Nulls
 
         public ActionResult Index(int id)
         {
-            // Проблема. GetById метод может вернуть null и
-            // из сигнатуры метода этого поведения нельзя этого увидеть.
-            Customer customer = _database.GetById(id);
+            Maybe<Customer> customer = _database.GetById(id);
 
-            if (customer == null)
+            if (customer.HasNoValue)
                 return HttpNotFound();
 
-            return View(customer);
+            return View(customer.Value);
         }
 
         public ActionResult CreateCustomer(CustomerModel customerModel)

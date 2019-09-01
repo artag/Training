@@ -1,9 +1,11 @@
-﻿namespace Nulls
+﻿using Nulls.Common;
+
+namespace Nulls
 {
     public interface IDatabase
     {
         void Save(Customer customer);
 
-        Customer GetById(int id);
+        Maybe<Customer> GetById(int id);
     }
 }
