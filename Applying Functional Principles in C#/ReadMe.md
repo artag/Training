@@ -932,3 +932,196 @@ public void Process(Email oldEmail, Email newEmail)
 
 Используемые общие базовые классы: `Result` и `ValueObject`.
 
+
+# Avoiding Nulls with the Maybe Type
+
+Проблемный код:
+```csharp
+// 1. Dishonest сигнатура метода GetById: он может возвратить как объект Organization,
+//    так и null.
+// 2. Отсюда, неясно точное значение organization 
+Organization organization = _repository.GetById(id);
+
+
+// Other code
+
+
+// 3. Здесь, при вызове organization.Name возможен выброс NullReferenceException,
+//    т.к. неизвестно точное значение organization.
+// 4. Возможно будет сложная отладка, т.к. между объявлением и использованием organization
+//    может выполняться и лежать куча разного кода.
+// 5. Нарушение принципа Fail Fast
+Console.WriteLine(organization.Name)
+```
+
+
+### Non-nullability on the Language Level
+
+На данный момент, в компиляторе языке C# нет гарантированного способа определить является ли
+ссылка на объект null или нет.
+
+Возможно, какие-то проверки будут реализваны в будущих версиях языка.
+
+### Mitigating the Billion-dollar Mistake
+(Уменьшение вероятности наткнуться на NullReferenceException)
+
+Введение класса `Maybe<T>` (или, в других источниках - `Optional<T>`)
+
+```csharp
+public Organization GetById(int id)
+{
+    // Some Code
+}
+```
+
+Замена на:
+```csharp
+public Maybe<Organization> GetById(int id)
+{
+    // Some Code
+}
+```
+
+Класс `Maybe<T>` действует похоже на класс `Nullable<T>` (который используется только для 
+объектов типа struct (ValueObject)).
+
+#### Полезные свойства Maybe_T и Nullable_T
+
+1. Honest signature of the method. 
+```csharp
+public Maybe<Organization> GetById(int id)
+{
+    // Some Code
+}
+
+public static int? Divide(int x, int y)
+{
+    if (y == 0)
+        return null;
+
+    return x / y;
+}
+```
+
+2. Safety in terms of convertions
+```csharp
+Maybe<Organization nullable = GetOrganozation(id);
+Organization nonNullable = nullable;           // Error
+
+Organization? nullable = GetOrganization(id);
+Organization nonNullable = nullable;           // Error
+
+Organization nonNullable = GetOrganization(id);
+Maybe<Organization> nullable = nonNullable;    // Ok
+
+Organization nonNullable = GetOrganization(id);
+Organization? nullable = nonNullable;          // Ok
+```
+
+
+#### Где конвертировать объекты в/из Maybe_T
+
+Как и в случае с `ValueObject` (см. предыдущий раздел) конвертацию данных необходимо осуществлять
+до их входа в Domain Model и после их выхода во "внешний мир".
+
+Внутри Domain Model все сущности должны использовать для работы объекты `Maybe<T>`.
+
+
+#### Большой пример
+
+Файл `Maybe<T>` можно найти в проекте `Nulls.Common`.
+
+Используется `CustomerController` из предыдущего раздела с добавлением одного небольшого метода.
+
+Правятся интерфейс `IDatabase` и метод `CustomerController.Index(int id)`.
+
+
+### Добавление автоматической проверки на null. Использование `NullGuard.Fody`
+
+*Внимание: в данном проекте я не пробовал это решение*.
+
+Требуется установка NuGet пакета `NullGuard.Fody`.
+
+После установки пакета в текущем проекте должен появиться файл `FodyWeavers.xml` со следующим
+содержанием:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Weavers>
+  <NullGuard IncludeDebugAssert="false" />
+</Weavers>
+```
+
+`IncludeDebugAssert="false"` добавляется для проверки на ссылок на null в Debug режиме
+(а не только в режиме Release).
+
+Также, по умолчанию, проверка на null выполняется только для public методов. Чтобы включить
+проверку для всех методов и свойств надо задать правило на уровне assembly.
+
+Для этого создается файл в корне текущего проекта (в видео назван как `Initer.cs`) со следующим
+содержанием:
+```csharp
+using NullGuard;
+
+// Включить проверку для всех методов и аттрибутов.
+[assembly: NullGuard(ValidationFlags.All)]
+
+namespace Nulls
+{
+    public class Initer
+    {
+    }
+}
+```
+
+Можно убрать проверки на null из конструкторов, методов и свойств.
+
+Если надо передать в метод или свойство null, то ко входному параметру метода или свойства надо
+добавить аттрибут `[AllowNull]`:
+
+Примеры для `Maybe<T>`:
+```csharp
+private Maybe([AllowNull] T value)
+{
+    _value = value;
+}
+
+public static implicit operator Maybe<T>([AllowNull] T value)
+{
+    return new Maybe<T>(value);
+}
+
+// Выключение автоматической проверки на null
+// как для входного, так и для выходного значений.
+
+[return: AllowNull]
+public T Unwrap([AllowNull] T defaultValue = default(T))
+{
+    if (HasValue)
+        return Value;
+
+    return defaultValue;
+}
+```
+
+
+#### Ограничения на использование автоматической проверки на null
+
+Нельзя использовать в проектах с библиотеками, которые широко используют (принимают/возвращают)
+null. Например, это такие Application Services как:
+
+* ASP.NET
+* WPF
+* WCF
+
+В своем **отдельном** проекте, содержащим Domain Logic использовать `NullGuard.Fody`
+можно и нужно.
+
+Примерно так надо поступать со входными null ссылками из "внешнего мира":
+
+```
+|         | ASP.NET | (Conveting) |              |          | Внешний мир
+| Null -> | WCF     | ---Maybe--> | Domain Model | --> Null | (DB)
+|         | WPF     |             |              |          |
+```
+
