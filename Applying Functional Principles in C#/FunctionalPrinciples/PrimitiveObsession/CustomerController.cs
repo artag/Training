@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using OperationResult;
+﻿using OperationResult;
 
 namespace PrimitiveObsession
 {
