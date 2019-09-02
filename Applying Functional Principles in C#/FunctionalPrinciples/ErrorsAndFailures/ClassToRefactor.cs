@@ -18,7 +18,7 @@
             _paymentGateway.ChargePayment(customer.BillingInfo, moneyAmount);
             _database.Save(customer);
 
-            return "Ok";
+            return "OK";
         }
     }
 }
