@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Nulls.Common\Nulls.Common.csproj" />
     <ProjectReference Include="..\OperationResult\OperationResult.csproj" />
     <ProjectReference Include="..\PrimitiveObsession.Common\PrimitiveObsession.Common.csproj" />
   </ItemGroup>

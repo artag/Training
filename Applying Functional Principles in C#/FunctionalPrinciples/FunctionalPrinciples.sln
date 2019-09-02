@@ -15,9 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrimitiveObsession", "Primi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrimitiveObsession.Common", "PrimitiveObsession.Common\PrimitiveObsession.Common.csproj", "{7D611972-F2D7-490B-9FE1-221DAEBA5F76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nulls.Common", "Nulls.Common\Nulls.Common.csproj", "{D3B91AD2-E309-4B69-94F1-7F627B01F21B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nulls.Common", "Nulls.Common\Nulls.Common.csproj", "{D3B91AD2-E309-4B69-94F1-7F627B01F21B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nulls", "Nulls\Nulls.csproj", "{9DD8A742-3D08-445E-9494-13825C08C22D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nulls", "Nulls\Nulls.csproj", "{9DD8A742-3D08-445E-9494-13825C08C22D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErrorsAndFailures", "ErrorsAndFailures\ErrorsAndFailures.csproj", "{89D015B5-A44F-4622-BEE8-20DA0F318071}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{9DD8A742-3D08-445E-9494-13825C08C22D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DD8A742-3D08-445E-9494-13825C08C22D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DD8A742-3D08-445E-9494-13825C08C22D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89D015B5-A44F-4622-BEE8-20DA0F318071}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89D015B5-A44F-4622-BEE8-20DA0F318071}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89D015B5-A44F-4622-BEE8-20DA0F318071}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89D015B5-A44F-4622-BEE8-20DA0F318071}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
