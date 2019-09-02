@@ -1125,3 +1125,132 @@ null. Например, это такие Application Services как:
 |         | WPF     |             |              |          |
 ```
 
+
+# Handling Failures and Input Errors in a Functional Way
+
+Пример. См. проект `ErrorsAndFailures`, класс `ClassToRefactor`. Там есть такой код:
+```csharp
+public string RefillBalance(int customerId, decimal moneyAmount)
+{
+    Customer customer = _database.GetById(customerId);
+    customer.Balance += moneyAmount;
+    _paymentGateway.ChargePayment(customer.BillingInfo, moneyAmount);
+    _database.Save(customer);
+
+    return "Ok";
+}
+```
+
+Этот код не годится для продакшена, надо добавить необходимые проверки.
+Итак, "традиционный" путь:
+```csharp
+public string RefillBalance(int customerId, decimal moneyAmount)
+{
+    if (!IsMoneyAmountValid(moneyAmount))
+    {
+        _logger.Log("Money amount is invalid");
+        return "Money amount is invalid";
+    }
+
+    Customer customer = _database.GetById(customerId);
+    if (customer == null)
+    {
+        _logger.Log("Customer is not found");
+        return "Customer is not found";
+    }
+
+    customer.Balance += moneyAmount;
+
+    try
+    {
+        _paymentGateway.ChargePayment(customer.BillingInfo, moneyAmount);
+    }
+    catch (ChargeFailedException ex)
+    {
+        _logger.Log("Unable to charge the credit card");
+        return "Unable to charge the credit card";
+    }
+
+    try
+    {
+        _database.Save(customer);
+    }
+    catch (Exception e)
+    {
+        _paymentGateway.RollbackLastTransaction();
+        _logger.Log("Unable to connect to the database");
+        return "Unable to connect to the database";
+    }
+
+    _logger.Log("OK");
+    return "OK";
+}
+```
+
+Очень сложно понять, что теперь происходит в этом коде.
+
+Теперь применим приемы, описанные в предыдущих разделах:
+* Обработка исключений, выбрасываемых сторонними библиотеками на как можно более низком уровне.
+
+* Использование `Result` и его возврат вместо выброса исключений.
+
+* Использование `Maybe`.
+
+* Использование `ValueObject` вместо primitive obsession.
+
+```csharp
+public string RefillBalance(int customerId, decimal moneyAmount)
+{
+    // Refactoring. Применение ValueObject<T>.
+    Result<MoneyToCharge> moneyToCharge = MoneyToCharge.Create(moneyAmount);
+    if (moneyToCharge.IsFailure)
+    {
+        _logger.Log(moneyToCharge.Error);
+        return moneyToCharge.Error;
+    }
+
+    // Refactoring. Применение Maybe<T>.
+    Maybe<Customer> customer = _database.GetById(customerId);
+    if (customer.HasNoValue)
+    {
+        _logger.Log("Customer is not found");
+        return "Customer is not found";
+    }
+
+    // Refactoring. Преобразование изменения баланса.
+    customer.Value.AddBalance(moneyToCharge.Value);
+
+    // Refactoring.
+    // 1. Перемещение try-catch блока на более низкий уровень (уровень ChargePayment).
+    // 2. Возврат Result вместо выброса исключения.
+    Result chargeResult = _paymentGateway.ChargePayment(customer.Value.BillingInfo, moneyToCharge.Value);
+
+    if (chargeResult.IsFailure)
+    {
+        _logger.Log(chargeResult.Error);
+        return chargeResult.Error;
+    }
+
+    // Refactoring.
+    // 1. Перемещение try-catch блока на более низкий уровень (уровень Save).
+    // 2. Возврат Result вместо выброса исключения.
+    Result saveResult = _database.Save(customer.Value);
+    if (saveResult.IsFailure)
+    {
+        _paymentGateway.RollbackLastTransaction();
+        _logger.Log(saveResult.Error);
+        return saveResult.Error;
+    }
+
+    _logger.Log("OK");
+    return "OK";
+}
+```
+
+Все равно, все еще очень сложно понять, что происходит в этом коде.
+
+Надо использовать:
+
+
+### Railway-oriented Programming
+
