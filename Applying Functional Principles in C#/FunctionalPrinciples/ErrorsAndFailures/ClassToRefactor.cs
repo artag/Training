@@ -1,4 +1,6 @@
 ﻿using System;
+using Nulls.Common;
+using OperationResult;
 
 namespace ErrorsAndFailures
 {
@@ -17,49 +19,49 @@ namespace ErrorsAndFailures
 
         public string RefillBalance(int customerId, decimal moneyAmount)
         {
-            if (!IsMoneyAmountValid(moneyAmount))
+            // Refactoring. Применение ValueObject<T>.
+            Result<MoneyToCharge> moneyToCharge = MoneyToCharge.Create(moneyAmount);
+            if (moneyToCharge.IsFailure)
             {
-                _logger.Log("Money amount is invalid");
-                return "Money amount is invalid";
+                _logger.Log(moneyToCharge.Error);
+                return moneyToCharge.Error;
             }
 
-            Customer customer = _database.GetById(customerId);
-            if (customer == null)
+            // Refactoring. Применение Maybe<T>.
+            Maybe<Customer> customer = _database.GetById(customerId);
+            if (customer.HasNoValue)
             {
                 _logger.Log("Customer is not found");
                 return "Customer is not found";
             }
 
-            customer.Balance += moneyAmount;
+            // Refactoring. Преобразование изменения баланса.
+            customer.Value.AddBalance(moneyToCharge.Value);
 
-            try
+            // Refactoring.
+            // 1. Перемещение try-catch блока на более низкий уровень (уровень ChargePayment).
+            // 2. Возврат Result вместо выброса исключения.
+            Result chargeResult = _paymentGateway.ChargePayment(customer.Value.BillingInfo, moneyToCharge.Value);
+
+            if (chargeResult.IsFailure)
             {
-                _paymentGateway.ChargePayment(customer.BillingInfo, moneyAmount);
-            }
-            catch (ChargeFailedException ex)
-            {
-                _logger.Log("Unable to charge the credit card");
-                return "Unable to charge the credit card";
+                _logger.Log(chargeResult.Error);
+                return chargeResult.Error;
             }
 
-            try
-            {
-                _database.Save(customer);
-            }
-            catch (Exception e)
+            // Refactoring.
+            // 1. Перемещение try-catch блока на более низкий уровень (уровень Save).
+            // 2. Возврат Result вместо выброса исключения.
+            Result saveResult = _database.Save(customer.Value);
+            if (saveResult.IsFailure)
             {
                 _paymentGateway.RollbackLastTransaction();
-                _logger.Log("Unable to connect to the database");
-                return "Unable to connect to the database";
+                _logger.Log(saveResult.Error);
+                return saveResult.Error;
             }
 
             _logger.Log("OK");
             return "OK";
-        }
-
-        private bool IsMoneyAmountValid(decimal moneyAmount)
-        {
-            throw new System.NotImplementedException();
         }
     }
 }
