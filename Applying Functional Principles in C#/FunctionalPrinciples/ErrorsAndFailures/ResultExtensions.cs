@@ -1,4 +1,5 @@
-﻿using Nulls.Common;
+﻿using System;
+using Nulls.Common;
 using OperationResult;
 
 namespace ErrorsAndFailures
@@ -11,6 +12,16 @@ namespace ErrorsAndFailures
                 return Result.Fail<T>(errorMessage);
 
             return Result.Ok(maybe.Value);
+        }
+
+        public static Result OnSuccess(this Result result, Action action)
+        {
+            if (result.IsFailure)
+                return result;
+
+            action();
+
+            return Result.Ok();
         }
     }
 }

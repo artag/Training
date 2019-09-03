@@ -19,24 +19,12 @@ namespace ErrorsAndFailures
 
         public string RefillBalance(int customerId, decimal moneyAmount)
         {
-            // Refactoring. Применение ValueObject<T>.
             Result<MoneyToCharge> moneyToCharge = MoneyToCharge.Create(moneyAmount);
-            if (moneyToCharge.IsFailure)
-            {
-                _logger.Log(moneyToCharge.Error);
-                return moneyToCharge.Error;
-            }
-
-            // Refactoring. Применение Maybe<T>.
             Result<Customer> customer = _database.GetById(customerId).ToResult("Customer is not found");
-            if (customer.IsFailure)
-            {
-                _logger.Log(customer.Error);
-                return customer.Error;
-            }
 
-            // Refactoring. Преобразование изменения баланса.
-            customer.Value.AddBalance(moneyToCharge.Value);
+            Result.Combine(moneyToCharge, customer)
+                .OnSuccess(() => customer.Value.AddBalance(moneyToCharge.Value))
+                
 
             // Refactoring.
             // 1. Перемещение try-catch блока на более низкий уровень (уровень ChargePayment).
