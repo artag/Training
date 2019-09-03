@@ -25,18 +25,10 @@ namespace ErrorsAndFailures
             Result.Combine(moneyToCharge, customer)
                 .OnSuccess(() => customer.Value.AddBalance(moneyToCharge.Value))
                 .OnSuccess(() => _paymentGateway.ChargePayment(customer.Value.BillingInfo, moneyToCharge.Value))
-
-
-            // Refactoring.
-            // 1. Перемещение try-catch блока на более низкий уровень (уровень Save).
-            // 2. Возврат Result вместо выброса исключения.
-            Result saveResult = _database.Save(customer.Value);
-            if (saveResult.IsFailure)
-            {
-                _paymentGateway.RollbackLastTransaction();
-                _logger.Log(saveResult.Error);
-                return saveResult.Error;
-            }
+                .OnSuccess(
+                    () => _database.Save(customer.Value)
+                        .OnFailure(() => _paymentGateway.RollbackLastTransaction()))
+                
 
             _logger.Log("OK");
             return "OK";

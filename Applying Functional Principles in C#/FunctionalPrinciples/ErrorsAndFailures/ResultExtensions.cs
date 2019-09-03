@@ -31,5 +31,15 @@ namespace ErrorsAndFailures
 
             return func();
         }
+
+        public static Result OnFailure(this Result result, Action action)
+        {
+            if (result.IsFailure)
+            {
+                action();
+            }
+
+            return result;
+        }
     }
 }
