@@ -24,18 +24,8 @@ namespace ErrorsAndFailures
 
             Result.Combine(moneyToCharge, customer)
                 .OnSuccess(() => customer.Value.AddBalance(moneyToCharge.Value))
-                
+                .OnSuccess(() => _paymentGateway.ChargePayment(customer.Value.BillingInfo, moneyToCharge.Value))
 
-            // Refactoring.
-            // 1. Перемещение try-catch блока на более низкий уровень (уровень ChargePayment).
-            // 2. Возврат Result вместо выброса исключения.
-            Result chargeResult = _paymentGateway.ChargePayment(customer.Value.BillingInfo, moneyToCharge.Value);
-
-            if (chargeResult.IsFailure)
-            {
-                _logger.Log(chargeResult.Error);
-                return chargeResult.Error;
-            }
 
             // Refactoring.
             // 1. Перемещение try-catch блока на более низкий уровень (уровень Save).
