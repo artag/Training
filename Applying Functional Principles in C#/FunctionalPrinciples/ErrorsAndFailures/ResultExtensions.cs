@@ -41,5 +41,17 @@ namespace ErrorsAndFailures
 
             return result;
         }
+
+        public static Result OnBoth(this Result result, Action<Result> action)
+        {
+            action(result);
+
+            return result;
+        }
+
+        public static T OnBoth<T>(this Result result, Func<Result, T> func)
+        {
+            return func(result);
+        }
     }
 }

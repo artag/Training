@@ -22,16 +22,22 @@ namespace ErrorsAndFailures
             Result<MoneyToCharge> moneyToCharge = MoneyToCharge.Create(moneyAmount);
             Result<Customer> customer = _database.GetById(customerId).ToResult("Customer is not found");
 
-            Result.Combine(moneyToCharge, customer)
+            return Result.Combine(moneyToCharge, customer)
                 .OnSuccess(() => customer.Value.AddBalance(moneyToCharge.Value))
                 .OnSuccess(() => _paymentGateway.ChargePayment(customer.Value.BillingInfo, moneyToCharge.Value))
                 .OnSuccess(
                     () => _database.Save(customer.Value)
                         .OnFailure(() => _paymentGateway.RollbackLastTransaction()))
-                
+                .OnBoth(result => Log(result))
+                .OnBoth(result => result.IsSuccess ? "OK" : result.Error);
+        }
 
-            _logger.Log("OK");
-            return "OK";
+        private void Log(Result result)
+        {
+            if (result.IsFailure)
+                _logger.Log(result.Error);
+            else
+                _logger.Log("OK");
         }
     }
 }
