@@ -1254,3 +1254,69 @@ public string RefillBalance(int customerId, decimal moneyAmount)
 
 ### Railway-oriented Programming
 
+Основная идея - вызывать методы последовательно, по цепочке (*мое примечание:* получится как в LINQ).
+
+Вводится 3 extension метода:
+* `OnSuccess` - выполняется когда предыдущая операция успешно завершилась
+
+```
+Examine previous Result -> If Success    -> Execute method, return new Result
+                        -> If No Success -> Return previous Result
+```
+
+* `OnFailure` - выполняется когда предыдущая операция завершилась с ошибкой
+
+```
+Examine previous Result -> If Success    -> Return previous Result
+                        -> If No Success -> Execute method, return previous Result
+```
+
+* `OnBOth` - выполняется независимо от результата предыдущей операции
+
+```
+Get previous Result -> Execute method -> Return previous Result
+```
+
+Опять тот же пример. См. проект `ErrorsAndFailures`, класс `ClassToRefactor`.
+
+Используется вспомогательный См. проект `ErrorsAndFailures`, класс `ResultExtensions`:
+
+В сам класс `Result` добавился метод `Combine` для проверки нескольких операций на их успешное
+завершение (см. проект `OperationalResult`, класс `Result`).
+
+В результате проведенных преобразований, код (метод) в классе `ClassToRefactor` выглядит так:
+
+```csharp
+public string RefillBalance(int customerId, decimal moneyAmount)
+{
+    Result<MoneyToCharge> moneyToCharge = MoneyToCharge.Create(moneyAmount);
+    Result<Customer> customer = _database.GetById(customerId).ToResult("Customer is not found");
+
+    return Result.Combine(moneyToCharge, customer)
+        .OnSuccess(() => customer.Value.AddBalance(moneyToCharge.Value))
+        .OnSuccess(() => _paymentGateway.ChargePayment(customer.Value.BillingInfo, moneyToCharge.Value))
+        .OnSuccess(
+            () => _database.Save(customer.Value)
+                .OnFailure(() => _paymentGateway.RollbackLastTransaction()))
+        .OnBoth(result => Log(result))
+        .OnBoth(result => result.IsSuccess ? "OK" : result.Error);
+}
+
+private void Log(Result result)
+{
+    if (result.IsFailure)
+        _logger.Log(result.Error);
+    else
+        _logger.Log("OK");
+}
+```
+
+
+#### Замечание
+
+* Railway-oriented programming подходит только для относительно простых действий.
+Если есть что-то сложное, то придется возвращаться к классическим `if...else`
+конструкциям.
+
+* Все расширения из `ResultExtensions` можно релизовать в самом `Result`, но это действие может
+привести к засорению последнего.
