@@ -28,11 +28,11 @@ namespace ErrorsAndFailures
             }
 
             // Refactoring. Применение Maybe<T>.
-            Maybe<Customer> customer = _database.GetById(customerId);
-            if (customer.HasNoValue)
+            Result<Customer> customer = _database.GetById(customerId).ToResult("Customer is not found");
+            if (customer.IsFailure)
             {
-                _logger.Log("Customer is not found");
-                return "Customer is not found";
+                _logger.Log(customer.Error);
+                return customer.Error;
             }
 
             // Refactoring. Преобразование изменения баланса.
