@@ -8,8 +8,11 @@
 02_03. Редактирование файла `Pages/Shared/_Layout.cshtml`:
 Добавление меню Restaurants (ссылка на `/Restaurants/List`)
 
-02_04. Добавление Razor Page (в `/Pages/Restaurants/List.cshtml`.
-Добавление заголовка на page
+02_04. Добавление Razor Page (в `/Pages/Restaurants/List.cshtml`).
+Добавление заголовка на page:
+```html
+<h1>Restaurants</h1>
+```
 
 02_05. Пример использования тулзы
 `dotnet aspnet-codegenerator`:
