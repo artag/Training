@@ -35,7 +35,7 @@ dotnet aspnet-codegenerator razorpage List Empty -udl -outDir Pages\Restaurants\
 Создание конструктора `ListModel` с инжектированным `IConfiguration`.
 Добавление в `ListModel`, в метод `OnGet()` чтения строки из конфигурационного файла.
 
-02_07. Создание нового проекта `OdeToFood.Core` для Entities.
+**02_07**. Создание нового проекта `OdeToFood.Core` для Entities.
 Создание класса `Restaurant` и перечисления `CuisineType`.
 
 02_08. Создание нового проекта `OdeToFood.Data` для доступа к данным.
