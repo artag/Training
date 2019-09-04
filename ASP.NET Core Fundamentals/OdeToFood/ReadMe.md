@@ -88,15 +88,15 @@ services.AddSingleton<IRestaurantData, InMemoryRestaurantData>();
 
 ## 03. Working with Models and Model Binding
 
-### 03_02. Working with HTML Forms
+#### 03_02. Working with HTML Forms
 
-*Рассказывается про `form`, `get` и `post`. Почему надо использовать для чтения данных `get`,
-и только для изменения данных `post`.*
+*Рассказывается про `form`, `get` и `post`. Почему надо использовать для чтения данных (или для
+поиска на странице) `get`, и только для изменения данных `post`.*
 
 Примеры форм (на слайдах).
 
 `Get`
-```cs
+```html
 <form action="/update" method="get">
     <label for="fname">First Name:</label>
     <input type="text" name="fname" />
@@ -107,7 +107,7 @@ GET /update?fname=Scott
 ```
 
 `Post`
-```cs
+```html
 <form action="/update" method="post">
     <label for="fname">First Name:</label>
     <input type="text" name="fname" />
