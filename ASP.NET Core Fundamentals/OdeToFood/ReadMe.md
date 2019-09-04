@@ -2,22 +2,29 @@
 
 ## 02. Drilling into Data
 
-**02_02**. Создание проекта. Тип проекта `Web Application` (Configure for HTTPS, No Authentication)
+#### 02_02. Creating the New Project
+Создание проекта. Тип проекта `Web Application` (Configure for HTTPS, No Authentication)
+
 Ну или создать с помощью командной строки `dotnet new ...`
 
 
-**02_03**. Редактирование файла `Pages/Shared/_Layout.cshtml`:
+#### 02_03. Editing Razor Pages
+Редактирование файла `Pages/Shared/_Layout.cshtml`:
+
 Добавление меню Restaurants (ссылка на `/Restaurants/List`)
 
 
-**02_04**. Добавление Razor Page (в `/Pages/Restaurants/List.cshtml`).
+#### 02_04. Adding a Razor Page
+Добавление Razor Page (в `/Pages/Restaurants/List.cshtml`).
+
 Добавление заголовка на page:
 ```html
 <h1>Restaurants</h1>
 ```
 
 
-**02_05**. Пример использования тулзы (Scaffolding Tools) из командной строки.
+#### 02_05. Using the Scaffolding Tools
+Пример использования тулзы (Scaffolding Tools) из командной строки.
 
 `dotnet aspnet-codegenerator`
 
@@ -28,7 +35,9 @@ dotnet aspnet-codegenerator razorpage List Empty -udl -outDir Pages\Restaurants\
 ```
 
 
-**02_06**. Добавление свойства `Message` в `ListModel` и во view (`List.cshtml`).
+#### 02_06. Injecting and Using Configuration
+Добавление свойства `Message` в `ListModel` и во view (`List.cshtml`).
+
 Во View значение свойства отображается так:
 ```html
 @Model.Message
@@ -40,17 +49,22 @@ dotnet aspnet-codegenerator razorpage List Empty -udl -outDir Pages\Restaurants\
 Добавление в `ListModel`, в метод `OnGet()` чтения строки из конфигурационного файла.
 
 
-**02_07**. Создание нового проекта `OdeToFood.Core` для Entities.
+#### 02_07. Creating an Entity
+Создание нового проекта `OdeToFood.Core` для Entities.
+
 Создание класса `Restaurant` и перечисления `CuisineType`.
 
 
-**02_08**. Создание нового проекта `OdeToFood.Data` для доступа к данным.
+#### 02_08. Building a Data Access Service
+Создание нового проекта `OdeToFood.Data` для доступа к данным.
+
 Создание интерфейса `IRestaurantData` и его реализации `InMemoryRestaurantData`.
 
 Было показано, как "руками", без VS, можно добавить ссылку в `*.csproj` на другой проект в солюшене.
 
 
-**02_09**. Регистрация `IRestaurantData` и `InMemoryRestaurantData` в `Startup.ConfigureServices()`
+#### 02_09. Registering a Data Service
+Регистрация `IRestaurantData` и `InMemoryRestaurantData` в `Startup.ConfigureServices()`
 ```csharp
 services.AddSingleton<IRestaurantData, InMemoryRestaurantData>();
 ```
@@ -63,11 +77,13 @@ services.AddSingleton<IRestaurantData, InMemoryRestaurantData>();
 (в `Pages/Restaurants/List.cshtml`).
 
 
-**02_10**. Добавление свойства `Restaurants` в класс `ListModel` и инициализация этого свойства.
+#### 02_10. Building a Page Model
+Добавление свойства `Restaurants` в класс `ListModel` и инициализация этого свойства.
 
 
-**02_11**. Добавление таблицы в `Pages/Restaurants/List.cshtml`, используя данные из `Restaurants`
-класса `ListModel`.
+#### 02_11. Displaying a Table of Restaurants
+Добавление таблицы в `Pages/Restaurants/List.cshtml`, используя данные из
+`Restaurants` класса `ListModel`.
 
 
 ## 03. Working with Models and Model Binding
