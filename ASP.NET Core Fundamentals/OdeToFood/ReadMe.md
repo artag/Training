@@ -14,8 +14,12 @@
 <h1>Restaurants</h1>
 ```
 
-02_05. Пример использования тулзы
-`dotnet aspnet-codegenerator`:
+02_05. Пример использования тулзы (Scaffolding Tools) из командной строки.
+
+`dotnet aspnet-codegenerator`
+
+Пример. Создание Razor Page в директории `\Pages\Restaurants` с именем `List`, пустой (`Empty`),
+с useDefaultLayout (`-udl`).
 ```
 dotnet aspnet-codegenerator razorpage List Empty -udl -outDir Pages\Restaurants\
 ```
