@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using OdeToFood.Core;
 using OdeToFood.Data;
 
 namespace OdeToFood.Pages.Restaurants
@@ -19,10 +21,13 @@ namespace OdeToFood.Pages.Restaurants
 
         public string MessageFromConfig { get; set; }
 
+        public IEnumerable<Restaurant> Restaurants { get; set; }
+
         public void OnGet()
         {
             Message = "Hello, World!";
             MessageFromConfig = _config["Message"];
+            Restaurants = _restaurantData.GetAll();
         }
     }
 }

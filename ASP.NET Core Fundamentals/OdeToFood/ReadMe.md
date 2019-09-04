@@ -63,9 +63,10 @@ services.AddSingleton<IRestaurantData, InMemoryRestaurantData>();
 (в `Pages/Restaurants/List.cshtml`).
 
 
-02_10. Добавление свойства `Restaurants` в класс `ListModel` и инициализация этого свойства.
+**02_10**. Добавление свойства `Restaurants` в класс `ListModel` и инициализация этого свойства.
 
-02_11. Добавление таблицы в `Pages/Restaurants/List.cshtml`, используя данные из `Restaurants`
+
+**02_11**. Добавление таблицы в `Pages/Restaurants/List.cshtml`, используя данные из `Restaurants`
 класса `ListModel`.
 
 
