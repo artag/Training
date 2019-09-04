@@ -5,14 +5,17 @@
 **02_02**. Создание проекта. Тип проекта `Web Application` (Configure for HTTPS, No Authentication)
 Ну или создать с помощью командной строки `dotnet new ...`
 
+
 **02_03**. Редактирование файла `Pages/Shared/_Layout.cshtml`:
 Добавление меню Restaurants (ссылка на `/Restaurants/List`)
+
 
 **02_04**. Добавление Razor Page (в `/Pages/Restaurants/List.cshtml`).
 Добавление заголовка на page:
 ```html
 <h1>Restaurants</h1>
 ```
+
 
 **02_05**. Пример использования тулзы (Scaffolding Tools) из командной строки.
 
@@ -23,6 +26,7 @@
 ```
 dotnet aspnet-codegenerator razorpage List Empty -udl -outDir Pages\Restaurants\
 ```
+
 
 **02_06**. Добавление свойства `Message` в `ListModel` и во view (`List.cshtml`).
 Во View значение свойства отображается так:
@@ -35,14 +39,29 @@ dotnet aspnet-codegenerator razorpage List Empty -udl -outDir Pages\Restaurants\
 Создание конструктора `ListModel` с инжектированным `IConfiguration`.
 Добавление в `ListModel`, в метод `OnGet()` чтения строки из конфигурационного файла.
 
+
 **02_07**. Создание нового проекта `OdeToFood.Core` для Entities.
 Создание класса `Restaurant` и перечисления `CuisineType`.
+
 
 **02_08**. Создание нового проекта `OdeToFood.Data` для доступа к данным.
 Создание интерфейса `IRestaurantData` и его реализации `InMemoryRestaurantData`.
 
-02_09. Регистрация `IRestaurantData` и `InMemoryRestaurantData` в `Startup.ConfigureServices()`
-Добавлена передача `IRestaurantData` через конструктор `ListModel` (в `Pages/Restaurants/List.cshtml`).
+Было показано, как "руками", без VS, можно добавить ссылку в `*.csproj` на другой проект в солюшене.
+
+
+**02_09**. Регистрация `IRestaurantData` и `InMemoryRestaurantData` в `Startup.ConfigureServices()`
+```csharp
+services.AddSingleton<IRestaurantData, InMemoryRestaurantData>();
+```
+Время жизни - один объект на всем протяжении работы приложения (`AddSingleton`).
+
+Предупреждение, что данная коллекция только для целей разработки и не годится для работы в
+многопоточном режиме (т.к. внутренний `List` не поддерживает).
+
+Добавлена передача `IRestaurantData` через конструктор `ListModel`
+(в `Pages/Restaurants/List.cshtml`).
+
 
 02_10. Добавление свойства `Restaurants` в класс `ListModel` и инициализация этого свойства.
 
