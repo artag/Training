@@ -38,7 +38,7 @@ dotnet aspnet-codegenerator razorpage List Empty -udl -outDir Pages\Restaurants\
 **02_07**. Создание нового проекта `OdeToFood.Core` для Entities.
 Создание класса `Restaurant` и перечисления `CuisineType`.
 
-02_08. Создание нового проекта `OdeToFood.Data` для доступа к данным.
+**02_08**. Создание нового проекта `OdeToFood.Data` для доступа к данным.
 Создание интерфейса `IRestaurantData` и его реализации `InMemoryRestaurantData`.
 
 02_09. Регистрация `IRestaurantData` и `InMemoryRestaurantData` в `Startup.ConfigureServices()`
