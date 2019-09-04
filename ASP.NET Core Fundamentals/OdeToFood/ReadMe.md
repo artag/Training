@@ -119,12 +119,12 @@ name=Scott
 ```
 
 
-### 03_03. Building a Search Form
+#### 03_03. Building a Search Form
 
-*Добавление поля для поиска и вывода списка ресторанов, начинающихся с определенных букв.
+*Добавление поля для задания поиска списка ресторанов, начинающихся с определенных букв.
 Перехода на другую страницу нет.*
 
-Добавление в `List.cshtml` form с get.
+Добавление в `List.cshtml` form с `get`.
 
 По сравнению с видео - в bootstrap 4 нет таких иконок.
 В bootstrap 3 можно украсить кнопку таким образом:
@@ -139,9 +139,8 @@ name=Scott
 В случае bootstrap 4 для добавления иконок рекомендуют поставить `Font Awesome` или
 `Github Octicons`.
 
-#### Добавление пакетов для web через `LibMan`
 
-*Примечание: установилось, но у меня не получилось включить font-awesome в коде.*
+##### Добавление пакетов для web через `LibMan`
 
 [Use LibMan with ASP.NET Core in Visual Studio](https://docs.microsoft.com/en-us/aspnet/core/client-side/libman/libman-vs?view=aspnetcore-2.1)
 
@@ -149,12 +148,21 @@ In Solution Explorer, right-click the project folder in which the files should b
 Choose Add > Client-Side Library. The Add Client-Side Library dialog appears.
 Choose `cdnjs` and set the name of library.
 
-#### Добавление пакетов через `package.json`
+В файл `Pages\Shared\_Layout.cshtml` добавить строку:
+```html
+<environment include="Development">
+    ...
+    <link rel="stylesheet" href="~/font-awesome/css/all.min.css" />
+</environment>
+```
+
+
+##### Добавление пакетов через `package.json`
 
 *Примечание: из одноименного старого курса Scott Allen*. font-awesome у меня завелся.
 1. Создается `package.json` в корне проекта.
 2. Создается `Middleware` `ApplicationBuilderExtension`.
-3. В `Startup.Configure` добвляется вызов этого middleware.
+3. В `Startup.Configure` добавляется вызов этого middleware.
 
 
 ### 03_04. Finding Restaurants by Name
