@@ -23,11 +23,11 @@ namespace OdeToFood.Pages.Restaurants
 
         public IEnumerable<Restaurant> Restaurants { get; set; }
 
-        public void OnGet()
+        public void OnGet(string searchTerm)
         {
             Message = "Hello, World!";
             MessageFromConfig = _config["Message"];
-            Restaurants = _restaurantData.GetAll();
+            Restaurants = _restaurantData.GetRestaurantsByName(searchTerm);
         }
     }
 }

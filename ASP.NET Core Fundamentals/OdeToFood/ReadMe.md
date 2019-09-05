@@ -185,7 +185,7 @@ public IEnumerable<Restaurant> GetRestaurantsByName(string name = null)
 Если ничего не передается, то `name == null` и выводятся все рестораны.
 
 
-### 03_05. Binding to a Query String
+#### 03_05. Binding to a Query String
 
 *Связывание данных формы и модели. Способ передачи данных из формы через параметр дествия.*
 
@@ -194,20 +194,19 @@ public IEnumerable<Restaurant> GetRestaurantsByName(string name = null)
 <input type="search" class="form-control" value="" name="searchTerm" />
 ```
 
-Меняется `Pages/Restaurants/List.cshtml.cs`. Показывается что можно передать значение из View в Model:
-* Через свойство `HttpContext.Request`
-* Через параметр метода:
+Меняется `Pages/Restaurants/List.cshtml.cs`. Показывается что можно передать значение из View в Model.
+"Model Binding" автоматом ищет в:
+* Свойствах `HttpContext.Request.Headers`, `HttpContext.Request.Query`,
+`HttpContext.Request.Query` `
+
+* В параметре метода (в примере OnGet):
 ```cs
 public void OnGet(string searchTerm)
 {
     Restaurants = _restaurantData.GetRestaurantsByName(searchTerm);
-
-    Message = "Hello World!";
-    MessageFromConfig = _configuration["Message"];
 }
 ```
-
-Проблема: строка поиска скидывается после вызова поиска.
+Все нормально ищется. Но, проблема: строка поиска скидывается после вызова поиска.
 
 
 ### 03_06. Using Model Binding and Tag Helpers
