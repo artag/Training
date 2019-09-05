@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using OdeToFood.Core;
@@ -23,11 +24,14 @@ namespace OdeToFood.Pages.Restaurants
 
         public IEnumerable<Restaurant> Restaurants { get; set; }
 
-        public void OnGet(string searchTerm)
+        [BindProperty(SupportsGet = true)]
+        public string SearchTerm { get; set; }
+
+        public void OnGet()
         {
             Message = "Hello, World!";
             MessageFromConfig = _config["Message"];
-            Restaurants = _restaurantData.GetRestaurantsByName(searchTerm);
+            Restaurants = _restaurantData.GetRestaurantsByName(SearchTerm);
         }
     }
 }

@@ -171,12 +171,12 @@ Choose `cdnjs` and set the name of library.
 
 Меняется `OdeToFood.Data/IRestaurantData`:
 вместо `IEnumerable<Restaurant> GetAll();` будет:
-```cs
+```csharp
 `IEnumerable<Restaurant> GetRestaurantsByName(string name);`
 ```
 
 Меняется соответственно `OdeToFood.Data/InMemoryRestaurantData`:
-```cs
+```csharp
 public IEnumerable<Restaurant> GetRestaurantsByName(string name = null)
 {
     ...
@@ -187,7 +187,7 @@ public IEnumerable<Restaurant> GetRestaurantsByName(string name = null)
 
 #### 03_05. Binding to a Query String
 
-*Связывание данных формы и модели. Способ передачи данных из формы через параметр дествия.*
+*Связывание данных формы и модели. Способ передачи данных из формы в модель через параметр дествия.*
 
 Меняется `Pages/Restaurants/List.cshtml` - в form для input добавился `name`
 ```html
@@ -200,7 +200,7 @@ public IEnumerable<Restaurant> GetRestaurantsByName(string name = null)
 `HttpContext.Request.Query` `
 
 * В параметре метода (в примере OnGet):
-```cs
+```csharp
 public void OnGet(string searchTerm)
 {
     Restaurants = _restaurantData.GetRestaurantsByName(searchTerm);
@@ -209,13 +209,54 @@ public void OnGet(string searchTerm)
 Все нормально ищется. Но, проблема: строка поиска скидывается после вызова поиска.
 
 
-### 03_06. Using Model Binding and Tag Helpers
+#### 03_06. Using Model Binding and Tag Helpers
 
-*Другой способ привязки модели. Через свойство с атрибутоми tag-helper.*
+*Другой способ привязки модели. Рассматривается два способа передачи данных из формы в модель и
+назад.*
 
-В `OdeToFood/List.cshtml.cs`:
+
+##### 1 способ задания Model Binding (в итоге, не применяется)
+
+*Из View (form) в Model передается через параметр метода `OnGet`, обратно, через свойство
+Model `SearchTerm`. Во View (form) при задании value ставится `@Model.SearchTerm`.*
+
+Файл `ListModel`:
+```csharp
+...
+// Используется как output Model, для установки значения value (см. ниже)
+public string SearchTerm { get; set; }
+...
+public void OnGet(string searchTerm)
+{
+    SearchTerm = searchTerm;
+    Restaurants = _restaurantData.GetRestaurantsByName(searchTerm);
+}
+```
+
+В файле `ListView` надо задать value через `@Model.SearchTerm`:
+```html
+<form method="get">
+    <div class="form-group">
+        <div class="input-group">
+            <input type="search" class="form-control"
+                   value=@Model.SearchTerm name="searchTerm"/>
+                <button class="btn btn-light">
+                    <i class="fas fa-search"></i>
+                </button>
+        </div>
+    </div>
+</form>
+```
+
+
+##### 2 способ задания Model Binding (более легкий)
+
+*Во View (form) используется tag-helper `asp-for`, в Model используется свойство со специальным
+атрибутом*.
+
+В `OdeToFood/List.cshtml.cs` (Model):
 1. Вводится свойство `SearchTerm`:
-```cs
+```csharp
 [BindProperty(SupportsGet = true)]
 public string SearchTerm { get; set; }
 ```
@@ -225,7 +266,7 @@ public string SearchTerm { get; set; }
 для операций get надо добавить `SupportsGet = true`.
 
 2. И метод `OnGet()` опять становится без параметра:
-```cs
+```csharp
 public void OnGet()
 {
     Restaurants = _restaurantData.GetRestaurantsByName(SearchTerm);
@@ -235,12 +276,16 @@ public void OnGet()
 }
 ```
 
-В `Pages/Restaurants/List.cshtml` - в form для input добавился tag-helper (`asp-for`):
+В `Pages/Restaurants/List.cshtml` (View) - в form для input добавился tag-helper (`asp-for`):
 ```html
+...
 <input type="search" class="form-control" asp-for="SearchTerm" />
+...
 ```
 
-Это автоматом ставит атрибут `value` для input'а.
+Tag-helper `asp-for` означает, что ввод предназначен для определенного свойства в Model.
+
+*Примечание*: `SearchForm` пишется без "приставки" `Model` (она автоматом подразумевается).
 
 
 ### 03_07. Building a Detail Page
