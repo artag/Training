@@ -36,10 +36,11 @@ namespace OdeToFood.Data
             };
         }
 
-        public IEnumerable<Restaurant> GetAll()
+        public IEnumerable<Restaurant> GetRestaurantsByName(string name = null)
         {
             return
                 from r in _restaurants
+                where string.IsNullOrEmpty(name) || r.Name.StartsWith(name)
                 orderby r.Name
                 select r;
         }

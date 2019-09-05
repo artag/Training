@@ -165,7 +165,7 @@ Choose `cdnjs` and set the name of library.
 3. В `Startup.Configure` добавляется вызов этого middleware.
 
 
-### 03_04. Finding Restaurants by Name
+#### 03_04. Finding Restaurants by Name
 
 *Изменение интерфейса в части Data для получения списка ресторанов по имени.*
 
@@ -175,7 +175,14 @@ Choose `cdnjs` and set the name of library.
 `IEnumerable<Restaurant> GetRestaurantsByName(string name);`
 ```
 
-Меняется соответственно `OdeToFood.Data/InMemoryRestaurantData`.
+Меняется соответственно `OdeToFood.Data/InMemoryRestaurantData`:
+```cs
+public IEnumerable<Restaurant> GetRestaurantsByName(string name = null)
+{
+    ...
+}
+```
+Если ничего не передается, то `name == null` и выводятся все рестораны.
 
 
 ### 03_05. Binding to a Query String
