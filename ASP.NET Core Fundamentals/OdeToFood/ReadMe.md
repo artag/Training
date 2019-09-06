@@ -360,7 +360,7 @@ https://localhost:44364/Restaurants/Detail/2
 ```
 
 
-### 03_09. Specifying Page Routes
+#### 03_09. Specifying Page Routes
 
 *Настройка маршрутизации для более красивого адреса для показа деталей ресторана.*
 

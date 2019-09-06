@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "{restaurantId:int}"
 @model OdeToFood.Pages.Restaurants.DetailModel
 @{
     ViewData["Title"] = "Detail";
@@ -15,4 +15,4 @@
     Cuisine: @Model.Restaurant.Cuisine
 </div>
 
-<a asp-page="./List" class="btn btn-outline-dark">All Restaurants</a>
+<a asp-page="./List" class="btn btn-outline-secondary">All Restaurants</a>
