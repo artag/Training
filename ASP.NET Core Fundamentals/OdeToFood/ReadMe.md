@@ -399,13 +399,40 @@ https://localhost:44364/Restaurants/Detail/2
 Исправление будет далее.
 
 
-### 03_11. Handling Bad Requests
+#### 03_11. Handling Bad Requests
 
-*Добавление обработки ошибки для ресторана с несуществующим id. Добавление перенаправления
-на страницу с информацией о "страница не существует".*
+*Добавление обработки ошибки для ресторана с несуществующим id.
+Добавление перенаправления на страницу с информацией о "страница не существует".
+Или возвращается текущий View, если ресторан найден.*
 
-1. Модификация `DetailModel.OnGet()`. Добавление проверки на `null` и добавление `RedirectToPage`.
-2. Создание `NotFound` Page.
+Не рекомендуется добавлять проверки на null-refence во View:
+```csharp
+@if(...)
+{
+    ...
+}
+```
+
+Проверку на null надо делать на месте, в Model.
+
+1. Модификация `DetailModel.OnGet()`.
+  * Замена возвращаемого типа `void` на `IActionResult`.
+  * Добавление проверки на `null` и добавление `RedirectToPage`.
+```csharp
+public IActionResult OnGet(int restaurantId)
+{
+    Restaurant = _restaurantData.GetById(restaurantId);
+    if (Restaurant == null)
+    {
+        return RedirectToPage("./NotFound");
+    }
+
+    return Page();
+}
+```
+
+2. Создание `NotFound` Page в `Pages/Restaurants/NotFound.cshtml`. Просто View, без Model.
+
 
 
 ## 04. Editing Data with Razor Pages
