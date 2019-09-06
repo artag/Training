@@ -30,6 +30,11 @@
                    asp-route-restaurantId="@restaurant.Id">
                     <i class="fas fa-search-plus"></i>
                 </a>
+                <a class="btn btn-outline-secondary btn-lg"
+                   asp-page="./Edit"
+                   asp-route-restaurantId="@restaurant.Id">
+                    <i class="far fa-edit"></i>
+                </a>
             </td>
         </tr>
     }

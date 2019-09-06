@@ -434,23 +434,23 @@ public IActionResult OnGet(int restaurantId)
 2. Создание `NotFound` Page в `Pages/Restaurants/NotFound.cshtml`. Просто View, без Model.
 
 
-
 ## 04. Editing Data with Razor Pages
 
 *Добавление функциональности для создания и редактирования ресторана*.
 
 
-### 04_02. Creating the Restaurant Edit Page
+#### 04_02. Creating the Restaurant Edit Page
 
 *Добавление кнопки на `List.cshtml` для редактирования ресторана и добавление новой
 страницы `Edit.cshtml`*.
 
-1. Добавление кнопки на `List.cshtml` для редактирования ресторана. (Рядом с кнопкой Details).
+1. Добавление кнопки на View `List.cshtml` для редактирования ресторана. (Рядом с кнопкой Details).
 
-2. Добавление новой страницы `/Pages/Restaurants/Edit.cshtml*.
-Для `Edit.cshtml.cs`:
-Здесь в `OnGet()` будет в виде параметра передаваться `id` редактируемого ресторана:
-```cs
+2. Добавление новой страницы Razor Page в `/Pages/Restaurants/Edit.cshtml`.
+
+Для `Edit.cshtml.cs`: здесь в `OnGet()` будет в виде параметра передаваться `id` редактируемого
+ресторана:
+```csharp
 public IActionResult OnGet(int restaurantId)
 {
     Restaurant = _restaurantData.GetById(restaurantId);
@@ -463,7 +463,7 @@ public IActionResult OnGet(int restaurantId)
 }
 ```
 
-Для `Edit.cshtml.cs` добавление:
+Для `Edit.cshtml.cs` добавление (добавление "красивого" роутинга - см. пред. раздел):
 ```html
 @page "{restaurantId:int}"
 ...
