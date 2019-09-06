@@ -284,16 +284,24 @@ public void OnGet()
 ```
 
 Tag-helper `asp-for` означает, что ввод предназначен для определенного свойства в Model.
+`asp-for` неявно задает атрибуты `value` и `name` элемента `input`.
 
 *Примечание*: `SearchForm` пишется без "приставки" `Model` (она автоматом подразумевается).
 
 
-### 03_07. Building a Detail Page
+#### 03_07. Building a Detail Page
 
 *Добавление страницы для показа более подробной информации о ресторане.*
 
 Добавление Razor Page для detail view: `Pages/Restaurants/Detail.cshtml`
-Модификация model и view.
+Модификация Model и View. В Model добавляется свойство `Restaurant`, во View через
+это свойство выводится информация о выбранном ресторане.
+
+Во View tag-helper `asp-page` (применяется в anchor-tag `<a>`) содержит линк на другую Razor Page.
+Пример (линк в виде кнопки на страницу `List`):
+```html
+<a asp-page="./List" class="btn btn-outline-dark">All Restaurants</a>
+``` 
 
 
 ### 03_08. Linking to the Details
