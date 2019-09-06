@@ -383,13 +383,20 @@ https://localhost:44364/Restaurants/Detail/2
 В нашем случае - `@page "{restaurantId:int}"`
 
 
-### 03_10. Fetching Restaurants by ID
+#### 03_10. Fetching Restaurants by ID
 
 *Добавление ссылки в `DetailModel` на `IRestaurantData` для получения ресторана по его id.*
 
 1. Модификация (добавление метода `GetById()`) в `IRestaurantData` и его реализацию.
+`GetById` может возвратить null, если ресторан с таким Id не найден.
+
 2. Добавление зависимости от `IRestaurantData` через конструктор в `DetailModel`.
-3. Добавление вызова `IRestaurantData.GetById()` в `DetailModel.OnGet()`.
+
+3. Добавление вызова `IRestaurantData.GetById()` в `DetailModel.OnGet()` и присвоение
+полученного ресторана свойству `Restaurant`, которое используется для показа во View.
+
+Проблема: при попытке вызова Detail для несуществующего Id приложение крашится с NRE.
+Исправление будет далее.
 
 
 ### 03_11. Handling Bad Requests
