@@ -304,32 +304,60 @@ Tag-helper `asp-for` означает, что ввод предназначен 
 ``` 
 
 
-### 03_08. Linking to the Details
+#### 03_08. Linking to the Details
 
 *Подготовка. Добавление параметра id (в `DetailModel.OnGet()`) и кнопки для показа деталей
 (в `List.cshtml`).*
 
 1. Меняется `Pages/Restaurants/Detail.cshtml.cs`, в `OnGet` добавляется параметр (пока только
 в сигнатуру):
-```cs
+```csharp
 public void OnGet(int restaurantId)
 {
     Restaurant = new Restaurant();
+    Restaurant.Id = restaurantId;
 }
 ```
 
-2. Меняется `Pages/Restaurants/List.cshtml`. Добавление в крайний правый столбец кнопки для
-показа деталей для соотв. ресторана:
+2. Меняется `Pages/Restaurants/List.cshtml`. Добавление в крайний правый столбец большой кнопки
+для показа деталей для соотв. ресторана:
 ```html
 <td>
-    <a class="btn btn-lg" asp-page="./Detail" asp-route-restaurantId="@restaurant.Id">
-        <i class="fa fa-search-plus"></i>
+    <a class="btn btn-outline-secondary btn-lg">
+        <i class="fas fa-search-plus"></i>
     </a>
 </td>
 ```
 
+В видео показывается, что в anchor-tag `<a>` можно добавить жестко-заданный линк (`href`):
+```html
+<a class="btn btn-outline-secondary btn-lg"
+   href="/Restaurants/Detail?restaurantId=@restaurant.Id">
+    ...
+</a>
+```
+
+Но рекомендуется использовать tag-helper `asp-route-имя_передаваемого_параметра`
+(вместе с `asp-page`). Пример:
+```html
+<a class="btn btn-outline-secondary btn-lg"
+   asp-page="./Detail"
+   asp-route-restaurantId="@restaurant.Id">
+    <i class="fas fa-search-plus"></i>
+</a>
+```
+
 `asp-route-restaurantId` - "динамический" tag-helper, частица `restaurantId` служит для передачи
-одноименного параметра в model.
+одноименного параметра в Model.
+
+Линк на страницу `Detail` передается примерно в таком виде:
+```
+https://localhost:44364/Restaurants/Detail?restaurantId=2
+```
+В следующем разделе будет объяснено, как сделать обращение к Detail по такому линку:
+```
+https://localhost:44364/Restaurants/Detail/2
+```
 
 
 ### 03_09. Specifying Page Routes
