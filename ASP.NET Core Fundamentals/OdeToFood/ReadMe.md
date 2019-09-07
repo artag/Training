@@ -470,7 +470,7 @@ public IActionResult OnGet(int restaurantId)
 ```
 
 
-### 04_03. Building an Edit Form with Tag Helpers
+#### 04_03. Building an Edit Form with Tag Helpers
 
 *Добавление полей ввода в `Edit.cshtml` (для редактирования деталей ресторана)*.
 
@@ -479,6 +479,7 @@ public IActionResult OnGet(int restaurantId)
 ```html
 <input type="hidden" asp-for="Restaurant.Id"/>`
 ```
+Скрыто, чтобы пользователь не видел и не редактировал Id, но Id нужен для поиска ресторана в БД.
 
 * Для редактирования `Name` и `Location`:
 ```html
@@ -487,31 +488,60 @@ public IActionResult OnGet(int restaurantId)
     <input asp-for="Restaurant.Name" class="form-control" />
 </div>
 ```
+Tag-helper `asp-for` позволяет не указывать аттрибуты: `type` (видит, что редактируется string),
+`name` и `value`.
 
 * Для выбора `Cuisine` - выпадающий список.
 ```html
 <div class="form-group">
     <label asp-for="Restaurant.Cuisine"></label>
-    <select asp-for="Restaurant.Cuisine" class="form-control"
+    <select class="form-control"
+            asp-for="Restaurant.Cuisine" 
             asp-items="Model.Cuisines"></select>
 </div>
 ```
 
-`select` - выпадающий список, `asp-items` - элементы в выпадающем списке
-(все элементы перечисления `CuisineType`.
+`select` - выпадающий список, `asp-items` - элементы в выпадающем списке `IEnumerable<SelectListItem>`
+(все элементы перечисления `CuisineType`).
+*Примечание*: `asp-for` не требует префикса `Model`, `asp-items` - требует.
+
+
+**Не рекомендуется** реализовывать логику выбора списка во View следующими двумя способами.
+1. Не рекомендуется использование конструкции `option` (из-за hard coding)
+```html
+<select class="form-control asp-for="Restaurant.Cuisine">
+    <option ...>
+    <option ...>
+    ...
+</select>
+```
+
+2. Не рекомендуется использование `asp-items` следующим способом (сложно тестировать, View не должен этим заниматься):
+```html
+<select class="form-control
+        asp-for="Restaurant.Cuisine"
+        asp-items="Html.GetEnumSelectList<CuisineType>()">
+    ...
+</select>
+```
+`Html` - свойство типа `IHtmlHelper`, генерирует html.
+`Html.GetEnumSelectList<CuisineType>()` - генерирует список для выпадающего списка.
+
 
 Для `Edit.cshtml.cs`:
 1. Добавление зависимости класса от `IHtmlHelper`.
-2. Ввод свойства `public IEnumerable<SelectListItem> Cuisines { get; set; }` - для выбора
-`CuisineType`.
+2. Ввод свойства `public IEnumerable<SelectListItem> Cuisines { get; set; }` - для выбора `CuisineType`.
 3. Инициализация поля в OnGet(), используя `IHtmlHelper`:
-```cs
+```csharp
 public IActionResult OnGet(int restaurantId)
 {
     Cuisines = _htmlHelper.GetEnumSelectList<CuisineType>();
     ...
 }
 ```
+Достоинства данного подхода получения списка enum для выпадайки во View:
+* тестируемость
+* гибкость
 
 
 ### 04_04. Model Binding an HTTP POST Operation
