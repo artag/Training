@@ -626,28 +626,46 @@ public IActionResult OnPost()
 `IValidatableObject` (в видео не показано)*).
 
 
-### 04_06. Using Model State and Showing Validation Errors
+#### 04_06. Using Model State and Showing Validation Errors
 
 *Продолжение реализации валидации, оставшейся из предыдущего пункта*.
 
-2.2 В `Edit.OnPost()` добавляется проверка статуса `ModelState` - это словарь, содержащий данные
-о валидности данных модели.
-
-Можно обратиться напрямую: `ModelState["Location"]...` или как в видео:
-```cs
+2.2 В `Edit.OnPost()` добавляется проверка статуса `ModelState`.
+`ModelState` - это словарь, содержащий данные о валидности данных модели.
+Можно обратиться напрямую, например:
+```csharp
+ModelState["Location"] - информация об элементе "Location".
+ModelState["Location"].Errors - сюда записываются ошибки при валидации.
+ModelState["Location"].AttemptedValue - введенное значение.
+```
+Все вышеперечисленное редко используется, на практике используется следующее
+(как показано в видео):
+```csharp
 if (ModelState.IsValid)
 {
     ...
 }
 ```
+Проблема: теперь при вводе хотя бы одного невалидного значения, введенные данные
+на форме редактирования не сохряняются и не видно никаких информационных сообщений
+об этом.
 
-#### Добавление валидации на форму
+Это решается путем добавления полей, содержащих информацию о валидации. 
 
+
+##### Добавление валидации на форму
+
+Добавляется во View (`Edit.cshtml`).
 Для проверямых полей ввода добавляется следущее (элемент `span` - подпись снизу):
 ```html
-<input asp-for="Restaurant.Name" class="form-control" />
-<span asp-validation-for="Restaurant.Name" class="text-danger" ></span>
+<div class="form-group">
+    <label asp-for="Restaurant.Name"></label>
+    <input asp-for="Restaurant.Name" class="form-control" />
+    <span asp-validation-for="Restaurant.Name" class="text-danger"></span>
+</div>
 ```
+Tag-helper `asp-validation-for` проверяет свойство на правильность. Если свойство не проходит
+валидацию, на форме выводится текст ошибки.
 
 Проблема: возможность повторной отправки POST при обновлении страницы.
 
