@@ -544,31 +544,54 @@ public IActionResult OnGet(int restaurantId)
 * гибкость
 
 
-### 04_04. Model Binding an HTTP POST Operation
+#### 04_04. Model Binding an HTTP POST Operation
 
 *Добавление операции POST нажатии на кнопку `Save` в `Edit.cshtml`*.
 
-1. Изменение `IRestaurantData`. Добавление:
+1. Изменение `IRestaurantData`. Добавление нового метода для обновления ресторана:
 * `Restaurant Update(Restaurant updatedRestaurant);`
-* `int Commit();` - метод для сохранения изменений в БД (в `InMemoryRestaurantData` не исаользуется)
+
+* `int Commit();`
+Метод для сохранения изменений в БД (в `InMemoryRestaurantData` не используется).
+Похожие методы есть во многих системах Data Sources, например в EF.
 
 2. Реализация добавленных методов в `InMemoryRestaurantData`.
+```csharp
+public Restaurant Update(Restaurant updatedRestaurant)
+{
+    var restaurant = GetById(updatedRestaurant.Id);
+    if (restaurant != null)
+    {
+        restaurant.Name = updatedRestaurant.Name;
+        restaurant.Location = updatedRestaurant.Location;
+        restaurant.Cuisine = updatedRestaurant.Cuisine;
+    }
+
+    return restaurant;
+}
+
+public int Commit()
+{
+    return 0;        // Dummy реализация
+}
+```
 
 3. Добавление `OnPost` в `Edit.cshtml.cs`:
-```cs
+```csharp
 public IActionResult OnPost()
 {
-    _restaurantData.Update(Restaurant);
+    Restaurant = _restaurantData.Update(Restaurant);
     _restaurantData.Commit();
     return Page();
 }
 ```
 
 И установка атрибута для свойства `Restaurant` (вкл. поддержки для передачи в POST):
-```cs
+```csharp
 [BindProperty]
 public Restaurant Restaurant { get; set; }
 ```
+Это свойство будет заполнено данными из form (из View).
 
 Есть несколько недочетов после нажатия на кнопку `Save` в `Edit.cshtml`:
 1. Пропадание типа кухни в выпадающем списке.

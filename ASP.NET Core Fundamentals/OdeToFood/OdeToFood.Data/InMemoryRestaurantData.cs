@@ -49,5 +49,24 @@ namespace OdeToFood.Data
                 orderby r.Name
                 select r;
         }
+
+        public Restaurant Update(Restaurant updatedRestaurant)
+        {
+            var restaurant = GetById(updatedRestaurant.Id);
+            if (restaurant != null)
+            {
+                restaurant.Name = updatedRestaurant.Name;
+                restaurant.Location = updatedRestaurant.Location;
+                restaurant.Cuisine = updatedRestaurant.Cuisine;
+            }
+
+            return restaurant;
+        }
+
+        // Используется для эмуляции работы с Data Source. Здесь не используется. 
+        public int Commit()
+        {
+            return 0;
+        }
     }
 }
