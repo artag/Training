@@ -697,11 +697,17 @@ public IActionResult OnPost()
 для перенаправления на страницу Detail.
 
 
-### 04_08. Building a Create Restaurant Page
+#### 04_08. Building a Create Restaurant Page
 
 *Построение страницы для создания новой страницы (на самом деле используя `Edit.cshtml`)*.
 
-1. Добавление в `List.cshtml` ссылки в виде кнопки на `Edit.cshtml`.
+1. Добавление в `List.cshtml` ссылки в виде кнопки на `Edit.cshtml`:
+```html
+<a asp-page="./Edit" class="btn btn-primary">Add New</a>
+```
+
+При нажатии на добавленную кнопку никакой реакции не будет, т.к. ссылка на страницу `Edit` не
+содержит `restaurantId`. Исправим это. 
 
 2. Добавление в `Edit` возможность приема Nullable int id.
 2.1. В `Edit.cshtml` - сверху:
@@ -710,11 +716,11 @@ public IActionResult OnPost()
 ...
 ```
 
-Если урл заканчивается на `/Edit`, то будет редактирование для новой страницы, если на `/Edit/1`, 
-то будет редактирование уже существующего ресторана.
+Если урл заканчивается на `/Edit` (`restaurantId` будет null), то будет редактирование для новой
+страницы, если на `/Edit/1`, то будет редактирование уже существующего ресторана.
 
 2.2. Модификация `Edit.OnGet()`:
-```cs
+```csharp
 public IActionResult OnGet(int? restaurantId)
 {
     Cuisines = _htmlHelper.GetEnumSelectList<CuisineType>();
@@ -731,6 +737,9 @@ public IActionResult OnGet(int? restaurantId)
     return Page();
 }
 ```
+
+Теперь необходимо реализовать добавление нового ресторана в репозитории данных и методе
+`Edit.OnPost()`.
 
 
 ### 04_09. Adding Create to the Data Access Service
