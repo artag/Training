@@ -774,20 +774,53 @@ public Restaurant Add(Restaurant newRestaurant)
 Ну и последний штрих - желательно добавить сообщение об успешности сохранения/изменения данных.
 
 
-### 04_11. Confirming the Last Operation
+#### 04_11. Confirming the Last Operation
 
-*Добавление подтверждения сохранения, используя `TempData`*.
+*Добавление сообщения (подтверждение) сохранения, используя `TempData`*.
 
-1. Добавление создания `TempData["Message"]` в `Edit.OnPost()`.
+Как передать информацию об успешном соранении между страницами `Edit` и `Detail`?
 
-2. Добавление свойства в `Detail.cshtml.cs`:
-```cs
+Можно передавать параметр через url, например строку. Способ не подходит, так как
+пользователь может внести такой адрес url в свои закладки.
+
+Другой способ состоит в использовании `TempData` - структура данных, которая подобна словарю,
+в котором можно передать что-либо между страницами. Но, после прочтения значения из `TempData`,
+оно оттуда исчезает.
+
+1. Создание `TempData["Message"]` в `Edit.OnPost()`:
+```csharp
+public IActionResult OnPost()
+{
+    ...
+    TempData["Message"] = "Restaurant saved!";
+    ...
+}
+```
+
+2. Добавление свойства в `Detail.cshtml.cs`.
+
+Можно сразу написать во View что-то типа:
+```csharp
+@if (TempData["Message"])
+{
+    // Что-то вывести на экран
+}
+```
+
+Но, лучше, добавить свойство в Model (как показано в видео).
+
+Можно сделать Bind для TempData. В `DetailModel` создать свойство со следующим атрибутом,
+которое автоматически будет подхватываться во View:
+```csharp
 [TempData]
-public string Message { get; set; }
+public string Message { get; set; }    // Имя свойства == имя ключа в TempData
 ```
 
 3. Добавление показа сообщения в случае наличия этого сообщения в `Detail.cshtml`:
-```html
+
+Изменения в `DetailView`:
+
+```csharp
 ...
 @if (Model.Message != null)
 {
@@ -797,6 +830,3 @@ public string Message { get; set; }
 }
 ...
 ```
-
-
-
