@@ -830,3 +830,21 @@ public string Message { get; set; }    // Имя свойства == имя кл
 }
 ...
 ```
+
+
+## 05. Working with SQL Server and the Entity Framework Core
+
+*Работа с реальной БД (MS-SQL Server) с помощью Entity Framework*.
+
+
+#### 05_02. Installing the Entity Framework
+
+В проекте, созданным по умолчанию из template, в метапакете `Microsoft.AspNetCore.App` уже
+содержатся ссылки на `EntityFramework`.
+
+Но, в остальные проекты, которые созданы "вручную", требуется добавить пакеты самому. Для
+текущего проекта требуется добавить (в видео проект `OdeToFood.Data`):
+* `Microsoft.EntityFrameworkCore`
+* `Microsoft.EntityFrameworkCore.Design`
+* `Microsoft.EntityFrameworkCore.SqlServer` - для работы с MS-SQL Server.
+
