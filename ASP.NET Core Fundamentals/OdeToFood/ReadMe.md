@@ -742,12 +742,25 @@ public IActionResult OnGet(int? restaurantId)
 `Edit.OnPost()`.
 
 
-### 04_09. Adding Create to the Data Access Service
+#### 04_09. Adding Create to the Data Access Service
 
 *Изменение интерфейса `IRestaurantData`. Добавление нового метода `Add`*.
 
 1. Добавление нового метода в `IRestaurantData`: `Restaurant Add(Restaurant newRestaurant);`.
-2. Добавление нового метода в `InMemoryRestaurantData`.
+
+2. Добавление нового метода в `InMemoryRestaurantData`:
+```csharp
+public Restaurant Add(Restaurant newRestaurant)
+{
+    _restaurants.Add(newRestaurant);
+    // Эмуляция автоматического присвоения Id новому ресторану базой данных.
+    newRestaurant.Id = _restaurants.Max(r => r.Id) + 1;
+
+    return new Restaurant();
+}
+```
+
+Осталось реализовать добавление нового ресторана в методе `Edit.OnPost()`.
 
 
 ### 04_10. Handling Create vs. Update Logic

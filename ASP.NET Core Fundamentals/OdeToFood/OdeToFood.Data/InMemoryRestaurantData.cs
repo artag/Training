@@ -50,6 +50,15 @@ namespace OdeToFood.Data
                 select r;
         }
 
+        public Restaurant Add(Restaurant newRestaurant)
+        {
+            _restaurants.Add(newRestaurant);
+            // Эмуляция автоматического присвоения Id новому ресторану базой данных.
+            newRestaurant.Id = _restaurants.Max(r => r.Id) + 1;
+
+            return new Restaurant();
+        }
+
         public Restaurant Update(Restaurant updatedRestaurant)
         {
             var restaurant = GetById(updatedRestaurant.Id);
