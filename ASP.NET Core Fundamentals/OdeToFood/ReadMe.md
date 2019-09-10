@@ -848,3 +848,20 @@ public string Message { get; set; }    // Имя свойства == имя кл
 * `Microsoft.EntityFrameworkCore.Design`
 * `Microsoft.EntityFrameworkCore.SqlServer` - для работы с MS-SQL Server.
 
+
+#### 05_03. Implementing an Entity Framework DbContext
+
+Для работы с БД необходимо определить класс, унаследованный от `DbContext`.
+Свойства в этом классе будут содержать информацию, которая будет находиться в БД и с которой
+будет работать EF.
+
+Создание в проекте `OdeToFood.Data` класса `OdeToFoodDbContext`:
+```csharp
+public class OdeToFoodContext : DbContext
+{
+    public DbSet<Restaurant> Restaurants { get; set; }
+}
+```
+
+`DbSet` говорит EF, что данные будут использоваться не только для query, но и для insert,
+update and delete.
