@@ -883,3 +883,22 @@ dotnet ef dbcontext info
 ```
 При попытке вывести информацию о DbContext type выводится сообщение (ошибка) о том, что
 не сконфигурирован database provider.
+
+
+#### 05_05. Using Other Databases and Tools
+
+EF поддерживает несколько БД, такие как Sqlite, MySql, ...
+Документацию о поддерживаемых БД можно найти тут (документация на Database Providers):
+https://docs.microsoft.com/ru-ru/ef/core/providers/
+
+Можно запустить на Linux MS-SQL Server через Docker Images(см. также на docs.microsoft.com)
+
+Упоминается command-line query tool for SQL Server `mssql-cli`.
+Это кроссплатформенная тулза, которая позволяет коннектиться к БД, выполнять query, ...
+
+В данном курсе показывается использование `LocalDB` (ставится вместе с VS).
+
+Меню View -> SQL Server Object Explore. Посмотреть на список доступных серверов.
+Нас интересует наличие в этом списке сервера `(LocalDB)\MSSQLLocalDB`.
+
+Название этого сервера понадобиться для задания `Connection String`.
