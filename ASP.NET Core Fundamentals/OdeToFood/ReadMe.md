@@ -839,6 +839,8 @@ public string Message { get; set; }    // Имя свойства == имя кл
 
 #### 05_02. Installing the Entity Framework
 
+*Установка EF (NuGet пакеты).*
+
 В проекте, созданным по умолчанию из template, в метапакете `Microsoft.AspNetCore.App` уже
 содержатся ссылки на `EntityFramework`.
 
@@ -850,6 +852,8 @@ public string Message { get; set; }    // Имя свойства == имя кл
 
 
 #### 05_03. Implementing an Entity Framework DbContext
+
+*Создание класса-наследника от `DbContext` для работы с данными в БД.*
 
 Для работы с БД необходимо определить класс, унаследованный от `DbContext`.
 Свойства в этом классе будут содержать информацию, которая будет находиться в БД и с которой
@@ -869,6 +873,8 @@ update and delete.
 
 #### 05_04. Using the Entity Framework Tools
 
+*Инструменты командной сроки для работы с EF.*
+
 Migration - меняет the schema of database.
 Чтобы создать migration надо воспользоваться инструментами командной строки.
 
@@ -886,6 +892,8 @@ dotnet ef dbcontext info
 
 
 #### 05_05. Using Other Databases and Tools
+
+*Немного о БД, инструментах для тех, что не на Windows и/или не использует VS.*
 
 EF поддерживает несколько БД, такие как Sqlite, MySql, ...
 Документацию о поддерживаемых БД можно найти тут (документация на Database Providers):
@@ -905,6 +913,8 @@ https://docs.microsoft.com/ru-ru/ef/core/providers/
 
 
 #### 05_06. Adding Connection Strings and Registering Services
+
+*Задание настроек подключения, регистрация настроек в сервисах, передача настроек в DbContext.*
 
 ##### Шаг 1
 `ConnectionString` записывается в конфигурационный файл `appsettings.json`:
@@ -960,6 +970,8 @@ public class OdeToFoodDbContext : DbContext
 
 #### 05_07. Adding Database Migrations
 
+*Создание (добавление) новой миграции.*
+
 Из директории `OdeToFood.Data` опять попробовать запустить:
 ```
 dotnet ef dbcontext info
@@ -1001,6 +1013,8 @@ dotnet ef migrations add initialcreate -s ..\OdeToFood\OdeToFood.csproj
 
 
 #### 05_08. Running Database Migrations
+
+*Запуск миграции. (Автоматическое обновление БД согласно миграции).*
 
 Из директории `OdeToFood.Data` запустить:
 ```
