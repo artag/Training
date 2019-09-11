@@ -901,4 +901,58 @@ https://docs.microsoft.com/ru-ru/ef/core/providers/
 Меню View -> SQL Server Object Explore. Посмотреть на список доступных серверов.
 Нас интересует наличие в этом списке сервера `(LocalDB)\MSSQLLocalDB`.
 
-Название этого сервера понадобиться для задания `Connection String`.
+Название этого сервера понадобиться для задания `ConnectionString`.
+
+
+#### 05_06. Adding Connection Strings and Registering Services
+
+##### Шаг 1
+`ConnectionString` записывается в конфигурационный файл `appsettings.json`:
+```json
+...
+"ConnectionStrings": {
+    "OdeToFoodDb": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=OdeToFood;Integrated Security=True;" 
+  }
+...
+```
+
+- `ConnectionStrings` - секция (может содержать информацию о нескольких возможных соединениях с БД).
+
+- `OdeToFoodDb` - ключ, имя ConnectionString.
+
+- Далее в кавычках - значение ConnectionString:
+  - `Data Source=(localdb)\\MSSQLLocalDB` - название сервер
+  - `Initial Catalog=OdeToFood` - Имя БД
+  - `Integrated Security=True` - Использоваться Windows Identity для создания SQL Server'а
+  (Особенность localdb).
+
+##### Шаг 2
+В `Startup.ConfigureServices()` добавляется:
+```cs
+services.AddDbContextPool<OdeToFoodDbContext>(options =>
+{
+    options.UseSqlServer(Configuration.GetConnectionString("OdeToFoodDb"));
+});
+```
+
+* Есть `AddDbContext<T>` и `AddDbContextPool<T>`. В видео используется последний как более
+быстрый (более ничего не объясняется).
+
+* `UseSqlServer` используется для установки Database Provider.
+
+##### Шаг 3
+В классе `OdeToFoodDbContext` надо передать в базовый класс `DbContext` опции
+`DbContextOptions<T>` (передача через конструктор):
+```csharp
+public class OdeToFoodDbContext : DbContext
+{
+    public OdeToFoodDbContext(DbContextOptions<OdeToFoodDbContext> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<Restaurant> Restaurants { get; set; }
+}
+```
+`DbContextOptions<T>` используется для передачи информации о ConnectionString 
+и других опций в `DbContext`.
