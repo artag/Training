@@ -865,3 +865,21 @@ public class OdeToFoodContext : DbContext
 
 `DbSet` говорит EF, что данные будут использоваться не только для query, но и для insert,
 update and delete.
+
+
+#### 05_04. Using the Entity Framework Tools
+
+Migration - меняет the schema of database.
+Чтобы создать migration надо воспользоваться инструментами командной строки.
+
+Из директории `OdeToFood.Data`:
+```
+dotnet ef dbcontext list
+```
+Вывести на экран все dbContext`ы. Сейчас выводит: `OdeToFood.Data.OdeToFoodContext`.
+
+```
+dotnet ef dbcontext info
+```
+При попытке вывести информацию о DbContext type выводится сообщение (ошибка) о том, что
+не сконфигурирован database provider.
