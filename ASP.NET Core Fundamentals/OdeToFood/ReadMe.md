@@ -956,3 +956,45 @@ public class OdeToFoodDbContext : DbContext
 ```
 `DbContextOptions<T>` используется для передачи информации о ConnectionString 
 и других опций в `DbContext`.
+
+
+#### 05_07. Adding Database Migrations
+
+Из директории `OdeToFood.Data` опять попробовать запустить:
+```
+dotnet ef dbcontext info
+```
+Ругается: `Unable to create an object of type 'OdeToFoodDbContext'...`
+
+Это из-за того, что `OdeToFood.Data` не включает `appsettings.json` (не стартовый проект).
+
+Для решения этого вопроса можно:
+
+* Имплементировать `IDesignTimeDbContextFactory<OdeToFoodDbContext>`. Эта реализация должна
+будет предоставить всю необходимую информацию (Database Provider, ConnectionString, ...)
+для dbContext.
+
+* Или можно просто указать путь к стартовому проекту прямо в команде:
+```
+dotnet ef dbcontext info -s ..\OdeToFood\OdeToFood.csproj
+```
+Команда должна вывести что-то типа:
+```
+info: Microsoft.EntityFrameworkCore.Infrastructure[10403]
+      Entity Framework Core 2.2.6-servicing-10079 initialized 'OdeToFoodDbContext'
+      using provider 'Microsoft.EntityFrameworkCore.SqlServer'
+      with options: MaxPoolSize=128
+Provider name: Microsoft.EntityFrameworkCore.SqlServer
+Database name: OdeToFood
+Data source: (localdb)\MSSQLLocalDB
+Options: MaxPoolSize=128
+```
+
+Теперь можно создать первый migration:
+```
+dotnet ef migrations add initialcreate -s ..\OdeToFood\OdeToFood.csproj
+```
+`initialcreate` - имя migration.
+
+Данная команда создаст в проекте `OdeToFood.Data` папку `Migrations` с файлы миграции.
+(Самый "интересный" файл будет называться *_initialcreate.cs").
