@@ -998,3 +998,14 @@ dotnet ef migrations add initialcreate -s ..\OdeToFood\OdeToFood.csproj
 
 Данная команда создаст в проекте `OdeToFood.Data` папку `Migrations` с файлы миграции.
 (Самый "интересный" файл будет называться *_initialcreate.cs").
+
+
+#### 05_08. Running Database Migrations
+
+Из директории `OdeToFood.Data` запустить:
+```
+dotnet ef database update -s ..\OdeToFood\OdeToFood.csproj
+```
+Данная команда обновляет базу данных используя миграцию.
+
+После первого запуска EF создал БД и таблицу в ней.
