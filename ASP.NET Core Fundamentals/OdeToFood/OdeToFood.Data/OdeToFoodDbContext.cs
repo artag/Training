@@ -3,7 +3,7 @@ using OdeToFood.Core;
 
 namespace OdeToFood.Data
 {
-    public class OdeToFoodContext : DbContext
+    public class OdeToFoodDbContext : DbContext
     {
         public DbSet<Restaurant> Restaurants { get; set; }
     }

@@ -857,7 +857,7 @@ public string Message { get; set; }    // Имя свойства == имя кл
 
 Создание в проекте `OdeToFood.Data` класса `OdeToFoodDbContext`:
 ```csharp
-public class OdeToFoodContext : DbContext
+public class OdeToFoodDbContext : DbContext
 {
     public DbSet<Restaurant> Restaurants { get; set; }
 }
@@ -876,7 +876,7 @@ Migration - меняет the schema of database.
 ```
 dotnet ef dbcontext list
 ```
-Вывести на экран все dbContext`ы. Сейчас выводит: `OdeToFood.Data.OdeToFoodContext`.
+Вывести на экран все dbContext`ы. Сейчас выводит: `OdeToFood.Data.OdeToFoodDbContext`.
 
 ```
 dotnet ef dbcontext info
