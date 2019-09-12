@@ -1023,3 +1023,22 @@ dotnet ef database update -s ..\OdeToFood\OdeToFood.csproj
 Данная команда обновляет базу данных используя миграцию.
 
 После первого запуска EF создал БД и таблицу в ней.
+
+
+#### 05_09. Implementing a Data Access Service
+
+*Добавление операции Delete в `IRestaurantData` и в `InMemoryRestaurantData`*.
+
+Добавленный метод в `InMemoryRestaurantData`:
+```csharp
+public Restaurant Delete(int id)
+{
+    var restaurant = GetById(id);
+    if (restaurant != null)
+    {
+        _restaurants.Remove(restaurant);
+    }
+
+    return restaurant;
+}
+```
