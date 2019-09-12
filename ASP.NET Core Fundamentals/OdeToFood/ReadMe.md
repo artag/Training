@@ -1104,3 +1104,58 @@ public void ConfigureServices(IServiceCollection services)
 2. SQL Server -> (localdb)\MSSQLLocalDB -> Databases -> OdeToFood -> Tables -> dbo.Restaurants
 3. dbo.Restaurants -> ПКМ -> View Data
 ```
+
+
+## 06. Building the User Interface
+
+*Tips and Tricks (более детальное рассмотрение) для Razor Pages и специальных Pages.*
+
+#### 06_02. Using Razor Layout Pages and Sections
+
+*Про специальный файл _Layout.cshtml. `@RenderBody()` и `@RenderSection()`.*
+
+* Компоненты (файлы) в директории `Shared` могут использоваться в нескольких местах.
+
+* Razor Page имеет наверху "метку" (directive) `@page`.
+
+* `_Layout` - технически является Razor View.
+
+* `_` в начале файла, не требуется, но является частью соглашения. Файлы с таким подчеркиванием
+не являются самостоятельными и используются совместно с другими.
+
+Задача `_Layout` - специальный файл, задача которого:
+1. Задание структуры пользовательского интерфейса.
+2. Какие скрипты и css файлы будут использоваться на странице.
+3. Описание общих элементов.
+
+`@RenderBody()` - сюда помещается содержимое Razor Pages и Razor Views, которые используют
+данный `_Layout`.
+
+`@RenderSection("footer", required: false)` - сюда помещается код из Razor Pages и Razor Views
+из секции с названием "footer" (может быть и другое).
+
+Параметр `required: false` говорит, что наличие этой секции в Razor Page/Razor View необязательно.
+(Если этот параметр в true и такой секции нет в Razor Page/Razor View, то будет выбрасываться
+исключение).
+
+**Пример**. Как выглядит RenderSection в `_Layout.cshtml`:
+```html
+<footer class="border-top footer text-muted">
+    <div class="container">
+        @RenderSection("footer", required: false)
+        &copy; 2019 - OdeToFood - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    </div>
+</footer>
+```
+
+Пример, как выглядит задание секции "footer" в `List.cshtml`, которая будет выводиться
+в соотв. месте `_Layout.cshtml`:
+```html
+@section footer
+{
+    @Model.Message
+    <br />
+    @Model.MessageFromConfig
+    <br />
+}
+```

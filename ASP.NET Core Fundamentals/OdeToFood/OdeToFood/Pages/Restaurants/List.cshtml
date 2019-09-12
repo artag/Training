@@ -42,8 +42,10 @@
 
 <a asp-page="./Edit" class="btn btn-primary">Add New</a>
 
-<hr/>
-<br/>
-@Model.Message
-<br/>
-@Model.MessageFromConfig
+@section footer
+{
+    @Model.Message
+    <br />
+    @Model.MessageFromConfig
+    <br />
+}
