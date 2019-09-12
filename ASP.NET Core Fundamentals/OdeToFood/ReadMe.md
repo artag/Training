@@ -1042,3 +1042,35 @@ public Restaurant Delete(int id)
     return restaurant;
 }
 ```
+
+
+#### 05_10. Saving and Commiting Data
+
+*Создание класса `SqlRestaurantData` для работы с реальной БД*.
+
+В проекте `OdeToFood.Data`, создается класс `SqlRestaurantData`, который является имплементацией
+`IRestaurantData`.
+
+Через конструктор классу передается ссылка на `OdeToFoodDbContext`.
+
+*Напоминание:* после изменений в БД (одного или нескольких), EF надо давать команду `SaveChanges`.
+В нашем случае это метод `Commit()`:
+```csharp
+public int Commit()
+{
+    return _db.SaveChanges();
+}
+```
+
+Все методы в принципе реализуются довольно просто (см. `SqlRestaurantData`). Исключением
+является метод `Update()`:
+```csharp
+public Restaurant Update(Restaurant updatedRestaurant)
+{
+    var entity = _db.Restaurants.Attach(updatedRestaurant);
+    entity.State = EntityState.Modified;
+    return updatedRestaurant;
+}
+```
+* Метод `Attach` - подключиться к объекту (сущности) в БД и отслеживать его изменения.
+* `entity.State` - установить состояние отслеживаемой сущности.
