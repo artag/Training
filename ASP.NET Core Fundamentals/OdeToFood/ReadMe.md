@@ -1027,7 +1027,7 @@ dotnet ef database update -s ..\OdeToFood\OdeToFood.csproj
 
 #### 05_09. Implementing a Data Access Service
 
-*Добавление операции Delete в `IRestaurantData` и в `InMemoryRestaurantData`*.
+*Добавление операции Delete в `IRestaurantData` и в `InMemoryRestaurantData`.*
 
 Добавленный метод в `InMemoryRestaurantData`:
 ```csharp
@@ -1046,7 +1046,7 @@ public Restaurant Delete(int id)
 
 #### 05_10. Saving and Commiting Data
 
-*Создание класса `SqlRestaurantData` для работы с реальной БД*.
+*Создание класса `SqlRestaurantData` для работы с реальной БД.*
 
 В проекте `OdeToFood.Data`, создается класс `SqlRestaurantData`, который является имплементацией
 `IRestaurantData`.
@@ -1074,3 +1074,33 @@ public Restaurant Update(Restaurant updatedRestaurant)
 ```
 * Метод `Attach` - подключиться к объекту (сущности) в БД и отслеживать его изменения.
 * `entity.State` - установить состояние отслеживаемой сущности.
+
+
+#### 05_11. Modifying the Service Registration
+
+*Модификация конфигурации сервиса в `Startup.Configuration()`, который создает объект
+`IRestaurantData`. Тестирование работы приложения.*
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    ...
+    services.AddScoped<IRestaurantData, SqlRestaurantData>();
+    ...
+}
+```
+
+* Интерфейс `IRestaurantData` теперь реализует "реальный" класс `SqlRestaurantData`.
+
+* Время жизни объекта исправлено с `AddSingleton` на `AddScoped`.
+Использование `AddSingleton` для `SqlRestaurantData` - это очень плохо для реального приложения.
+`AddScoped` - объект создается один раз для каждого запроса Http Request.
+
+Теперь можно запустить проект.
+
+Посмотреть данные в таблице Restaurants в БД можно так (в VS):
+```
+1. View -> SQL Server Object Explorer
+2. SQL Server -> (localdb)\MSSQLLocalDB -> Databases -> OdeToFood -> Tables -> dbo.Restaurants
+3. dbo.Restaurants -> ПКМ -> View Data
+```
