@@ -1260,3 +1260,42 @@ Layout из файла `_ViewStart.cshtml`.
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 ```
 задает использование всех (*) tag-helper'ов из сборки `Microsoft.AspNetCore.Mvc.TagHelpers`.
+
+
+#### 06_06. Reusing Markup with Partial Views
+
+*Что такое Partial View. Создание Partial View `_Summary.cshtml`.*
+
+Partial View используется для:
+1. Рендера какой-либо части от большого View и может использовать его какую-то более малую часть
+Model.
+
+2. Для создания переиспользуемого куска html.
+
+Создание Page View (будет использоваться как Partial View) `/Pages/Restaurants/_Summary.cshtml`.
+Данный Partial View не содержит Model.
+
+В качестве примера создается Partial View для ресторана из списка `List`.
+
+Содержимое `_Summary.cshtml`:
+```html
+@using OdeToFood.Core
+@model Restaurant
+
+<div class="card">
+    <div class="card-header bg-secondary text-white">
+        <h3>@Model.Name</h3>
+    </div>
+    <div class="card-body">
+        <span>Location: @Model.Location</span>
+        <span>Cuisine: @Model.Cuisine</span>
+    </div>
+    <div class="card-footer">
+        ...
+        <!-- Скопированные кнопки из List. -->
+        ...
+    </div>
+</div>
+```
+
+Это обычный Page View без своей Model.
