@@ -1299,3 +1299,20 @@ Model.
 ```
 
 Это обычный Page View без своей Model.
+
+
+#### 06_07. Rendering Partial Views
+
+*Использование Partial View, созданного в предыдущем разделе на странице `List`.*
+
+В `List` старая таблица с ресторанами была заменена на:
+```csharp
+@foreach (var restaurant in Model.Restaurants)
+{
+    <partial name="_Summary" model="restaurant"/>
+}
+```
+
+* `partial` - это tag-helper.
+* `name` - параметр для tag-helper. Имя Partial View, который будет использован для подстановки.
+* `model` - параметр для tag-helper. Модель, передаваемая в Partial View для его рендеринга.
