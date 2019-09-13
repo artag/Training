@@ -1165,7 +1165,7 @@ public void ConfigureServices(IServiceCollection services)
 
 *Добавление страницы `Delete` для подтверждения удаления. Работа над `DeleteModel`.*
 
-Два метода: `OnGet(int id) и `OnPost(int id)`.
+Два метода: `OnGet(int id)` и `OnPost(int id)`.
 
 В `OnGet()` вызывает страницу `Delete` для ресторана с заданным id. Если такового нет в БД,
 то перенаправляет на страницу `NotFound`.
@@ -1174,3 +1174,21 @@ public void ConfigureServices(IServiceCollection services)
 Если ресторана нет, то перенаправление на `NotFound`.
 
 
+#### 06_04. Implementing the Delete Markup
+
+*Работа над `DeleteView`. Добавление кнопки Delete на страницу `List`.*
+
+Так выглядит `DeleteView`:
+```html
+...
+<h2>Delete</h2>
+<div class="alert alert-danger">
+    Are you sure you want to delete @Model.Restaurant.Name?
+</div>
+<form method="post">
+    <button type="submit" class="btn btn-danger">Yes!</button>
+    <a asp-page="List" class="btn btn-outline-secondary">Cancel</a>
+</form>
+```
+
+Кнопка Delete добавлена на страницу `List` по аналогии с кнопками Detail и Edit.
