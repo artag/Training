@@ -1192,3 +1192,71 @@ public void ConfigureServices(IServiceCollection services)
 ```
 
 Кнопка Delete добавлена на страницу `List` по аналогии с кнопками Detail и Edit.
+
+
+#### 06_05. Using _ViewImports and _ViewStart Files
+
+*Демонстрация установки ссылки на страницу `Layout` в null. Установка `Layout` на несуществующий
+`_Layout2`. Назначение файла `_ViewStart.cshtml`. Назначение файла `_ViewImports.cshtml`.*
+
+
+##### Про `/Shared/_Layout.cshtml`
+
+Демонстрация установки ссылки в `DeleteView` на `Layout` в `null`:
+```html
+@page "{restaurantId:int}"
+@model OdeToFood.Pages.Restaurants.DeleteModel
+@{
+    Layout = null;
+}
+...
+```
+
+При установке на несуществующий View `_Layout2`:
+```html
+...
+@{
+    Layout = "_Layout2";
+}
+...
+```
+будет выброшено исключение InvalidOperationException.
+
+Рассказано, что:
+* Общие View обычно лежат в папке `Shared` - они там всегда ищутся инфраструктурой.
+* В одном проекте могут быть несколько View типа `_Layout`.
+
+
+##### Про `/_ViewStart.cshtml`
+
+Содержимое файла по умолчанию:
+```html
+@{
+    Layout = "_Layout";
+}
+```
+Содержимое в этом файле всегда выполняется **до** создания RazorPage (которые лежат в данной и/или
+в дочерних директориях). 
+
+Если задать "ручками" значение Layout на самой RazorPage, то новое значение перепишет значение
+Layout из файла `_ViewStart.cshtml`.
+
+
+##### Про `/_ViewImports.cshtml`
+
+Содержимое файла:
+```html
+@using OdeToFood
+@namespace OdeToFood.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+```
+Содержимое в этом файле включает определения `using`, `namespace` и `tag-helper`'ов для
+всех RazorPage, которые лежат в данной и/или в дочерних директориях.
+
+Поэтому в каждую из этих страниц не надо копировать эти строки.
+
+Строка:
+```
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+```
+задает использование всех (*) tag-helper'ов из сборки `Microsoft.AspNetCore.Mvc.TagHelpers`.
