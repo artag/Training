@@ -1159,3 +1159,18 @@ public void ConfigureServices(IServiceCollection services)
     <br />
 }
 ```
+
+
+#### 06_03. Implementing a Delete Restaurant Page Model
+
+*Добавление страницы `Delete` для подтверждения удаления. Работа над `DeleteModel`.*
+
+Два метода: `OnGet(int id) и `OnPost(int id)`.
+
+В `OnGet()` вызывает страницу `Delete` для ресторана с заданным id. Если такового нет в БД,
+то перенаправляет на страницу `NotFound`.
+
+В `OnPost()` вызывается удаление ресторана - если он есть и перенаправляет на страницу `List`.
+Если ресторана нет, то перенаправление на `NotFound`.
+
+
