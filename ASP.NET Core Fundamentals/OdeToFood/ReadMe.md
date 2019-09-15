@@ -1388,3 +1388,72 @@ public IViewComponentResult Invoke()
 }
 ```
 Здесь `count` будет работать как model для View.
+
+
+#### 06_09. Rendering a ViewComponent
+
+*Создание Razor View для View Component. Регистрация tag-helper из своей сборки.
+Вставка Razor View в виде tag-helper внутрь `_Layout.cshtml`.*
+
+
+##### Создание View для ViewComponent
+
+Для ViewComponent `RestaurauntCountViewComponent`, создается Razor View (вложенность и
+наименования важны) в `/Shared/Components/RestaurauntCount/Default.cshtml`:
+```html
+@model int
+
+<div class="card card-body bg-light">
+    There are @Model restaurants here.
+    <a asp-page="/Restaurants/List">See them all!</a>
+</div>
+```
+
+Во ViewComponent для возвращаемого значения `IViewComponentResult` можно указать
+имя для View вместе с передаваемой моделью:
+```csharp
+public IViewComponentResult Invoke()
+{
+    ...
+    return View("count", count);
+}
+```
+Если имя не указано, то название View будет `Default`.
+
+
+##### Регистрация своего tag-helper в своем namespace
+
+В файл `_ViewImports.cshtml` добавляется следующая строка:
+```csharp
+@addTagHelper *, OdeToFood
+```
+Регистрация всех tag-helper (*) из сборки `OdeToFood`.
+
+
+##### Вставка ViewComponent внутрь _Layout.cshtml
+
+В footer вставил:
+```html
+<footer class="border-top footer text-muted">
+    ...
+        <vc:restaurant-count></vc:restaurant-count>
+    ...
+</footer>
+```
+Вызов `RestaurantCountViewComponent` из razor в виде `vc:restaurant-count`.
+
+Если бы требовалось передать во ViewComponent из View какой-либо параметр, то надо было бы сделать
+следующее:
+
+1. Во ViewComponent:
+```csharp
+public IViewComponentResult Invoke(string zipcode)
+{
+    ...
+}
+```
+
+2. На месте вызова:
+```html
+<vc:restaurant-count zipcode="123abc"></vc:restaurant-count>
+```
