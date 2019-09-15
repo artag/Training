@@ -20,6 +20,12 @@ namespace OdeToFood.Data
             return newRestaurant;
         }
 
+        public int GetCountOfRestaurants()
+        {
+            // Для performance надо кешировать.
+            return _db.Restaurants.Count();
+        }
+
         public int Commit()
         {
             return _db.SaveChanges();

@@ -1316,3 +1316,75 @@ Model.
 * `partial` - это tag-helper.
 * `name` - параметр для tag-helper. Имя Partial View, который будет использован для подстановки.
 * `model` - параметр для tag-helper. Модель, передаваемая в Partial View для его рендеринга.
+
+
+#### 06_08. Implementing a ViewComponent
+
+*Использование `ViewData` для передачи данных между View. Создание ViewComponent для отображения
+количества ресторанов.*
+
+
+##### Про ViewData
+
+`ViewData` - динамический словарь, в который можно записать объект лбого типа. Через `ViewData`
+можно передавать данные между Razor Pages (между несколькими View).
+
+Пример, передача Title в `_Layout.cshtml` из различных Razor Pages (из различных Views).
+
+В `Layout.cshtml`:
+```html
+...
+<title>@ViewData["Title"] - OdeToFood</title>
+...
+```
+
+В `Detail.cshtml`:
+```html
+...
+@{
+    ViewData["Title"] = "Detail";
+}
+...
+```
+И так далее для `List.cshtml`, `Delete.cshtml`, `Edit.cshtml`.
+
+
+##### Про ViewComponent
+
+`ViewComponent` - встраиваемый компонент в другие View (как Partial View). Особенности:
+* Более самостоятельный компонент чем PartialView.
+* Наследуется от класса `ViewComponent`.
+* Лежит в отдельной директории `ViewComponent`.
+* Не содержит методов `OnGet(), OnPost()` (не обрабатыват Get и Post запросы).
+* Когда выполняется рендер ViewComponent, то вызывается метод `Invoke()`:
+```csharp
+public IViewComponentResult Invoke() { ... }
+```
+
+1. Создание нового ViewComponent в `/ViewComponent.RestaurauntCountViewComponent.cs`.
+Это класс, наследуемый от `ViewComponent`. Содержит метод `Invoke()`, который вызывается при
+рендеринге компонента.
+
+2. В `IRestaurantData` и его имплементации добавляется новый метод
+`int GetCountOfRestaurants()`.
+
+Уточнение для `SqlRestaurantData.GetCountOfRestaurants()`:
+```csharp
+public int GetCountOfRestaurants()
+{
+    return _db.Restaurants.Count();
+}
+```
+Если данный метод будет использоваться в `_Layout.cshtml`, то он будет часто вызываться.
+Поэтому, для performance-ориентированных приложений необходимо выполнять кеширование данных.
+
+
+3. Редактиуем метод `RestaurauntCountViewComponent.Invoke()`:
+```csharp
+public IViewComponentResult Invoke()
+{
+    var count = _restaurantData.GetCountOfRestaurants();
+    return View(count);
+}
+```
+Здесь `count` будет работать как model для View.

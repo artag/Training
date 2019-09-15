@@ -78,6 +78,11 @@ namespace OdeToFood.Data
             return 0;
         }
 
+        public int GetCountOfRestaurants()
+        {
+            return _restaurants.Count();
+        }
+
         public Restaurant Delete(int id)
         {
             var restaurant = GetById(id);
