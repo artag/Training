@@ -1457,3 +1457,32 @@ public IViewComponentResult Invoke(string zipcode)
 ```html
 <vc:restaurant-count zipcode="123abc"></vc:restaurant-count>
 ```
+
+
+#### 06_10. Scaffolding a Complete Set of CRUD Pages
+
+*Использование New Scaffolded Items для создания CRUD структуры страниц "одним махом".*
+
+1. Создается директория `/Pages/R2`.
+
+2. В Solution Explorer:
+```
+ПКМ -> Add -> New Scaffolded Item...
+```
+
+  2.1 Выбор `Razor Pages using Entity Framework (CRUD)`
+
+  2.2 Установки
+
+    * Model class: `Restaurant (OdeToFood.Core)`
+    * Data context class: `OdeToFoodDbContext (OdeToFood.Data)`
+    * Create as a partial view: `False`
+    * Reference script libraries: `True`
+    * Use a layout page: `True`
+
+3. Готово. Создадутся 5 Razor Page:
+  * Create
+  * Delete
+  * Details
+  * Edit
+  * Index
