@@ -1510,3 +1510,44 @@ public IViewComponentResult Invoke(string zipcode)
 </footer>
 ```
 Картинка `OdeToFood.png` лежит в `/wwwroot`.
+
+
+#### 07_03. Using ASP.NET Core Environments
+
+*Как происходит загрузка js и css файлов. Про `environment` tag-helper.*
+
+В директории `/wwwroot/lib` лежат библиотеки bootstrap, jquery.
+
+В примере все эти файлы загружаются в `_Layout.cshtml`:
+1. Сверху, внутри тега `head` лежат линки на:
+  * bootstrap.css
+  * `site.css`
+
+2. В нижней части лежат ссылки на загружаемые скрипты:
+  * bootstrap.js
+  * jquery.js
+  * site.js
+
+Tag-helper `environment` выполняется на стороне сервера. Он смотрит на переменную окружения.
+```
+<environment include="Development">
+    // Скрипты/линки загружаются, если environment == Development
+</environment>
+
+<environment exclude="Development">
+    // Скрипты/линки загружаются, если environment != Development
+</environment>
+```
+
+Можно устанавливать любые наименования environment, но, как правило, используется
+"Development" и "Production".
+
+По умолчанию разработка приложения ASP.NET начинается в Development.
+
+Все настройки для environment задаются в `/Properties/launchSettings.json`.
+
+Эта переменная определяет environment:
+```
+"ASPNETCORE_ENVIRONMENT": "Development"
+```
+Если эта переменная не задана/отсутствует, то считается, что environment "Production".
