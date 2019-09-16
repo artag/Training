@@ -1607,3 +1607,56 @@ Tag-helper `environment` выполняется на стороне сервер
 Edit.cshtml        -> _Layout.cshtml     -> _ValidationScriptsPartial
 Определение секции    Определение секции    Загрузка скриптов
 ```
+
+
+#### 07_05. Loading Restaurants from the Client
+
+*Создание Razor Page (View) для получения списка ресторанов через api.
+На примере использования jQuery.*
+
+Для демонстрации получения списка ресторанов из api создается обычная Razor Page
+`ClientRestaurants.cshtml`.
+
+Работать с api можно с помощью различных js framework'ов: Angular, React, Vue.js, ...
+В примере будет использован jQuery.
+
+В ClientRestaurantsModel ничего нет, во View же переопределяется section `Scripts`:
+```html
+@section Scripts {
+    <script>
+
+        $(function() {
+            $.ajax("/api/restaurants/",
+                    { method: "get" })
+                .then(function(response) {
+                    console.dir(response);
+                });
+        });
+
+    </script>
+}
+```
+
+*Замечание:* обычно js скрипт кладется в отдельный файл - для тестируемости, переиспользования и
+для читаемости кода во View представлении. Но для этого примера сделано исключение.
+
+По скрипту:
+1. `ajax` - perform asyncronous HTTP (ajax) request
+
+2. `/api/restaurants/` - по этому адресу будут запрашиваться все рестораны.
+Если запрашиваемый адрес такой: `/api/restaurants/3`, то будет возвращен ресторан с id = 3.
+
+3. `method: "get"` - запрос для чтения (GET request).
+
+4. `then` - handler для обработки возвращаемых данных.
+
+5. `.then(function(response) { console.dir(response); })` - вывод полученных данных (в виде
+JSON) на консоль разработчика в браузере.
+
+При запросе страницы вида `https://localhost:44364/Restaurants/ClientRestaurants`
+в консоли отладки браузера вылетает сообщение:
+```
+Failed to load resource: the server responded with a status of 404 ()
+https://localhost:44364/api/restaurants/
+```
+Это потому, что еще не определен соответствующий api.
