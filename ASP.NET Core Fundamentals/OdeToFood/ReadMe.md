@@ -1556,5 +1556,54 @@ Tag-helper `environment` выполняется на стороне сервер
 
 #### 07_04. Enforcing Validation on the Client
 
-*.*
+*Включение скриптов на странице для валидации вводимых данных на стороне клиента.
+Про `_ValidationScriptsPartial` и RenderSection "Scripts".*
 
+Сейчас вся проверка идет только на стороне сервера, когда выполняется POST-операция.
+
+На стороне клиента проверка выполняется при помощи:
+* `jquery-validation`
+* `jquery-validation-unobtrusive` - от Microsoft, связывает вместе ASP.NET и jquery-validation.
+(например, обеспечивает поддержку tag-helper`ов).
+
+Если посмотреть на генерируемый html-код полей, где производится валидация, то можно увидеть
+атрибуты, которые явно "заточены под проверку jquery":
+```html
+<input class="form-control"
+       ...
+       data-val="true"
+       data-val-length="The field Name must be a string with a maximum length of 80."
+       data-val-length-max="80"
+       data-val-required="The Name field is required."
+       ... />
+```
+
+Таким образом, надо прописать загрузку скриптов на нужной странице.
+
+Можно включить их для всех страниц в `_Layout.cshtml` или (предпочтительнее) загружать
+для "избранных" страниц.
+
+##### Загрузка jquery-validation для "избранных" страниц
+
+1. Есть файл `/Pages/Shared/_ValidationScriptsPartial.cshtml`, который уже включает скрипты для
+валидации на стороне клиента.
+
+2. В файле `_Layout.cshtml` есть необязательная секция:
+```html
+@RenderSection("Scripts", required: false)
+```
+
+3. На нужной странице, на которой необходимо включить jquery-validation надо определить
+секцию "Scripts". Пример определения секции из `Edit.cshtml`:
+```html
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+```
+* `partial` - это tag-helper.
+
+Этим простым движением включается валидация на стороне клиента.
+```
+Edit.cshtml        -> _Layout.cshtml     -> _ValidationScriptsPartial
+Определение секции    Определение секции    Загрузка скриптов
+```
