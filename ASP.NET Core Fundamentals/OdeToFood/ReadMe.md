@@ -1486,3 +1486,27 @@ public IViewComponentResult Invoke(string zipcode)
   * Details
   * Edit
   * Index
+
+
+## 07. Integrating Client-side JavaScript and CSS
+
+#### 07_02. Serving Static Files and Content from wwwroot
+
+*Место хранения по умолчанию для статического содержимого в `wwwroot`.*
+
+По умолчанию ASP.NET хранит статические файлы (картинки, js, css, ...) в `/wwwroot`.
+
+В других частях приложения ресурсы "снаружи" не доступны (и это хорошо).
+
+`jquery-validation` - набор js файлов для валидации данных на стороне клиента.
+
+Пример добавления ссылки на картинку, которая будет лежать в `/wwwroot` и будет доступна
+"снаружи". Файл `_Layout.cshtml`:
+```html
+<footer class="border-top footer text-muted">
+    ...
+    <img src="/OdeToFood.png"/>
+    ...
+</footer>
+```
+Картинка `OdeToFood.png` лежит в `/wwwroot`.
