@@ -1514,7 +1514,8 @@ public IViewComponentResult Invoke(string zipcode)
 
 #### 07_03. Using ASP.NET Core Environments
 
-*Как происходит загрузка js и css файлов. Про `environment` tag-helper.*
+*Как происходит загрузка js и css файлов. Про `environment` tag-helper.
+Немного про `launchSettings.json`.*
 
 В директории `/wwwroot/lib` лежат библиотеки bootstrap, jquery.
 
@@ -1551,3 +1552,9 @@ Tag-helper `environment` выполняется на стороне сервер
 "ASPNETCORE_ENVIRONMENT": "Development"
 ```
 Если эта переменная не задана/отсутствует, то считается, что environment "Production".
+
+
+#### 07_04. Enforcing Validation on the Client
+
+*.*
+
