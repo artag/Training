@@ -1703,3 +1703,50 @@ JSON данных, описывающий все рестораны.
 
 При запросе страницы вида `https://localhost:44364/Restaurants/ClientRestaurants`
 (см. пред. раздел) в консоли отладки браузера появится массив с ресторанами.
+
+
+#### 07_07. Using DataTables
+
+*Установка DataTables (таблица, плагин для jQuery). Различные виды установки. Установка
+используя CDN (для "Development" environment).*
+
+Для отображения данных, полученных из api можно использовать `Angular`, `React` или `Vue.js`.
+
+Но, в данном курсе используется плагин к jQuery - `DataTables`. (https://datatables.net)
+Это тулза для отображения таблицы.
+
+##### Как установить DataTables
+
+1. DataTables можно скачать с сайта различными способами и в разных конфигурациях.
+
+2. Можно использовать стандартный установщик в VS Client-Side Library:
+```
+wwwroot -> ПКМ -> Add -> Cient-Side Library...
+```
+Но, мы не ищем легких путей.
+
+##### Установка DataTables используя CDN
+
+1. С сайта скопировать линки на CDN.
+
+2. Скопированные линки можно вставить в `_Layout.cshtml`, но лучше вставлять только в те места,
+где эти скрипты будут использоваться - в `ClientRestaurants.cshtml`.
+
+3. Вставка в `ClientRestaurants.cshtml`:
+```html
+
+@section Scripts {
+    <environment include="Development">
+    </environment>
+    <environment exclude="Development">
+        <link <!-- Какой-то путь -->/datatables.min.css" />
+        <script <!-- Какой-то путь -->/datatables.min.js"></script>
+    </environment>
+
+    <script>
+        <!-- Скрипт получения данных из api -->
+    </script>
+}
+```
+Установка скриптов из CDN подходит для Release сборки приложения.
+Установку скриптов для Development сборки см. далее.
