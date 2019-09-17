@@ -1660,3 +1660,46 @@ Failed to load resource: the server responded with a status of 404 ()
 https://localhost:44364/api/restaurants/
 ```
 Это потому, что еще не определен соответствующий api.
+
+
+#### 07_06. Implementing an API Controller
+
+*Краткое введение в api. Создание контроллера api (используя "wizard"). Проверка работы api
+(get-запросы).*
+
+Для рендеринга html на сервере и/или для POST requests рекомендуется использовать Razor Pages.
+Для реализации api, для отдачи данных в виде text, json рекомендуется использовать Controllers из
+MVC.
+
+##### Создание контроллера для реализации api
+
+Для создания api будет использоваться scaffolding tool.
+
+1. Шаг. Создание директории `/Api`, где будет контроллер, отвечающий за api.
+
+2. Шаг. ПКМ -> Add -> Controller...
+
+  * Выбрать "API Controller with actions, using Entity Framework". Это создаст полный
+    набор в api.
+
+  * Model class: `Restaurant(OdeToFood.Core)`
+  * Data context class: `OdeToFoodDbContext(OdeToFood.Data)`
+  * Controller name: `RestaurantsController`
+
+##### Особенности созданного `RestaurantsController`.
+
+* Наследуется от `ControllerBase`.
+
+* Сгенерированные методы api: Get (получить весь список или один ресторан), Put (обновить),
+Post (создать новый), Delete (удалить).
+
+##### Проверка работы api (только get запросы)
+
+По примерно такому адресу `https://localhost:44364/api/Restaurants` должен вернуться набор
+JSON данных, описывающий все рестораны.
+
+По такому адресу `https://localhost:44364/api/Restaurants/2` возвращается только один ресторан
+в виде JSON (если он конечно есть).
+
+При запросе страницы вида `https://localhost:44364/Restaurants/ClientRestaurants`
+(см. пред. раздел) в консоли отладки браузера появится массив с ресторанами.
