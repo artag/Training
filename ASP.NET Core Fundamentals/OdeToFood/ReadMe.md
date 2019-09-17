@@ -1797,3 +1797,41 @@ npm install --save datatables.net-bs4
 ```
 npm install
 ```
+
+
+#### 07_09. Managing Production Scripts and Development Scripts
+
+*Задание путей к установленным пакетам в `node_modules` на нужной странице.*
+
+1. Показать скрытые директории:
+```
+Solution Explorer -> Action Bar -> Show All Files
+```
+
+2. "Добавить" скрытую директорию `/node_modules` в проект (чтобы эта директория не была скрыта):
+```
+ПКМ на /node_modules -> Include In Project
+```
+
+3. Задание путей к установленным пакетам в `ClientRestaurants.cshtml`. Простой Drag'n'drop файлов:
+```html
+@section Scripts {
+    <environment include="Development">
+        <script <!-- Какой-то путь -->/jquery.dataTables.js"></script>
+        <script <!-- Какой-то путь -->/dataTables.bootstrap4.js"></script>
+        <link <!-- Какой-то путь -->/dataTables.bootstrap4.css" rel="stylesheet" />
+    </environment>
+    <environment exclude="Development">
+        <!-- Линки и скрипты, полуаемые из CDN -->
+    </environment>
+
+    <script>
+        <!-- Скрипт получения данных из api -->
+    </script>
+}
+```
+
+4. **Дополнительный шаг**. Clean up. Удаление всех скриптов и css файлов из `wwwroot` и их
+установка при помощи npm в директорию `/node_modules`.
+
+4-ый шаг здесь (и видео) не показан.
