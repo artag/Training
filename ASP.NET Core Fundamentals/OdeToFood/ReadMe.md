@@ -1621,7 +1621,7 @@ Edit.cshtml        -> _Layout.cshtml     -> _ValidationScriptsPartial
 В примере будет использован jQuery.
 
 В ClientRestaurantsModel ничего нет, во View же переопределяется section `Scripts`:
-```html
+```js
 @section Scripts {
     <script>
 
@@ -1862,3 +1862,72 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
     ...
 }
 ```
+
+
+#### 07_11. Creating Sortable, Searchable Data Grids with DataTables
+
+*Создание таблицы DataTables (плагин к jQuery).*
+
+Последовательность действий при редактировании `ClientRestaurants.cshtml`.
+
+1. Создание пустой таблицы
+```html
+<table class="table" id="restaurants">
+</table>
+```
+
+2. Добавить вместо вывода JSON данных на девелоперскую консоль в браузере заполнение
+таблицы:
+```js
+$(function() {
+    $.ajax("/api/restaurants/",
+            { method: "get" })
+        .then(function(response) {
+            $("#restaurants").dataTable({
+                data: response,
+                columns: [
+                    { "data": "name" },
+                    { "data": "location" },
+                    { "data": "cuisine" }
+                ]
+            });
+        });
+});
+```
+* `$("#restaurants").dataTable` - jQuery selector, выбирает элемент по id (`restaurants`).
+`dataTable` - расширение(плагин) для jQuery.
+
+* `data: response` - первый передаваемый параметр. Данные для заполнения таблицы берутся из
+объекта `response`.
+
+* `columns: [ { "data": "name" }, ...]` - второй передаваемый параметр. Определение колонок,
+которые будут отображаться.
+
+Эта таблица разбивается по страницам, ее можно сортировать по различным стобцам,
+можно выполнять поиск. Единственно, тип кухни ("cuisine") отображается как число.
+
+Чтобы это исправить надо по хорошему сериализовать (как?) все типы кухонь в формат JSON и
+подгрузить их в таблицу. В примере же показан самый простой и тупой подход:
+
+1. Захардкодить наименования кухонь в скрипте 
+```js
+$(function () {
+    var cuisines = ["Unknown", "Mexican", "Italian", "Indian"];
+    ...
+```
+
+2. Для колонки "cuisine" использовать кастомный рендер:
+```js
+columns: [
+        { "data": "name" },
+        { "data": "location" },
+        {
+            "data": "cuisine", "render": function(data) {
+                return cuisines[data];
+            }
+        }
+    ]
+```
+
+* `function(data)` - функция которая принимает текуoее значение в строке `data` (0, 1, 2 или 3)
+и возвращает захардкоженное значение.
