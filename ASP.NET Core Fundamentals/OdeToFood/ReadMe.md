@@ -1835,3 +1835,30 @@ Solution Explorer -> Action Bar -> Show All Files
 установка при помощи npm в директорию `/node_modules`.
 
 4-ый шаг здесь (и видео) не показан.
+
+
+#### 07_10. Serving Files from the node_modules Directory
+
+*Конфигурирование директории `node_modules` в качетсве еще одного места для хранения и обеспечения
+доступа к статическим файлам. Установка для этих целей NuGet пакета `OdeToCode.UseNodeModules`.
+Добавление в pipeline нужного Middleware.*
+
+Чтобы использовать директорию `node_modules` как и `wwwroot` для хранения статических файлов и
+чтобы можно было обращаться к ней "снаружи", необходимо использовать специальный NuGet package
+`OdeToCode.UseNodeModules` (автор Scott Allen).
+
+*Мое примечание:* в старом варианте этого курса было показано, как сделать самому этот
+Middleware, регистрирующий директорию `node_modules` как директорию для хранения статических
+данных.
+
+После добавления этого NuGet пакета, в `Startup.Configure()` необходимо добавить Middleware
+из этого пакета:
+```csharp
+public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+    ...
+    app.UseStaticFiles();
+    app.UseNodeModules(env);
+    ...
+}
+```
