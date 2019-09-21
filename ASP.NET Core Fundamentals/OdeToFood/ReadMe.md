@@ -2110,3 +2110,37 @@ else
 }
 ...
 ```
+
+
+#### 08_06. Logging Application Messages
+
+*Еще раз про логирование. Как записать что-либо в логи самому.*
+
+Вывод логов можно увидеть в консоли, откуда запускается приложение (см. ранее).
+
+Если запуск из VS, то можно увидеть логи в окне Output,
+output from ASP.NET Core Web Server (у меня Debug).
+
+Настройки уровней логирования можно задать в файле `appsettings.json`.
+Про уровни логирования можно почитать на сайте MS.
+
+Пример добавления записи в логи можно посмотреть в ListModel, файл `List.cshtml.cs`:
+```csharp
+// Конструктор
+public ListModel(
+    IConfiguration config,
+    IRestaurantData restaurantData,
+    ILogger<ListModel> logger)
+{
+    ...
+    _logger = logger;
+}
+
+public void OnGet()
+{
+    _logger.LogError("Executing ListModel");
+
+    ...
+}
+```
+В этом примере создается запись в логи с уровнем "Error" при каждом get request.
