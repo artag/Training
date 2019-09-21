@@ -2047,3 +2047,66 @@ Middleware и отображает страницу `Error`.
 
 * `app.UseSpa()` (после `app.UseMvc()`) - возвращает страницу по умолчанию для
 Single Page Application (SPA).
+
+
+#### 08_05. Building Custom Middleware
+
+*Пример создания своего Middleware на примере отображения надписи `Hello World`
+при вводе определенного адреса в url.*
+
+Обычно пишется полноценный класс Middleware (см. старый вариант данного курса), но в данном
+курсе Middleware пишется прямо в методе `Configure()`.
+
+В `Configure()` поместили впереди всех свой самодельный Middleware:
+```csharp
+...
+app.Use(SayHelloMiddleware);
+
+app.UseHttpsRedirection();
+...
+app.UseMvc();
+```
+`app.Use()` примнимает `Func<RequestDelegate, RequestDelegate>` - middleware delegate.
+
+`RequestDelegate()` - A function that can process an HTTP request.
+```csharp
+public delegate Task RequestDelegate(HttpContext context);
+```
+
+Сам Middleware delegate:
+```csharp
+private RequestDelegate SayHelloMiddleware(RequestDelegate next)
+{
+    return async ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/hello"))
+        {
+            await ctx.Response.WriteAsync("Hello, World!");
+        }
+        else
+        {
+            await next(ctx);
+        }
+    };
+}
+```
+Если HttpContext `context` в пути запроса содержит сегмент `/hello`, то цепочка в pipeline
+прервется и будет послан ответ, содержащий простую строку.
+
+Иначе, будет вызван следущий в pipeline RequestDelegate `next` - следующий Middleware.
+
+Если надо вставить обработку ответа (Response) от последующих Middleware, то это делается здесь:
+```csharp
+...
+else
+{
+    await next(ctx);
+
+    // Здесь будет обработка ответа
+    if (ctx.Response.StatusCode == ...)
+    {
+        ...
+    }
+}
+...
+```
