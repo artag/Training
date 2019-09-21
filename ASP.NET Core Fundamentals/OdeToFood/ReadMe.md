@@ -1973,3 +1973,77 @@ dotnet run
 
 * `Configure()` - конфигурирует Middleware pipeline, использующийся для обработки входящих
 (и исходящих) запросов.
+
+
+#### 08_03. Processing Summer Corn with the Allen Family
+
+*Рассказ про то, что такое Middleware (на абстрактном примере).*
+
+
+#### 08_04. Exploring the Application Middleware
+
+*Немного более подробно о Middleware, используемых в текущем приложении. И еще немного о некоторых.*
+
+Рассматривается метод `Startup.Configure()`.
+
+##### О pipeline
+
+* Порядок размещения Middleware имеет значение.
+
+* Middleware может обрабатывать как входящие так и исходящие request.
+
+* Одни Middleware обрабатывают только входящие запросы, другие - только исходящие, третьи - и те и
+другие.
+
+* Любой из Middleware в pipeline может прервать цепочку обработки запроса и вернуть ответ.
+
+##### О Middleware, используемых в текущем приложении
+
+```csharp
+if (env.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseNodeModules(env);
+app.UseCookiePolicy();
+
+app.UseMvc();
+```
+* `app.UseDeveloperExceptionPage()` - перехватывает исключения, порождаемые последующими
+Middleware и отображает страницу с подбробным описанием исключения. Как видно, для данного
+примера работает только в `Development`.
+
+* `app.UseExceptionHandler("/Error")` - перехватывает исключения, порождаемые последующими
+Middleware и отображает страницу `Error`.
+
+* `app.UseHsts()` - использовать https secure connection.
+
+* `app.UseHttpsRedirection()` - перенаправление браузера, который пытается использовать
+простой http.
+
+* `app.UseStaticFiles()` - работа со статическим содержимым в `wwwroot`.
+В опциях `StaticFilesOptions` можно задать `FileProvider`, который может поставлять файлы
+откуда угодно: из облака, из БД, ...
+
+* `app.UseNodeModules(env)` - работа со статическим содержимым в `node_modules`.
+
+* `app.UseCookiePolicy()` - использование Cookies.
+
+* `app.UseMvc()` - роутер для MVC.
+
+##### Какие еще есть Middleware.
+
+* `app.UseAuthentication()` (впереди `app.UseMvc()`) - иденфтификация пользователя.
+
+* `app.UseSignalR()` (впереди `app.UseMvc()`) - realtime socket communication.
+
+* `app.UseSpa()` (после `app.UseMvc()`) - возвращает страницу по умолчанию для
+Single Page Application (SPA).
