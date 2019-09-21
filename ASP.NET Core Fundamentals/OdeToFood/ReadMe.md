@@ -2310,3 +2310,53 @@ dotnet publish -o C:\Temp\OdeToFood --self-contained -r win-x64
 .NET Core RID Catalog - список кратких значений RID платформ, где будет работать приложение.
 
 В publish-директории при такой публикации будет файл для запуска `*.exe`.
+
+
+#### 09_06. Deploying to a Web Server (IIS)
+
+*Deploy на IIS сервер.*
+
+Можно deploy'ить приложение на Nginx, Apache, IIS. Всю документацию можно найти на сайте MS.
+Здесь рассматривается deploy на IIS сервер.
+
+##### Предварительные шаги
+
+1. Поставить на target-машину (см. документацию):
+* Install the .NET Core Hosting Bundle
+* (возможно не потребуется ставить) Microsoft Visual C++ 2015 Redistributable 
+
+2. Из `Startup.ConfigureServices()`
+Временно отключить обращение к SQL-серверу (зачем?). Потом, после установки на IIS,
+опять включить:
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    ...
+    //services.AddScoped<IRestaurantData, SqlRestaurantData>();
+    services.AddScoped<IRestaurantData, InMemoryRestaurantData>();
+    ...
+}
+```
+
+3. Заново выполнить publish, с учетом сделанных изменений.
+
+##### Краткие шаги по Deploy на IIS.
+
+1. Запуск Internet Information Services (IIS) Manager.
+
+2. Зайти в Modules
+
+Видно, что присутствуют модуль(и) `AspNetCoreModule` и/или `AspNetCoreModuleV2`.
+
+3. Слева ПКМ на папку `Sites -> Add Website...`
+* Site name: OdeToFood
+* Physical path: *куда выполнялся publish*
+* Type: https
+* IP address: All Unassigned
+* Port: 443
+* SSL certificate: IIS Express Development Certificate
+(т.к. будет использоваться на локальной машине)
+
+Новый сайт должен появиться в папке `Sites`.
+
+4. В браузере по линку `https://localhost` (без указания порта) должно открыться приложение.
