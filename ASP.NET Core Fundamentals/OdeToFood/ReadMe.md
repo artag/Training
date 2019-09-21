@@ -2223,3 +2223,26 @@ https://github.com/aspnet/AspNetCore, файл src/DefaultBuilder/src/WebHost.cs
     * linux-x64
 
 Но, в примере будет показано как сделать publish из командной строки.
+
+
+#### 09_03. Using dotnet publish
+
+*publish из командной строки.*
+
+Команда запускается из директории, где находится основной проект (есть файл `*.csproj`).
+
+Publish в определенную директорию
+```
+dotnet publish -o C:\Temp\OdeToFood
+```
+* В publish в `wwwroot` будет скопировано все содержимое.
+
+* В publish не копируется `node_modules`. Это будет исправлено далее.
+(Для создания node_modules можно запустить `npm install` руками, но это не выход).
+
+* Приложение компилируется в `*.dll` файл.
+
+Запуск такого приложения:
+```
+dotnet OdeToFood.dll
+```
