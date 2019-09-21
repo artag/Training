@@ -2292,3 +2292,21 @@ dotnet OdeToFood.dll
 могут быть сюда включены.
 
 Теперь по команде `dotnet publish` все устанавливается как надо.
+
+
+#### 09_05. Building Self-contained Applications
+
+*Публикация приложения в режиме self-contained.*
+
+```
+dotnet publish -o C:\Temp\OdeToFood --self-contained -r win-x64
+```
+Параметр `--self-contained` позволяет опубликовать приложение со всем нужным содержимым
+(скопирует приложение и framework).
+Никаких дополниьельных framework`ов на target машине устанавливать не придется.
+
+Параметр `-r win-x64` задает runtime identifier для target system.
+На сайте https://docs.microsoft.com/ru-ru/dotnet/core/rid-catalog можно найти
+.NET Core RID Catalog - список кратких значений RID платформ, где будет работать приложение.
+
+В publish-директории при такой публикации будет файл для запуска `*.exe`.
