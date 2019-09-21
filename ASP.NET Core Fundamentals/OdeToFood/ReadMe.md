@@ -2246,3 +2246,49 @@ dotnet publish -o C:\Temp\OdeToFood
 ```
 dotnet OdeToFood.dll
 ```
+
+
+#### 09_04. Using MSBuld to Execute npm install
+
+*Правка файла `*.csproj` для публикации с использованием npm.*
+
+Чтобы `node_modules` устанавливались при выполнении publish надо внести изменения
+в главный `*.csproj` файл.
+
+##### Что добавить
+
+Добавить следующие строки
+```xml
+<Target Name="PostBuild" AfterTargets="ComputeFilesToPublish">
+  <Exec Command="npm install" />
+</Target>
+```
+и
+```xml
+<ItemGroup>
+  <Content Include="node_modules/**" CopyToPublishDirectory="PreserveNewest" />
+</ItemGroup>
+```
+Первый блок отвечает за запуск `npm install` после окончания публикации.
+Дополнительно, можно проверить наличие npm на машине, проверить какая конфигурация
+(Debug или Publish).
+
+Второй блок отвечает за копирование содержимого в `node_modules` в директорию, куда
+выполняется publish.
+
+##### Что удалить
+
+Удалить строки вида:
+```xml
+<ItemGroup>
+  <Content Include="node_modules\datatables.net-bs4\css\dataTables.bootstrap4.css" />
+  <Content Include="node_modules\datatables.net\License.txt" />
+  <Content Include="node_modules\jquery\AUTHORS.txt" />
+  ...
+</ItemGroup>
+```
+Эти строки появляются в `*.csproj`, когда папка `node_modules` добавляется в проект
+и становится видимой. Плюс, могут быть глюки: не все файлы из этой директории 
+могут быть сюда включены.
+
+Теперь по команде `dotnet publish` все устанавливается как надо.
