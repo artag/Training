@@ -2144,3 +2144,50 @@ public void OnGet()
 }
 ```
 В этом примере создается запись в логи с уровнем "Error" при каждом get request.
+
+
+#### 08_07. Configuring the App Using the Default Web Host Builder
+
+*Исследование конфигурации приложения при создании сервера с настройками по умолчанию.
+Рассматриваются источники для задания конфигурации и настройки логирования.*
+
+Исходники для `CreateDefaultBuilder` можно найти на github:
+```
+https://github.com/aspnet/AspNetCore, файл src/DefaultBuilder/src/WebHost.cs
+```
+
+##### Источники для задания конфигурации
+
+Здесь можно увидеть, что конфигурация в настройках по умолчанию задается из:
+* `appsettings.json`
+
+* `appsettings.{env.EnvironmentName}.json`
+(перекрывает одноименные настройки из `appsettings.json`)
+
+* `EnvironmentVariables` - из переменных среды
+
+* `CommandLine` - из командной строки
+
+Плюс, еще есть `UserSecrets`, которые доступны для Development.
+
+Перекрытие параметра:
+```
+("самый слабый") json -> environment variable -> command line parameter ("самый сильный")
+```
+
+##### Конфигурация для логов
+
+Из файла на github `WebHost.cs`, метод `CreateDefaultBuilder()`:
+```csharp
+...
+.ConfigureLogging((hostingContext, logging) =>
+{
+    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+    logging.AddConsole();
+    logging.AddDebug();
+    logging.AddEventSourceLogger();
+}).
+```
+Видно, что для задания конфигурации используется настройка "Logging" в конфигурации.
+
+Также здесь добавляются различные инструменты для вывода логов.
