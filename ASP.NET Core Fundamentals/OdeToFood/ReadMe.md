@@ -2191,3 +2191,35 @@ https://github.com/aspnet/AspNetCore, файл src/DefaultBuilder/src/WebHost.cs
 Видно, что для задания конфигурации используется настройка "Logging" в конфигурации.
 
 Также здесь добавляются различные инструменты для вывода логов.
+
+
+## 09. Deploying ASP.NET Core Web Applications
+
+#### 09_02. Publishing Apps vs. Deploying Apps
+
+*Краткий обзор как сделать publish приложения из VS.*
+
+**Publish** - все нужные для работы приложения файлы складываются в какую-то директорию
+перед Deploy.
+
+В VS Publish делается так:
+
+1. `ПКМ на проекте -> Publish...`
+
+2. Выбираем `Folder`. 
+
+Настройки:
+
+  * Configuration: Debug / Release
+  * Target Framework: netcoreapp2.1 (версия framework)
+  * Deployment Mode:
+    * Framework-Dependent (помимо приложения нужен установленный framework)
+    * Self-Contained (все включено)
+  * Target Runtime:
+    * Portable
+    * win-x86
+    * win-x64
+    * osx-x64
+    * linux-x64
+
+Но, в примере будет показано как сделать publish из командной строки.
