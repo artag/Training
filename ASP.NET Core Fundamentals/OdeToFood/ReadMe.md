@@ -2450,3 +2450,61 @@ private static void MigrateDatabase(IWebHost host)
 
 Конечно, до запуска `Migrate()` в реальном Production приложении могут быть дополнительные
 проверки, backup'ы БД и прочее.
+
+
+#### 09_09. Connecting to a SQL Server Database
+
+*Запуск приложения с использованием реальной БД (БД не в LocalDb).*
+
+**Шаг 1**. В Internet Information Services (IIS) Manager.
+
+Посмотреть в Application Pools значение в Identity. Это будет использоваться в качестве логина
+в БД.
+
+**Шаг 2**. В Microsoft SQL Server Management Studio (SSMS).
+
+Создать login для приложения, с нужными правами для создания БД.
+
+* Object Explorer -> Security -> ПКМ на Logins -> New Login...
+* Login name: IIS AppPool\OdeToFood
+* Windows authentication
+
+OK -> Логин должен появиться в Object Explorer.
+
+* ПКМ на новом login -> Properties
+* Перейти на закладку Server Roles
+* Поставить галку на `dbcreator` (еще одна уже будет стоять на `public`).
+
+`dbcreator` позволит приложению создать БД.
+
+В реальном Production приложении могут быть и другие привелегии и права доступа.
+
+**Шаг 3**. Создание `ConnectionStrings` для указания SQL сервера.
+
+Создается новый файл `appsettings.Production.json`:
+```json
+{
+  "ConnectionStrings": {
+    "OdeToFoodDb": "Data Source=.;Initial Catalog=OdeToFood;Integrated Security=True;" 
+  } 
+}
+```
+Эта строка позволит подсоединится к Application Pool, через это можно будет сделать
+Migrations и выполнять различные запросы к БД.
+
+Если в ConnectionStrings нужно указать логин и пароль для подключения
+к БД, то их надо устанавливать в переменных окружения или еще где,
+но не в json файлах.
+
+**Шаг 4**. Повторный запуск публикации.
+```
+dotnet publish -o C:\Temp\OdeToFood --self-contained -r win-x64
+```
+
+Если ругается, что не удается переписать файлы, так как они заняты другим приложением, то
+выполнить reset IIS (с правами админа):
+```
+iisreset
+```
+
+**Шаг 5**. Готово. Все должно работать.
