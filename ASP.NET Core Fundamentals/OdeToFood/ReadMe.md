@@ -2400,3 +2400,53 @@ IIS смотрит в файл `web.config`. Этот файл уже не ис�
 При запуске напрямую используется встроенный в ASP.NET сервер Kestrel.
 Не рекомендуется использовать такой вид запуска в Production, т.к. могут быть проблемы
 с безопасностью приложения. Рекомендуется запускать приложение под управлением Nginx, Apache, IIS.
+
+
+#### 09_08. Setting up Automatic Entity Framework Migrations
+
+*Создание автоматического Migration для БД при запуске приложения.*
+
+**Шаг 1**. Возвращение подключения к реальной БД в `Startup.ConfigureServices()`:
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddScoped<IRestaurantData, SqlRestaurantData>();
+    //services.AddScoped<IRestaurantData, InMemoryRestaurantData>();
+}
+```
+
+**Шаг 2.0** (мы не будем его использовать). Создание скрипта для Migrations
+
+Из директории проекта, где находится OdeToFoodDbContext (OdeToFood.Data) запустить команду:
+```
+dotnet ef migrations script -s ..\OdeToFood\OdeToFood.csproj
+```
+
+Но это надо будет каждый раз делать руками, для каждого развертывания приложения
+
+**Шаг 2.1**. Запуск Migrations (если надо) при запуске приложения.
+Редактирование `Program.cs`:
+```csharp
+public static void Main(string[] args)
+{
+    var host = CreateWebHostBuilder(args).Build();
+    MigrateDatabase(host);
+    host.Run();
+}
+
+private static void MigrateDatabase(IWebHost host)
+{
+    using (var scope = host.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<OdeToFoodDbContext>();
+        dbContext.Database.Migrate();
+    }
+}
+```
+Здесь вставили запуск Migration после создания webhost`а, но до его запуска.
+
+Запрашивается сервис `OdeToFoodDbContext`, для него запускается метод `Migrate()`.
+Здесь БД будет автоматически создаваться при ее отсутствии.
+
+Конечно, до запуска `Migrate()` в реальном Production приложении могут быть дополнительные
+проверки, backup'ы БД и прочее.
