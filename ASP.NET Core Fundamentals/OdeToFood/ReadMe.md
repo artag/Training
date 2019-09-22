@@ -2360,3 +2360,43 @@ public void ConfigureServices(IServiceCollection services)
 Новый сайт должен появиться в папке `Sites`.
 
 4. В браузере по линку `https://localhost` (без указания порта) должно открыться приложение.
+
+
+#### 09_07. Exploring web.config and How IIS Hosting Works
+
+*Где хранятся настройки в IIS для запуска приложения (в файле `web.config`).*
+
+IIS смотрит в файл `web.config`. Этот файл уже не используется в ASP.NET Core, но все еще
+требуется в работе с IIS.
+
+`web.config` появляется в publish директории. Его примерное содержимое:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <location path="." inheritInChildApplications="false">
+    <system.webServer>
+      <handlers>
+        <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModuleV2" resourceType="Unspecified" />
+      </handlers>
+      <aspNetCore processPath="dotnet" arguments=".\OdeToFood.dll" stdoutLogEnabled="false" stdoutLogFile=".\logs\stdout" hostingModel="InProcess" />
+    </system.webServer>
+  </location>
+</configuration>
+<!--ProjectGuid: FEB3CB78-F614-440B-B2BB-7446403503A5-->
+```
+
+Рассматривается секция `handlers`.
+* `name` - имя секции
+* `path="*"` - для любого запроса
+* `verb="*"` - для любого verb: add, get, post, delete, ...
+
+Все запросы переадресовывать на `modules="AspNetCoreModuleV2"`.
+
+В секции `aspNetCore` прописывается как запускать приложение.
+
+Перед запуском приложения внутри IIS, его можно запустить напрямую, из командной строки.
+Если запустится отсюда, то скорее всего запустится и из IIS.
+
+При запуске напрямую используется встроенный в ASP.NET сервер Kestrel.
+Не рекомендуется использовать такой вид запуска в Production, т.к. могут быть проблемы
+с безопасностью приложения. Рекомендуется запускать приложение под управлением Nginx, Apache, IIS.
