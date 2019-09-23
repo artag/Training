@@ -159,7 +159,8 @@ Request                Update
 
 ### 04_03,04 Creating the Model and the Repository
 
-*Создание модели, интерфейса для доступа к репозиторию. Регистрация репозитория в DI.*
+*Создание модели, интерфейса для доступа к репозиторию, реализация mock репозитория.
+Регистрация репозитория в DI.*
 
 Особенности The Model:
 * Domain data + logic to manage data
@@ -213,3 +214,36 @@ public void ConfigureServices(IServiceCollection services)
 
 * `AddScoped` - экземпляр MockPieRepository создается один раз для одного запроса, для другого
 запроса создастся еще один экземпляр.
+
+
+### 04_05,06 Creating the Controller
+
+*Создание контроллера.*
+
+Особенности контроллера:
+* Respond to user interaction.
+* Update model.
+* No knowledge about data persistence.
+
+Что из себя представляет контроллер:
+* Это простой класс.
+* Наследуется от базового класса `Controller`.
+* Название контроллера по соглашению оканчивается строкой "Controller".
+* Метод в контроллере, отвечающий за обработку запроса называется "Action".
+* В качестве возвращаемого значения Action возвращает View.
+
+Пример простого контроллера:
+```csharp
+public class PieController : Controller
+{
+    public ViewResult Index()        // <-- Action
+    {
+        return View();               // <-- View to show
+    }
+}
+```
+
+Все контроллеры располагаются в директории `Controllers`.
+
+В директории `Controllers` создаем контроллер `HomeController`, использующий средства DI
+для доступа к объекту `IPieRepository`.
