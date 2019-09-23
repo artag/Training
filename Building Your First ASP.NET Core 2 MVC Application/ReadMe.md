@@ -132,3 +132,84 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 3. ConfigureServices method (Registering services)
 4. Configure method (Pipeline is created)
 5. Ready for requests
+
+
+## 04. Creating the List Page
+
+*Создание страницы со списком.*
+
+### 04_02. MVC (Model-View-Controller)
+
+*Про MVC.*
+
+Особенности:
+* Architectural pattern
+* Separation of concerns
+* Promotes testability and maintainability
+
+Схема взаимодействия
+```
+Request                Update
+--------> Controller ---------> Model
+              |                  ^
+              |                  |  Get data from
+              |        Update    |
+              |---------------> View
+```
+
+### 04_03,04 Creating the Model and the Repository
+
+*Создание модели, интерфейса для доступа к репозиторию. Регистрация репозитория в DI.*
+
+Особенности The Model:
+* Domain data + logic to manage data
+* Simple API
+* Hides details of managing the data
+
+Пример класса, который будет использоваться в качестве модели (директория `Models`):
+```csharp
+public class Pie
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string ShortDescription { get; set; }
+    public string LongDescription { get; set; }
+    public decimal Price { get; set; }
+    public string ImageUrl { get; set; }
+    public string ImageThumbnailUrl { get; set; }
+    public bool IsPieOfTheWeek { get; set; }
+}
+```
+
+Использование Repository позволяет использовать объекты, не зная никаких деталей об их хранении.
+
+1. Для этого надо создать простой API (интерфейс), через который мы будем получать нужные объекты.
+
+Pie Repository Interface (директория `Models`):
+```csharp
+public interface IPieRepository
+{
+    IEnumerable<Pie> GetAllPies();
+    Pie GetPieById(int pieId);
+}
+```
+
+2. Надо создать реализацию этого интерфейса - в данном примере создается `MockPieRepository`,
+который содержит mock data (также лежит в директории `Models`).
+
+3. Надо зарегистрировать Repository в DI Container (в `Startup.ConfigureServices()`):
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    ...
+    services.AddTransient<IPieRepository, MockPieRepository>();
+}
+```
+Варианты регистрации:
+
+* `AddTransient` - экземпляр MockPieRepository создается каждый раз, когда запрашивается.
+
+* `AddSingleton` - экземпляр MockPieRepository создается только один раз.
+
+* `AddScoped` - экземпляр MockPieRepository создается один раз для одного запроса, для другого
+запроса создастся еще один экземпляр.

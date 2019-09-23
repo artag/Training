@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using BethanysPieShop.Models;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,6 +9,7 @@ namespace BethanysPieShop
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<IPieRepository, MockPieRepository>();
             services.AddMvc();
         }
 
