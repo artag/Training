@@ -34,28 +34,32 @@ namespace BethanysPieShop.Models
                     Id = 1,
                     Name = "Apple Pie",
                     Price = 12.95M,
-                    ShortDescription = "Our famous apple pies!"
+                    ShortDescription = "Our famous apple pies!",
+                    ImageThumbnailUrl = @"/blob/applepiesmall.jpg",
                 },
                 new Pie
                 {
                     Id = 2,
                     Name = "Blueberry Cheese Cake",
                     Price = 18.95M,
-                    ShortDescription = "You'll love it!"
+                    ShortDescription = "You'll love it!",
+                    ImageThumbnailUrl = @"/blob/blueberrycheesecakesmall.jpg",
                 },
                 new Pie
                 {
                     Id = 3,
                     Name = "Cheese Cake",
                     Price = 18.95M,
-                    ShortDescription = "Plain cheese cake. Plain pleasure."
+                    ShortDescription = "Plain cheese cake. Plain pleasure.",
+                    ImageThumbnailUrl = @"/blob/cheesecakesmall.jpg",
                 },
                 new Pie
                 {
                     Id = 4,
                     Name = "Cherry Pie",
                     Price = 15.95M,
-                    ShortDescription = "A summer classic!"
+                    ShortDescription = "A summer classic!",
+                    ImageThumbnailUrl = @"/blob/cherrypiesmall.jpg",
                 }
             };
         }

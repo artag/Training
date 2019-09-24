@@ -252,7 +252,7 @@ public class PieController : Controller
 
 ### 04_07,08 Adding the View
 
-*Добавление View. Про `_Layout.cshtml` и `_Layout.cshtml`.*
+*Добавление View. Про `_Layout.cshtml` и `_ViewStart.cshtml`.*
 
 Особенности View:
 * HTML template (файл *.cshml)
@@ -355,7 +355,7 @@ public class HomeViewModel
 
 #### Файл `_Layout.cshtml`
 
-Может являться шаблоном для других View (что-бы не делать copy-paste разметки).
+Может являться шаблоном для других View (чтобы не делать copy-paste разметки).
 
 Особенности:
 * Template - не него могут ссылаться другие View
@@ -402,5 +402,103 @@ public class HomeViewModel
 
 Создание файла:
 ```
-ПКМ -> Add -> New Item... -> Razor View Imports
+ПКМ -> Add -> New Item... -> Razor View Start
+```
+
+
+### 04_09-13 Styling the View
+
+*Стилизация View. Добавление в проект `bootstrap`. Рассматривается использование пакетных
+менеджеров `Bower`, `Library Manager` и обычное добавление файлов "руками".
+Добавление картинок, стилей. Прописывание путей на ссылки в `_Layout.cshtml`.*
+
+Какие пакетные менеджеры используются в VS:
+* Bower (до версии 15.5)
+* Ручной процесс (версии 15.6 - 15.7)
+* Library Manager (LibMan) (версия 15.8 и выше)
+
+#### Bower
+
+Как добавить конфигурационный файл:
+```
+ПКМ -> Add -> New Item... -> Bower Configuration File
+```
+
+В корне проекта появляется файл `bower.json`. В раздел `dependencies` надо добавить нужный пакет:
+```json
+{
+  "name": "asp.net",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "v3.3.7"
+  }
+```
+
+Нужные файлы автоматически появятся в `/wwwroot` после сохранения файла.
+
+
+#### Ручной процесс
+
+Берем библиотеку и разархивируем/копируем ее в `/wwwroot`.
+
+
+#### Library Manager (LibMan)
+
+Как добавить:
+`ПКМ -> Add -> Clien-Side Library...`
+* Provider: cdnjs
+* Library: *нужная библиотека*
+* Target Location: wwwroot/lib/*путь к библиотеке*
+
+После нажатия на `Install` все нужные файлы появятся в `/wwwroot`.
+
+В корне проекта появится файл `libman.json`, содержащий список установленных пакетов:
+```json
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "twitter-bootstrap@3.3.7",
+      "destination": "wwwroot/lib/bootstrap/"
+    }
+  ]
+}
+```
+
+#### Копирование (создание) картинок и стилей для сайта
+
+В директории:
+* `/wwwroot/images` - сюда копируются картинки для сайта
+* `/wwwroot/content` - сюда копируются стили (*.css) для сайта
+
+Создание стилевой страницы:
+```
+ПКМ -> Add -> New Item... -> Style Sheet
+```
+site.css
+```css
+body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    background-image: url('/images/pattern.png');
+    background-repeat: repeat;
+}
+
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+```
+
+
+#### Вставка ссылок на css в _Layout.cshtml
+
+```html
+<head>
+    ...
+    <link href="~/lib/bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <link href="~/content/site.css" rel="stylesheet" />
+    ...
+</head>
 ```
