@@ -247,3 +247,160 @@ public class PieController : Controller
 
 В директории `Controllers` создаем контроллер `HomeController`, использующий средства DI
 для доступа к объекту `IPieRepository`.
+
+
+
+### 04_07,08 Adding the View
+
+*Добавление View. Про `_Layout.cshtml` и `_Layout.cshtml`.*
+
+Особенности View:
+* HTML template (файл *.cshml)
+* "Plain" or strongly-typed
+* Uses Razor
+
+Все View по соглашению находятся в директории `/Views` и ее поддиректориях.
+
+В Action контроллера, если не указано название View, то по умолчанию будет искаться View с
+именем Action.
+```csharp
+public class PieController : Controller
+{
+    public ViewResult Index()        // <-- Action
+    {
+        return View();               // <-- View to show: Index.cshtml
+    }
+}
+```
+Здесь будет искаться View под именем `Index.cshtml` в `/Views/Pie` или `/Views/Shared` директориях.
+Если View не найдено, то будет выброшено исключение.
+
+Создание файла:
+```
+ПКМ -> Add -> New Item... -> Razor View
+```
+
+
+#### Способы передачи данных во View
+
+Для передачи данных во View можно использовать:
+
+1. **ViewBag** - объект, содержащий динамически задаваемые данные.
+```csharp
+public class PieController : Controller
+{
+    public ViewResult Index()
+    {
+        ViewBag.Message = "Welcome to Bethany’s Pie Shop";
+        return View();
+    }
+}
+```
+
+Использование `ViewBag` во View:
+```html
+<div>
+    @ViewBag.Message
+</div>
+```
+
+2. Передача данных через **Model**
+```csharp
+public class PieController : Controller
+{
+    public ViewResult List()
+    {
+        return View(_pieRepository.Pies);
+    }
+}
+```
+Список из Pie передается во View в качестве параметра.
+
+
+Использование Model во View:
+```html
+@model IEnumerable<Pie>
+<html>
+...
+    <body>
+        <div>
+            @foreach (var pie in Model.Pies)
+            {
+                <div>
+                    <h2>@pie.Name</h2>
+                    <h3>@pie.Price.ToString("c")</h3>
+                    <h4>@pie.Category.CategoryName</h4>
+                </div>
+            }
+        </div>
+    </body>
+</html>
+```
+
+3. Создание и передача **ViewModel**.
+
+Это по сути wrapper, содержащий в себе все необходимые данные для передачи во View.
+В видео, в итоге был создан класс `HomeViewModel` (в директории `/ViewModels`), который содержит
+в себе `Title` и `Pies`:
+```csharp
+public class HomeViewModel
+{
+    public string Title { get; set; }
+    public IEnumerable<Pie> Pies { get; set; }
+}
+```
+`HomeViewModel` создается и устанавливается в Action контроллера и передается во View.
+
+
+
+#### Файл `_Layout.cshtml`
+
+Может являться шаблоном для других View (что-бы не делать copy-paste разметки).
+
+Особенности:
+* Template - не него могут ссылаться другие View
+* Shared folder
+* More than one can be created
+
+Файл `_Layout.cshtml` по соглашению лежит в директории `Views/Shared`
+
+Пример содержимого файла:
+```html
+!DOCTYPE html>
+<html>
+    <head>
+        <title>Bethany's Pie Shop</title>
+    </head>
+    <body>
+        <div>
+            @RenderBody()  <!-- Replaced with view -->
+        </div>
+    </body>
+</html>
+```
+Вместо `@RenderBody()` будет подставляться содержимое из View.
+
+Создание файла:
+```
+ПКМ -> Add -> New Item... -> Razor Layout
+```
+
+
+#### Файл `_ViewStart.cshtml`
+
+Файл `_ViewStart.cshtml` по соглашению лежит в директории `/Views`.
+Содержимое из этого файла автоматом подставляется в любой View при создании последнего.
+
+Пример содержимого файла:
+```html
+@{
+    Layout = "_Layout";
+}
+```
+В данном случае для всех View файлов перед их созданием устанавливается Layout.
+Если надо, то можно переопределить значение Layout в самом View.
+
+Создание файла:
+```
+ПКМ -> Add -> New Item... -> Razor View Imports
+```
