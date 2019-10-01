@@ -157,7 +157,7 @@ Request                Update
               |---------------> View
 ```
 
-### 04_03,04 Creating the Model and the Repository
+### 04_03,04. Creating the Model and the Repository
 
 *Создание модели, интерфейса для доступа к репозиторию, реализация mock репозитория.
 Регистрация репозитория в DI.*
@@ -216,7 +216,7 @@ public void ConfigureServices(IServiceCollection services)
 запроса создастся еще один экземпляр.
 
 
-### 04_05,06 Creating the Controller
+### 04_05,06. Creating the Controller
 
 *Создание контроллера.*
 
@@ -250,7 +250,7 @@ public class PieController : Controller
 
 
 
-### 04_07,08 Adding the View
+### 04_07,08. Adding the View
 
 *Добавление View. Про `_Layout.cshtml` и `_ViewStart.cshtml`.*
 
@@ -406,7 +406,7 @@ public class HomeViewModel
 ```
 
 
-### 04_09-13 Styling the View
+### 04_09-13. Styling the View
 
 *Стилизация View. Добавление в проект `bootstrap`. Рассматривается использование пакетных
 менеджеров `Bower`, `Library Manager` и обычное добавление файлов "руками".
@@ -508,7 +508,7 @@ body {
 
 *Работа с данными в Entity Framework Core.*
 
-### 05_02 EF Core
+### 05_02. EF Core
 
 Особенности:
 * ORM (Object-Relational Mapping, рус. объектно-реляционное отображение, или преобразование)
@@ -532,3 +532,93 @@ Code First позволяет с минимальными усилиями из�
 ```
 
 EF Core заменяет работу с БД с использованием SQL-выражений на работу с БД, используя обычные классы.
+
+
+### 05_03,04. Adding EF Core to the Application
+
+*Создание DbContext, "реального" репозитория, application configuration (appsettings.json).*
+
+Для включения EF нужно:
+1. Domain classes
+2. Database context
+3. Connection string (как коннектиться к БД)
+4. Application configuration (изменения в Startup классе)
+
+
+#### Database context
+
+Пример:
+```csharp
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
+
+    public DbSet<Pie> Pies { get; set; }
+}
+```
+* Наследуется от `DbContext`.
+
+* Передача в базовый класс `DbContextOptions<T>` (можно через overriding метод `OnConfiguring()`
+или через конструктор (так делается чаще всего)).
+
+* Для таблицы в БД создается свойство `DbSet<T>`.
+
+Создаем класс `/Models/AppDbContext`.
+
+#### "Реальный" репозиторий
+
+Создание класса `/Models/PieRepository`.
+
+Особенности:
+* Реализует `IPieRepository`.
+* Работа с данными выполняется через объект `AppDbContext` (передается через конструктор).
+
+
+#### Добавление информации о подключении к БД
+
+1. Добавление `ConnectionString`.
+
+Один из способов задания `ConnectionString` - чтение настроек из файла `appsettings.json`.
+В примере создается файл `appsettings.json` (в корне проекта):
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=BethanyDemo123;Trusted_Connection=True;MultipleActiveResultSets=true"
+  }
+}
+```
+`localdb` - специальная "разработческая" версия БД, которая поставляется вместе с VS.
+
+
+2. В `Startup` следующие изменения:
+```csharp
+public class Startup
+{
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+        services.AddTransient<IPieRepository, PieRepository>();
+        ...
+    }
+    ...
+}
+```
+* В конструктор добавляется ссылка на объект `IConfiguration`.
+
+* В `ConfigureServices()`
+
+  * Добавляется информация о `ConnectionString` для `AppDbContext`.
+  * Реализация интерфейса `IPieRepository` меняется на "реальную" реализацию `PieRepository`.
+
+Теперь необходимо создать первоначальную БД для работы с данными.
