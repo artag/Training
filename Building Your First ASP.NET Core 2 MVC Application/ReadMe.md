@@ -621,4 +621,78 @@ public class Startup
   * Добавляется информация о `ConnectionString` для `AppDbContext`.
   * Реализация интерфейса `IPieRepository` меняется на "реальную" реализацию `PieRepository`.
 
-Теперь необходимо создать первоначальную БД для работы с данными.
+Теперь необходимо создать и инициализировать БД.
+
+
+### 05-05,06. Creating and Initializing the Database
+
+*Создание БД. Инициализация БД первоначальными данными.*
+
+#### Создание БД
+
+Используется Package Manager Console.
+```
+View -> Other Windows -> Package Manager Console
+```
+
+Команды
+
+1. Добавление начальной Migration
+```
+add-migration InitialMigration
+```
+InitialMigration - наименование миграции.
+
+Это команда автоматом создает Migration в `/Migrations`.
+В файле вида `дата_InitialMigration.cs` содержатся методы `Up()` и `Down()`.
+Первый метод создает БД и таблицу в ней, второй drop'ает таблицу.
+
+2. Обновление БД
+```
+update-database
+```
+Производится синхронизация состояния БД и Data Context в коде с помощью миграций
+(сейчас пока только одна).
+
+Т.о. на данном шаге создана БД с пустой таблицей `Pies`.
+
+#### Заполнение БД первоначальными данными
+
+После создания, БД инициализируется данными.
+
+1. Создание класса-заполнителя `/Model/DbInitializer`.
+
+Класс `DbInitializer` статический, содержит статический метод `Seed()`.
+Здесь производится заполнение пустой таблицы в БД начальными данными.
+
+2. Запуск первоначальной инициализации БД данными при загрузке приложения
+(если надо).
+
+Запуск `DbInitializer.Seed()` производится из класса `Program`.
+Так рекомендует MS. Раньше было в `Startup`.
+
+Кусок из `Program.Main()`:
+```csharp
+CreateWebHostBuilder(args).Build().Run();
+```
+Превратился в:
+```csharp
+var host = CreateWebHostBuilder(args).Build();
+
+using (var scope = host.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        DbInitializer.Seed(context);
+    }
+    catch (Exception)
+    {
+        // We could log this in a real-world situation
+    }
+}
+
+host.Run();
+```
+Здесь получаем доступ к `DbContext` и запускаем инициализацию данных (если надо).
