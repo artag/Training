@@ -696,3 +696,32 @@ using (var scope = host.Services.CreateScope())
 host.Run();
 ```
 Здесь получаем доступ к `DbContext` и запускаем инициализацию данных (если надо).
+
+
+### 05_07,08. Modifying the Model
+
+*Внесение изменения в класс-модель `Pie`. Создание новой Migration. Обновление БД.*
+
+Действия при изменении Model:
+* Создание новой migration.
+* Запуск обновления ("синхронизации" с моделью) БД.
+
+Пример.
+
+1. Внесли изменение в `/Model/Pie` - добавили новое свойство.
+
+2. В Package Manager Console
+
+Создание новой миграции под именем PieModelChanged
+```
+add-migration PieModelChanged
+```
+
+3. В Package Manager Console
+
+Запуск обновления БД
+```
+update-database
+```
+
+В SQL Server Object Explorer можно увидеть, что в БД, в таблице `Pies` появилось новое поле.
