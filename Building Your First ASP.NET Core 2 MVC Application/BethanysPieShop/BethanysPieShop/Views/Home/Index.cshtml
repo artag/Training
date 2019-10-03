@@ -12,7 +12,9 @@
                     @pie.Price.ToString("c")
                 </h3>
                 <h4>
-                    @pie.Name
+                    <a asp-controller="Home"
+                       asp-action="Details"
+                       asp-route-id="@pie.Id">@pie.Name</a>
                 </h4>
                 <p>
                     @pie.ShortDescription

@@ -796,8 +796,120 @@ app.UseMvc(routes =>
 ```
 
 Можно описать несколько Routing, порядок их описания важен.
+```csharp
+app.UseMvc(routes =>
+{
+    routes.MapRoute(
+        ...
+        );
+    routes.MapRoute(
+        ...
+        );
+});
+```
 
 Такой шаблон подходит для следующих адресов:
 * `www.bethanyspieshop.com`
 * `www.bethanyspieshop.com/Pie/List`
 * `www.bethanyspieshop.com/Pie/Details/1`
+
+
+### 06_03,04. Adding Navigation
+
+*Добавление навигации: создание action в controller (Details), создание view Details,
+модификация `Index.cshtml` для создания линка на страницу Details. Добавление
+верхнего меню со ссылкой на главную страницу.*
+
+Во View используются Tag Helpers. Их особенности:
+* Server-side
+* Trigger code execution (можно "повесить" код при запуске на исполнение)
+* Built-in or custom (есть встроенные, можно сделать свои)
+* Replace HTML Helpers (замена устаревшим HTML Helpers)
+
+Пример, link в html:
+```html
+<a asp-controller="Pie" asp-action="List">
+    View Pie List
+</a>
+```
+Будет преобразован с учетом заданного Routing в:
+```html
+<a href="/Pie/List">View Pie List</a>
+```
+
+Здесь рассматриваются следующие теги:
+* `asp-controller` - указывает на Controller, которому предназначен запрос.
+
+* `asp-action` - указывает на Action.
+
+* `asp-route-*` - определяет значение для определенного параметра.
+
+* `asp-route` - указывает на название маршрута.
+Толком не объяснено что это, но говорится, что это редко используется.
+
+#### Добавление функционала по выводу деталей для выбранного пирога
+
+**1.** Создание нового action `Details`.
+
+В /Controllers/HomeController создается новый action:
+```csharp
+public IActionResult Details(int id)
+{
+    var pie = _pieRepository.GetPieById(id);
+    if (pie == null)
+    {
+        return NotFound();
+    }
+
+    return View(pie);
+}
+```
+
+**2.** Создание нового view `Details`.
+
+Во `/Views/Home` создается `Details.cshtml`.
+
+**3.** Создание файла `/Views/_ViewImports.cshtml`
+
+Файл `_ViewImports.cshtml` лежит во `/Views` и предназначен для определения всех
+используемых usage и tag helpers в остальных Views.
+```
+@using BethanysPieShop.Models;
+@using BethanysPieShop.ViewModels;
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+```
+Последняя строка добавляет все taghelper'ы из указанного assembly.
+
+Теперь можно почистить все View от namespace'ов.
+
+**4.** Создание линка в списке пирогов (`Index.cshtml`) на Details для определенного пирога.
+
+Вместо простого наименования пирога ставится ссылка на Details:
+```html
+<h4>
+    <a asp-controller="Home"
+       asp-action="Details"
+       asp-route-id="@pie.Id">@pie.Name</a>
+</h4>
+```
+
+#### Добавление верхнего меню и ссылки на главную страницу в `_Layout.cshtml`.
+
+Добавлен следующий код (в начало body):
+```html
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li>
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="navbar-brand">
+                        Bethany's Pie Shop
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+```
