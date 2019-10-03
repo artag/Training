@@ -724,4 +724,80 @@ add-migration PieModelChanged
 update-database
 ```
 
-В SQL Server Object Explorer можно увидеть, что в БД, в таблице `Pies` появилось новое поле.
+В SQL Server Object Explorer можно увидеть, что в БД, в таблице `Pies` появился новый столбец.
+
+
+## 06. Adding Navigation to the Site
+
+*Изучение Routing. Создание Detail View для выбранного элемента из списка.*
+
+### 06_02. Understanding Navigation in MVC
+
+*Объяснение Routing.*
+
+Есть ссылка:
+```
+http://www.bethanyspieshop.com/Pie/List
+```
+Поиск выполняется в соответствии с заданным шаблоном.
+
+Шаблон: `{Controller}/{Action}`
+* `Pie` - Controller
+* `List` - Action
+```csharp
+public class PieController : Controller
+{
+    public ViewResult List()
+    {
+        return View();
+    }
+}
+```
+
+Для ссылки:
+```
+http://www.bethanyspieshop.com/Pie/Details/2
+```
+Шаблон: `{Controller}/{Action}/{id}`
+* `Pie` - Controller
+* `Details` - Action
+* `2` - Value
+```csharp
+public class PieController : Controller
+{
+    public ViewResult Details(int id)
+    {
+        //Do something
+    }
+}
+```
+
+Шаблон для Routing устанавливается в `Startup.Configure()`:
+```csharp
+app.UseMvcWithDefaultRoute();
+```
+Это шаблон по умолчанию, который подходит для множества сайтов.
+Это шаблон вида:
+```
+{controller=Home}/{action=Index}/{id?}
+```
+- `Home` - Controller по умолчанию
+- `Index` - Action по умолчанию
+- `id` - Value. `?` означает что параметр необязательный
+
+Шаблон по умолчанию для Routing можно записать в таком виде в `Startup.Configure()`:
+```csharp
+app.UseMvc(routes =>
+{
+    routes.MapRoute(
+        name: "default",
+        template: "{controller=Home}/{action=Index}/{id?}");
+});
+```
+
+Можно описать несколько Routing, порядок их описания важен.
+
+Такой шаблон подходит для следующих адресов:
+* `www.bethanyspieshop.com`
+* `www.bethanyspieshop.com/Pie/List`
+* `www.bethanyspieshop.com/Pie/Details/1`
