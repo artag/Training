@@ -913,3 +913,65 @@ public IActionResult Details(int id)
     </div>
 </nav>
 ```
+
+
+## 07. Creating a Simple Form
+
+*Создание страницы для feedback. Валидация вводимых данных.*
+
+### 07_02,03. Using Tag Helpers
+
+*Cоздание страницы для feedback.*
+
+Tag helper'ы для выполнения операции post.
+* Form tag helper
+* Input tag helper
+* Label tag helper
+* Textarea tag helper
+* Select tag helper
+* Validation tag helpers
+
+Эти tag helper'ы, по сути, являются расширениями стандартных html тегов.
+
+Пример использования Form Tag Helper:
+```html
+<form asp-action="Index" method="post"
+      class="form-horizontal" role="form">
+    ...
+</form>
+```
+
+Пример использования Tag Helper:
+В разметке Razor:
+```html
+<label asp-for="Name">
+</label>
+```
+Получившийся Html:
+```html
+<label for="Name">
+    Name
+</label>
+```
+
+### Этапы работы
+
+1. Создание Model `/Models/Feedback.cs`.
+2. Добавление новой таблицы в `AppDbContext`:
+```csharp
+public DbSet<Feedback> Feedbacks { get; set; }
+```
+3. Создание FeedbackRepository в `/Models` (`IFeedbackRepository` и `FeedbackRepository`).
+4. Регистрация FeedbackRepository в `Startup.ConfigureServices()`. 
+5. Создание Migration и обновление БД.
+```
+add-migration Feedback
+update-database
+```
+6. Создание Controller `/Controllers/FeedbackController.cs`.
+Через конструктор передается ссылка на `IFeedbackRepository`.
+7. Создание View `Views/Feedback/Index.cshtml`.
+(Элементы ввода: input, textarea, checkbox).
+
+
+Продолжение см. в следующем разделе.
