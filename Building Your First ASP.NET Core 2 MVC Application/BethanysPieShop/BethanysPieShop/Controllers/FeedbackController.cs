@@ -17,5 +17,17 @@ namespace BethanysPieShop.Controllers
         {
             return View();
         }
+
+        [HttpPost]
+        public IActionResult Index(Feedback feedback)
+        {
+            _feedbackRepository.AddFeedback(feedback);
+            return RedirectToAction(nameof(FeedbackComplete));
+        }
+
+        public IActionResult FeedbackComplete()
+        {
+            return View();
+        }
     }
 }

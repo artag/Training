@@ -971,7 +971,116 @@ update-database
 6. Создание Controller `/Controllers/FeedbackController.cs`.
 Через конструктор передается ссылка на `IFeedbackRepository`.
 7. Создание View `Views/Feedback/Index.cshtml`.
-(Элементы ввода: input, textarea, checkbox).
-
+(Элементы ввода: input, textarea, checkbox, submit button).
 
 Продолжение см. в следующем разделе.
+
+
+### 07_04,05. Model Binding and Validation
+
+*Объяснение работы Model Binding. Добавление валидации для вводимых данных.
+Завершение работы над формой feedback.*
+
+Связывание для **простых** типов данных
+```
+Запрос                             Action в Controller
+/Pie/Details/1 -> Model binders -> public ViewResult Details(int id)
+```
+
+В Model binders поиск ведется в (порядок важен):
+1. Form data
+2. Route variables
+3. Query string
+
+Связывание для **сложных** типов данных.
+
+Передаваемые данные верны
+```
+Запрос                             Action в Controller
+Add "Feedback" -> Model binders -> public ViewResult Index(Feedback feedback)
+
+Feedback
+---
+Name = "Some User"
+ContactMe = true
+```
+
+В передаваемых данных ошибка
+```
+Запрос                             Action в Controller
+Add "Feedback" -> Model binders -> public ViewResult Index(Feedback feedback)
+                                                                        ^
+Feedback                                                             ОШИБКА
+---
+Name = "Some User"
+ContactMe = ABC
+```
+
+Для **валидации данных** используется:
+1. В Controller, Action. Используется `ModelState`:
+```csharp
+if (ModelState.IsValid)
+{
+    _appDbContext.Feedbacks.Add(feedback);
+    _appDbContext.SaveChanges();
+}
+else
+{
+    return View();
+}
+```
+
+2. В Model для соответствующих полей (свойств) ставятся атрибуты:
+```csharp
+public class Feedback
+{
+    [Required]
+    [StringLength(100)]
+    public string Name { get; set; }
+
+    [Required]
+    [StringLength(5000)]
+    public string Message { get; set; }
+}
+```
+
+3. Во View вставляются tag helper'ы для отображения сообщений об ошибках.
+
+#### Атрибуты валидации
+* Required
+* StringLength
+* Range
+* RegularExpression
+* DataType
+  * Phone
+  * Email
+  * Url
+
+#### Продолжение работы над формой feedback
+
+8. В `FeedbackController` добавляются два Action'а:
+```csharp
+[HttpPost]
+public IActionResult Index(Feedback feedback)
+{
+    _feedbackRepository.AddFeedback(feedback);
+    return RedirectToAction(nameof(FeedbackComplete));
+}
+
+public IActionResult FeedbackComplete()
+{
+    return View();
+}
+```
+Post-action помечается атрибутом `HttpPost`.
+
+9. Создание View `/Views/Feedback/FeedbackComplete.cshtml`.
+10. Добавление ссылки на страницу с feedback в верхнее меню (редактирование
+`/Views/Shared/_Layout.cshtml`):
+```html
+<li>
+    <a asp-controller="Feedback" asp-action="Index">
+        Feedback
+    </a>
+</li>
+```
