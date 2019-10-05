@@ -1044,16 +1044,20 @@ public class Feedback
 }
 ```
 
-3. Во View вставляются tag helper'ы для отображения сообщений об ошибках.
+3. Во View вставляются tag helper'ы для отображения сообщений об ошибках. Примеры:
+```html
+<div asp-validation-summary="All" class="text-danger"></div>
+<span asp-validation-for="Name" class="text-danger"></span>
+```
 
 #### Атрибуты валидации
 * Required
 * StringLength
 * Range
 * RegularExpression
-* DataType
+* DataType (не добавляется валидация, но сообщает браузеру о конкретной особенности обработки значения)
   * Phone
-  * Email
+  * Email 
   * Url
 
 #### Продолжение работы над формой feedback
@@ -1084,3 +1088,33 @@ Post-action помечается атрибутом `HttpPost`.
     </a>
 </li>
 ```
+
+#### Добавление валидации
+
+1. В Model `Feedback` добавляются атрибуты валидации.
+2. Добавление в `FeedbackController.Index(Feedback feedback)` проверки `ModelState`:
+```csharp
+[HttpPost]
+public IActionResult Index(Feedback feedback)
+{
+    if (ModelState.IsValid)
+    {
+        _feedbackRepository.AddFeedback(feedback);
+        return RedirectToAction(nameof(FeedbackComplete));
+    }
+    else
+    {
+        return View(feedback);
+    }
+}
+```
+3. Добавление во View `Views/Feedback/Index.cshtml` тегов для отображения ошибок при валидации:
+```html
+...
+<div asp-validation-summary="All" class="text-danger"></div>
+<span asp-validation-for="Name" class="text-danger"></span>
+...
+```
+`asp-validation-summary` - отображает ошибки для всех проверяемых свойств.
+
+`asp-validation-for="Name"` - отображение ошибки только для определенного свойства.
