@@ -1187,3 +1187,119 @@ add-migration IdentityAdded
 update-database
 ```
 Новая Migration добавила кучу таблиц без создания с моей стороны каких либо дополнительных `DbSet`.
+
+
+### 08_04,05. Adding Authentication to the Site
+
+*Scaffolding (генерация) Login и Register функциональности. Обновление Layout (View).*
+
+Различия между версиями ASP.NET Core:
+* ASP.NET Core 2.0 - Ручное создание контроллеров и Views на основе `AccountController`.
+Также доступно и из текущих, более новых версий
+
+* ASP.NET Core 2.1 и выше (рекомендуется) - поддержка Razor Class Library (RCL) and scaffolding.
+Т.е. возможно полуавтоматическое создание компонентов, отвечающих за Identity.
+
+
+Особенности Razor Class Library (RCL)
+* ASP.NET Core 2.1 feature
+* Может содержаться в отдельной библиотеке (как обычный Class Library)
+* Reuse functionality
+  - Views, pages, controllers, view components...
+* Can be overridden
+
+
+Последовательность изменений для Allowing Users to Log In:
+* Use built-in RCL (вместе с ASP.NET, в RCL поставляется код для реализации Identity)
+* Scaffold items (генерация кода для Identity)
+* Layout changes (изменения во View)
+
+Important Classes in Identity
+* `UserManager<IdentityUser>` - create and delete user... В общем, отвечает за действия,
+связанные с объектом User. Также отвечает за изменения этих данных в БД.
+
+* `SignInManager<IdentityUser>` - отвечает за user authentication и related actions.
+
+**1.** Scaffolding
+
+```
+1. ПКМ на проекте -> Add -> New Scaffolded Item...
+2. Identity -> Add
+3. В Add Identity Dialog выбрать нужные файлы:
+  * Account\Login
+  * Account\Logout
+  * Account\Register
+
+  В DataContextClass выбрать наш AppDbContext
+4. Кнопка Add
+```
+
+В `/Areas/Identity` создалось несколько файлов:
+* `/Areas/Identity/Pages/Account` лежат Razor Pages:
+  * `Login.cshtml` - Log in screen. 
+  Здесь `_signInManager` ипользуется для входа пользователя в систему, используя предоставленные
+  им данные (логин, пароль, etc.).
+  
+  * `Register.cshtml` - регистрация пользователя.
+  Создается новый `IdentityUser` класс, который представляет user'а.
+  Используется `_userManager`.
+
+Этот scaffolding код очень легко модифицировать.
+
+**2.** Внести изменения в `IdentityHostingStartup.Configure()`
+
+В `/Areas/Identity/Pages` класс `IdentityHostingStartup` конфигурирует Identity.
+Изменения:
+```csharp
+public void Configure(IWebHostBuilder builder)
+{
+    builder.ConfigureServices((context, services) =>
+    {
+        services.AddDefaultIdentity<IdentityUser>()
+            .AddEntityFrameworkStores<AppDbContext>();
+    });
+}
+```
+* `services.AddDefaultIdentity<IdentityUser>()` - включение Identity в Services Collection.
+* `AddEntityFrameworkStores<AppDbContext>()` - `AppDbContext` будет использоваться для
+хранения Identity Information, и, соответственно, будет использовать БД от AppDbContext.
+
+**3.** Добавление возможности log in в интерфейс пользователя (во View)
+
+В `/Views/Shared/` scaffolding добавил `_LoginPartial.cshtml` (partial view).
+
+В `_LoginPartial.cshtml`. Инжекция зависимостей в Razor:
+```csharp
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+```
+
+Можно увидеть, что в режиме "SignIn" пользователь видит:
+* Ссылку на свой профиль
+* Ссылку на Logout
+
+Если пользователь не залогинен, то видит:
+* Ссылку на Register (`/Account/Register`)
+* Ссылку на Login (`/Account/Login`)
+
+#### Добавление
+
+**1.** Partial View добавляется в `/Views/Shared/_Layout.cshtml`:
+```html
+...
+<!-- Было --> <li><a asp-controller="Feedback" asp-action="Index">Feedback</a></li>
+<partial name="_LoginPartial" />
+```
+Вместо tag-helper `partial` можно использовать:
+```html
+<@Html.Partial ...
+```
+
+**2.** Дополнительно, в `/Views/Shared/_Layout.cshtml`, в самый его конец надо добавить
+ссылку на скрипты:
+```html
+    ...
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
+```
