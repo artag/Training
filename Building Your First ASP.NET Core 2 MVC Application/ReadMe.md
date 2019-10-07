@@ -1118,3 +1118,72 @@ public IActionResult Index(Feedback feedback)
 `asp-validation-summary` - отображает ошибки для всех проверяемых свойств.
 
 `asp-validation-for="Name"` - отображение ошибки только для определенного свойства.
+
+
+## 08. Adding Login Capabilities
+
+*Добавление авторизации.*
+
+### 08_02,03. Exploring and adding ASP.NET Core Identity
+
+*Добавление в приложение ASP.NET Identity.*
+
+Особенности ASP.NET Identity:
+- Membership system
+- Authentication and authorization
+- Supports external providers (использование "внешних" паролей. Например от Google или Facebook)
+- SQL Server support built-in
+- Since ASP.NET Core 2.1: scaffolding support
+
+Процесс добавления ASP.NET Identity:
+- IdentityDbContext (создание таблиц в БД, содержащих информацию об identity).
+- Configuration changes
+  - Password length (ограничение на длину пароля)
+  - Cookies
+  - User options (уникальный email, например)
+- Scaffolding
+
+Пример задания правил (ограничений) на пароль в Configuration Options:
+```csharp
+services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = true;
+    options.User.RequireUniqueEmail = true;
+});
+```
+
+**1.** Изменение `AppDbContext`
+
+Для включения Identity необходимо изменить базовый класс на `IdentityDbContext<IdentityUser>`:
+```csharp
+public class AppDbContext : IdentityDbContext<IdentityUser>
+{
+    ...
+}
+```
+
+Класс `IdentityUser` будет представлять правила доступа для юзера по умолчанию.
+Он содержит нужные свойства и т.п.
+Если надо что-то добавить, то можно унаследоваться от `IdentityUser`, а затем включить
+получившийся класс в `IdentityDbContext<сюда>`.
+
+**2.** Изменения в `Startup.Configure()`
+
+Добавить:
+```csharp
+...
+app.UseStaticFiles();
+app.UseAuthentication();
+...
+```
+
+**3.** Добавление Migration и обновление БД
+
+В Package Manager Console
+```
+add-migration IdentityAdded
+update-database
+```
+Новая Migration добавила кучу таблиц без создания с моей стороны каких либо дополнительных `DbSet`.
