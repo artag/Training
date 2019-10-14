@@ -1200,14 +1200,12 @@ update-database
 * ASP.NET Core 2.1 и выше (рекомендуется) - поддержка Razor Class Library (RCL) and scaffolding.
 Т.е. возможно полуавтоматическое создание компонентов, отвечающих за Identity.
 
-
 Особенности Razor Class Library (RCL)
 * ASP.NET Core 2.1 feature
 * Может содержаться в отдельной библиотеке (как обычный Class Library)
 * Reuse functionality
   - Views, pages, controllers, view components...
 * Can be overridden
-
 
 Последовательность изменений для Allowing Users to Log In:
 * Use built-in RCL (вместе с ASP.NET, в RCL поставляется код для реализации Identity)
@@ -1303,3 +1301,53 @@ public void Configure(IWebHostBuilder builder)
 </body>
 </html>
 ```
+
+
+### 08_06,07. Authorization. Adding Authorization to the Site
+
+*Добавление авторизации (чтобы оставить Feedback на сайте, надо сначала залогиниться).*
+
+Авторизацию можно включать на уровне контроллеров. Все action внутри этого контроллера
+будут также содержать авторизацию:
+```csharp
+[Authorize]
+public class FeedbackController : Controller
+{
+}
+```
+
+Авторизация на уровне action:
+```csharp
+public class FeedbackController : Controller
+{
+    [Authorize]
+    public IActionResult Send()
+    {
+    }
+}
+```
+
+Есть куча дополнительных опций для атрибута `Authorize`. Подробнее о них см. в курсе
+"Building an Enterprise Application with ASP.NET Core MVC".
+Пример такой опции. Проверка авторизованного пользователя на принадлежность определенному Role:
+```csharp
+[Authorize(Roles = "Administrator")]
+public class FeedbackController : Controller
+{
+}
+```
+
+#### Добавление Autorize в приложение
+
+Незалогиненный пользователь не должен иметь возможность оставлять Feedback.
+Атрибут `Authorize` добавляется в `FeedbackController`:
+```csharp
+[Authorize]
+public class FeedbackController : Controller
+{
+    ...
+}
+```
+
+Теперь, незалогиненный пользователь при попытке перейти на страницу `Feedback` попадает
+на страницу ввода логина.
