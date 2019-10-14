@@ -124,3 +124,34 @@ Query Strings for non-data elements: например для format, sorting, se
 
 Работа с функциональностью системы
 * `http://.../api/reloadconfig` - перезагрузка конфигурации.
+
+
+## 02-07,08. Getting the Starting Project. Using Postman
+
+**1.** Для работы будет использоваться тулза `Postman`.
+
+Небольшие настройки Postman:
+```
+Settings:
+Two-pane view -> On
+Automatically follow redirects -> Off
+```
+
+**2.** Настройки учебного проекта в VS
+В свойствах проекта, закладка `Debug`:
+* Снять флажок с `Launch browser`
+* В `App URL` указать адрес с фиксированным портом. Например: `http://localhost:6600/`.
+ 
+
+При вводе в Postman такого адреса (GET):
+```
+http://localhost:6600/api/values
+```
+От сервера прийдет ответ:
+```
+[
+    "Hello",
+    "From",
+    "Pluralsight"
+]
+```
