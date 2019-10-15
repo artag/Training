@@ -155,3 +155,53 @@ http://localhost:6600/api/values
     "Pluralsight"
 ]
 ```
+
+
+## 02-09. Trip Around the Project
+
+Рассказывается немного о проекте:
+* Program.cs
+* Startup.cs
+* appsettings.json (ConnectionStings для БД)
+
+В `appsettings.json` интересна строка:
+```json
+  "ConnectionStrings": {
+    "CodeCamp": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=PSCodeCamp;
+                 Integrated Security=True;Connect Timeout=30;"
+```
+Здесь используется:
+* Название соединения "CodeCamp".
+* БД `localdb` (входит в состав VS).
+* Название БД будет "PSCodeCamp".
+
+Для создания БД и применения миграции выполнить команду (в консоли):
+```
+dotnet ef database update
+```
+Примечание. Для .NET Core 3.0 Entity Framework "no longer part of the .NET Core SDK"
+
+Чтобы его включить надо:
+1. This change allows us to ship dotnet ef as a regular .NET CLI tool that can be installed
+as either a global or local tool. For example, to be able to manage migrations or scaffold
+a DbContext, install dotnet ef as a global tool typing the following command:
+```
+dotnet tool install -g dotnet-ef --version 3.0.0-*
+```
+У меня получилось поставить с помощью команды:
+```
+dotnet tool install -g dotnet-ef
+```
+
+2. You might need to add the following NuGet packages to your project:
+```
+Microsoft.EntityFrameworkCore.SqlServer
+Microsoft.EntityFrameworkCore.Design
+Microsoft.EntityFrameworkCore.Tools
+```
+У меня завелось без добавления NuGet пакетов (возможно из-за того, что проект был создан в
+.NET Core 2).
+
+Рекомендуемые **Extensions для VS**:
+1. Open Command Line (by Mads Kristensen)
+2. Add New File (by Mads Kristensen)
