@@ -8,8 +8,9 @@
 * Defining Operational APIs
 * Versioning APIs with MVC 6
 
+## 02. Pragmatic Rest
 
-## 02-02. How Does HTTP Work?
+### 02-02. How Does HTTP Work?
 
 От клиента серверу идет `Request` (запрос), который содержит:
 1. `verb` - что собираемся делать
@@ -34,7 +35,7 @@
 Режим работы сервера **Stateless** (не имеет состояния). Для сервера
 каждый раз надо передавать всю необходимую информацию.
 
-### Основные виды запросов:
+#### Основные виды запросов:
 
 * `GET` - Retrieve a resource.
 
@@ -50,7 +51,7 @@
 Есть еще другие запросы, но эти основные.
 
 
-## 02-03. What Is REST
+### 02-03. What Is REST
 
 Расшифровывается как **REpresentational State Transfer** - передача состояния представления.
 
@@ -81,7 +82,7 @@ Concepts include:
 * Uniform Interface (Единый интерфейс)
 
 
-## 02-04. What Are Resources
+### 02-04. What Are Resources
 
 Ресурсы это не только Enity:
 * People
@@ -95,7 +96,7 @@ Concepts include:
 * Несколько взаимосвязанных сущностей (например, отчет)
 
 
-## 02-05. What Are URIs
+### 02-05. What Are URIs
 
 URI - **Uniform Resource Identifier** — унифицированный (единообразный) идентификатор ресурса.
 
@@ -104,7 +105,7 @@ URIs are just paths to Resources. Пример: `api.yourserver.com/people`.
 Query Strings for non-data elements: например для format, sorting, searching, etc.
 
 
-## 02-06. Designing the URI
+### 02-06. Designing the URI
 
 Учебный пример.
 1. Есть Camp'ы.
@@ -126,7 +127,7 @@ Query Strings for non-data elements: например для format, sorting, se
 * `http://.../api/reloadconfig` - перезагрузка конфигурации.
 
 
-## 02-07,08. Getting the Starting Project. Using Postman
+### 02-07,08. Getting the Starting Project. Using Postman
 
 **1.** Для работы будет использоваться тулза `Postman`.
 
@@ -157,7 +158,7 @@ http://localhost:6600/api/values
 ```
 
 
-## 02-09. Trip Around the Project
+### 02-09. Trip Around the Project
 
 Рассказывается немного о проекте:
 * Program.cs
@@ -205,3 +206,83 @@ Microsoft.EntityFrameworkCore.Tools
 Рекомендуемые **Extensions для VS**:
 1. Open Command Line (by Mads Kristensen)
 2. Add New File (by Mads Kristensen)
+
+
+## 03. Building Your First API
+
+### 03-01. Introduction
+
+Как работает доступ к API.
+1. Приходит Request
+
+2. С помощью механизма Route определяется маршрут
+```
+http://.../api/customer -> /api/customer
+``` 
+
+3. Производится поиск маршрута по всем Route'ам.
+
+4. Найденный маршрут соответствует определенном `Controller` и `Action`.
+
+5. Execute Action. (Выполняется Action).
+
+6. Отправляется `Response`.
+
+
+### 03-02. Creating an Action
+
+Создание нового контроллера `/Controllers/CampsController.cs`.
+* Задается атрибут `Route`:
+  * Можно так: `[Route("api/camps")]`
+  * Но лучше (более надежно) так: `[Route("api/[controller]")]`
+* Наследуется от класса `ControllerBase`.
+* Создание action `Get()`, возвращающего (временно) object, анонимный объект.
+
+Итого:
+```csharp
+[Route("api/[controller]")]
+public class CampsController : ControllerBase
+{
+    public object Get()
+    {
+        return new {Moniker = "ATL2018", Name = "Atlanta Code Camp" };
+    }
+}
+```
+
+В Postman:
+```
+http://localhost:6600/api/camps
+```
+Выведет анонимный объект в виде JSON.
+
+
+### 03-03. Status Codes
+
+* 200 - OK
+* 201 - Created 
+* 202 - Accepted 
+* 302 - Found 
+* 304 - Not Modified 
+* 307 - Temp Redirect 
+* 308 - Perm Redirect 
+* 400 - Bad Request
+* 401 - Not Authorized
+* 403 - Forbidden
+* 404 - Not Found
+* 405 - Method Not Allowed
+* 409 - Conflict
+* 500 - Internal Error
+
+**Минимальный набор** используемых Status Codes
+* 200 - OK ("It Worked")
+* 400 - Bad Request ("You did bad")
+* 500 - Internal Error ("We did bad")
+
+И еще полезные коды для использования:
+* 201 - Created
+* 304 - Not Modified
+* 404 - Not Found
+* 401 - Unauthorized
+* 403 - Forbidden
+
