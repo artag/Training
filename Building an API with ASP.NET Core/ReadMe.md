@@ -286,3 +286,40 @@ http://localhost:6600/api/camps
 * 401 - Unauthorized
 * 403 - Forbidden
 
+
+### 03-04. Using Status Codes
+
+В action `CampsController.Get()` надо добавить возвращаемые ответы:
+```csharp
+public IActionResult Get()
+{
+    if (...)
+    {
+        // Что-то пошло не так - status code 400
+        return BadRequest("Bad stuff happens");
+    }
+
+    if (...)
+    {
+        // Что-то пошло не так - status code 404
+        return NotFound("Message not found");
+    }
+
+    // Все нормально - status code 200
+    return Ok(new {Moniker = "ATL2018", Name = "Atlanta Code Camp" });
+}
+```
+
+Атрибут `[HttpGet]` над action четко описывает назначение этого action'а.
+Этот атрибут позволяет переименовать метод для лучшей читаемости.
+Рекомендуется добавлять.
+
+В нашем случае результат будет (пока) такой:
+```csharp
+[HttpGet]
+public IActionResult GetCamps()
+{
+    return Ok(new {Moniker = "ATL2018", Name = "Atlanta Code Camp" });
+}
+```
+В данном случае не добавляются другие возвращаемые Status Codes, кроме 200 (Ok).
