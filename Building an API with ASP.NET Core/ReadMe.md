@@ -459,3 +459,47 @@ public async Task<ActionResult<CampModel[]>> Get()
 ```
 * `Task<ActionResult<CampModel[]>>` автоматом возвращает статус Ok.
 * Поэтому можно просто вернуть `_mapper.Map<CampModel[]>(results)`.
+
+
+### 03-07. Getting an Individual Item
+
+Пользователь будет получать требуемый `Camp` по значению его `Moniker`
+
+Добавленный метод в `CampsController`:
+```csharp
+[HttpGet("{moniker}")]
+public async Task<ActionResult<CampModel>> Get(string moniker)
+{
+    try
+    {
+        var result = await _repository.GetCampAsync(moniker);
+
+        if (result == null)
+            return NotFound();    // Status Code 404
+
+        return _mapper.Map<CampModel>(result);
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+}
+```
+Особенности:
+* Добавление дополнительного пути для routing - `[HttpGet("{moniker}")]`. Запрос к action'у будет
+выглядеть так:
+```
+http://localhost:6600/api/camps/ATL2018
+```
+
+* Если не найдено (null), то возвращается код `NotFound`.
+
+* Если бы использовался тип int для входного параметра, то атрибут задания доп. пути 
+для routing помимо названия еще можно было ограничить его типом int:
+```csharp
+[HttpGet("{moniker:int}")]
+public async Task<ActionResult<CampModel>> Get(int moniker)
+{
+    ...
+}
+```
