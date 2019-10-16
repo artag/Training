@@ -503,3 +503,71 @@ public async Task<ActionResult<CampModel>> Get(int moniker)
     ...
 }
 ```
+
+
+### 03-08. Returning Related Data
+
+В entity `Camp` есть ссылка на другой entity - `Location`.
+
+Есть несколько способов включить `Location` в состав показываемого `CampModel`:
+* Целиком, как это делается в `Camp`.
+* Можем скопировать часть свойств из `Location` прямо в `CampModel`.
+* Или можно опционально показывать `Location` в составе `CampModel`.
+
+В примере показывается копирование нескольких свойств из Location прямо в `CampModel`.
+
+Шаги:
+1. Копирование некоторых свойств из `Location` в `CampModel`:
+```csharp
+public class CampModel
+{
+    ...
+    public string LocationVenueName { get; set; }
+    public string LocationAddress1 { get; set; }
+    public string LocationAddress2 { get; set; }
+    public string LocationAddress3 { get; set; }
+    public string LocationCityTown { get; set; }
+    public string LocationStateProvince { get; set; }
+    public string LocationPostalCode { get; set; }
+    public string LocationCountry { get; set; }
+}
+```
+Префикс `Location` в добавленных свойствах автоматически задает mapping для свойств
+из entity `Location` для automapper'а.
+
+2. Для mapping'a переименованного свойства:
+
+Пример. Mapping свойства `LocationVenueName` как `Venue`
+```csharp
+public class CampModel
+{
+    ...
+    public string Venue { get; set; }
+    ...
+}
+```
+
+2.1. В классе `CampProfile` создается следующий mapping:
+```csharp
+public CampProfile()
+{
+    CreateMap<Camp, CampModel>()
+        .ForMember(c => c.Venue, o => o.MapFrom(m => m.Location.VenueName));
+}
+```
+* Первая лямбда задает целевое свойство для mapping'а.
+
+* Вторая лямбда позволяет задать:
+  * AllowNull
+  * ExplicitExpansion
+  * Ignore
+  * ...
+  * MapFrom - откуда производится mapping
+
+* Третья лямда задает исходное свойство для mapping'а.
+
+Запрос в Postman:
+```
+http://localhost:6600/api/camps/ATL2018
+```
+Покажет содержимое одного CampModel с выборочной информацией из `Location` entity.
