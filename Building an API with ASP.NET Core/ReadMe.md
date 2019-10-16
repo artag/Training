@@ -360,3 +360,102 @@ async-await и тип возвращаемого значения меняетс
 http://localhost:6600/api/camps
 ```
 Возвращает коллекцию `Camp` в виде JSON.
+
+
+### 03-06. Returning Models Instead of Entities
+
+Как правило, пользователю не надо возвращать/показывать весь Entity целиком, поэтому
+надо создать EnityModel только с требуемыми полями и использовать его для возврата пользователю.
+
+Why Models instead of Entities?
+- Payload is a contract with your users
+- Likely want to filter data for security too
+- Surrogate Keys are useful too
+
+Шаги. Для создания Model для entity `Camp`:
+1. Создание `/Models/CampModel` (содержит только некоторые поля из entity):
+```csharp
+public class CampModel
+{
+    public string Name { get; set; }
+    public string Moniker { get; set; }
+    public DateTime EventDate { get; set; } = DateTime.MinValue;
+    public int Length { get; set; } = 1;
+}
+```
+
+2. Можно создать models в методе `CampsController.Get()`, используя LINQ, for, foreach:
+```csharp
+var results = await _repository.GetAllCampsAsync(includeTalks);
+CampModel[] models = results...;
+```
+Но в данном примере будет использоваться automapper:
+
+2.1. Ставится NuGet пакет `AutoMapper.Extensions.Microsoft.DependencyInjection`.
+
+2.2. В `Startup.ConfigureServices()` добавляется новый сервис:
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    ...
+    // В видео
+    services.AddAutoMapper();
+    // У меня (в версии automapper, которую я использовал)
+    services.AddAutoMapper(typeof(Startup));
+    ...
+}
+```
+
+2.3. Добавляется `/Data/CampProfile` который задает mapping между классами `Camp` и `CampModel`.
+```csharp
+public class CampProfile : Profile
+{
+    public CampProfile()
+    {
+        CreateMap<Camp, CampModel>();
+    }
+}
+```
+Особенности:
+* Базовый класс `Profile`.
+* В конструкторе задается map между нужными классами.
+
+2.4. Через конструктор класса `CampsController` передается ссылка на `IMapper`.
+
+2.5. В метод `CampsController.Get()` создание `CampModel[]` происходит так:
+```csharp
+public async Task<IActionResult> Get()
+{
+    ...
+    var results = await _repository.GetAllCampsAsync(includeTalks);
+    CampModel[] models = _mapper.Map<CampModel[]>(results);
+    return Ok(models);
+    ...
+}
+```
+
+3. При запросе в Postman:
+```
+http://localhost:6600/api/camps
+```
+будет возвращаться только нужные данные из entity `Camp`
+
+**Итоговый action для GET**
+
+Для большей ясности кода автор преобразует `CampsController.Get()` в следующее:
+```csharp
+public async Task<ActionResult<CampModel[]>> Get()
+{
+    try
+    {
+        var results = await _repository.GetAllCampsAsync();
+        return _mapper.Map<CampModel[]>(results);
+    }
+    catch (Exception)
+    {
+        return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+}
+```
+* `Task<ActionResult<CampModel[]>>` автоматом возвращает статус Ok.
+* Поэтому можно просто вернуть `_mapper.Map<CampModel[]>(results)`.
