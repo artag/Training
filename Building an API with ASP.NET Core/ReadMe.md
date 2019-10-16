@@ -311,8 +311,8 @@ public IActionResult Get()
 ```
 
 Атрибут `[HttpGet]` над action четко описывает назначение этого action'а.
-Этот атрибут позволяет переименовать метод для лучшей читаемости.
-Рекомендуется добавлять.
+Рекомендуется добавлять этот атрибут.
+Также можно переименовать метод (для лучшей читаемости, например).
 
 В нашем случае результат будет (пока) такой:
 ```csharp
@@ -323,3 +323,40 @@ public IActionResult GetCamps()
 }
 ```
 В данном случае не добавляются другие возвращаемые Status Codes, кроме 200 (Ok).
+
+
+### 03-05 Using GET for Collections
+
+*Использование GET для получения коллекции из БД.*
+
+Шаги:
+1. Добавление в контроллер `CampsController` через конструктор reference на `ICampRepository`.
+
+2. Добавление в метод `Get` следующего кода:
+```csharp
+[HttpGet]
+public async Task<IActionResult> Get()
+{
+    try
+    {
+        var results = await _repository.GetAllCampsAsync();
+        return Ok(results);
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+}
+```
+Т.к. нет отдельного метода для возврата Status Code 500, то код 500 возвращается через вызов
+метода `StatusCode(StatusCodes.Status500InternalServerError, ...)`,
+где `StatusCodes` enum.
+
+3. Т.к. метод `GetAllCampsAsync()` из репозитория асинхронный, то добавляется конструкция
+async-await и тип возвращаемого значения меняется с `IActionResult` на `Task<IActionResult>`.
+
+Запрос в Postman:
+```
+http://localhost:6600/api/camps
+```
+Возвращает коллекцию `Camp` в виде JSON.
