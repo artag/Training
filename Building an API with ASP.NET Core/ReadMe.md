@@ -741,3 +741,42 @@ http://localhost:6600/api/camps/search?theDate=2018-10-18
 http://localhost:6600/api/camps/search?theDate=2018-10-18&includeTalks=true
 ```
 Вернут нужные Camps за требуемую дату, иначе вернется Status Code 404 (Not Found).
+
+
+## 04. Modifying Data
+
+### 04-01. URI Design
+
+Поведение verb зависит от ресурса, над которым совершается действие.
+
+Пример. Действие, совершаемые над ресурсами customer:
+```
+Resource         /customers
+GET    (read)    Get List
+POST   (create)  Create Item
+PUT    (update)  Update Batch
+DELETE (delete)  Error
+
+Resource         /customers/123
+GET    (read)    Get Item
+POST   (create)  Error
+PUT    (update)  Update Item
+DELETE (delete)  Delete Item
+```
+
+Пример. Результаты, получаемые после действий, проведенных над ресурсами customer:
+```
+Resource         /customers
+GET    (read)    List
+POST   (create)  New Item
+PUT    (update)  Status Code Only
+DELETE (delete)  Status Code Only (Error Status Code)
+```
+
+```
+Resource         /customers/123
+GET    (read)    Item
+POST   (create)  Status Code Only (Error Status Code)
+PUT    (update)  Updated Item
+DELETE (delete)  Status Code Only
+```
