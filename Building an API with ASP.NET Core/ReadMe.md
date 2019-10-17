@@ -696,3 +696,48 @@ http://localhost:6600/api/camps?includeTalks=true
 В последний момент в эти классы моделей добавляются свойства с id (взяты из entity),
 для идентификации talk и speaker:
 `TalkId` и `SpeakerId`.
+
+
+### 03-10. Implementing Searching
+
+*Добавление поиска Camps по дате.*
+
+Шаг 1. В контроллер `CampsController` добавляется следующий метод:
+```csharp
+[HttpGet("search")]
+public async Task<ActionResult<CampModel[]>> SearchByDate(
+    DateTime theDate, bool includeTalks = false)
+{
+    try
+    {
+        var result = await _repository.GetAllCampsByEventDate(theDate, includeTalks);
+
+        if (!result.Any())
+        {
+            return NotFound();
+        }
+
+        return _mapper.Map<CampModel[]>(result);
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+}
+```
+Похоже на все то, что использовалось ранее. Особенности:
+* Атрибут `[HttpGet("search")]` добавляет к Route "дополнительный" маршрут:
+```
+/api/camps/search?queryString1&queryString2
+```
+
+* Для получения Camps по дате используется метод ` _repository.GetAllCampsByEventDate()`.
+
+
+Запросы:
+```
+http://localhost:6600/api/camps/search?theDate=2018-10-18
+или
+http://localhost:6600/api/camps/search?theDate=2018-10-18&includeTalks=true
+```
+Вернут нужные Camps за требуемую дату, иначе вернется Status Code 404 (Not Found).
