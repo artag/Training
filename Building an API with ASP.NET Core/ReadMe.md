@@ -571,3 +571,128 @@ public CampProfile()
 http://localhost:6600/api/camps/ATL2018
 ```
 Покажет содержимое одного CampModel с выборочной информацией из `Location` entity.
+
+
+### 03-09. Using Query Strings
+
+Включим получение коллекции `Talk` в составе `CampModel`.
+
+#### Получение Talks в составе Camps 
+
+1. Получение коллекции из `Talk` опциональное: метод `_repository.GetAllCampsAsync()`
+содержит опциональный параметр `bool includeTalks = false`.
+
+Метод Get в `CampsController` изменится следующим образом:
+```csharp
+[HttpGet]
+public async Task<ActionResult<CampModel[]>> Get(bool includeTalks = false)
+{
+    try
+    {
+        var results = await _repository.GetAllCampsAsync(includeTalks);
+        return _mapper.Map<CampModel[]>(results);
+    }
+    ...
+}
+```
+Без указания параметра или с параметром `false` возвращается `CampModel` без `Talks`.
+
+2. Создание TalkModel в `/Models/TalkModels`. Скопированы из `/Data/Entities/Talk`
+некоторые поля:
+```csharp
+public class TalkModel
+{
+    public string Title { get; set; }
+    public string Abstract { get; set; }
+    public int Level { get; set; }
+}
+```
+
+3. Включение коллекции полей в `CampModel` (еще один способ включения данных из entity,
+см. ранее, для `Location`):
+```csharp
+public class CampModel
+{
+    ...
+    public ICollection<TalkModel> Talks { get; set; }
+}
+```
+
+4. В видео сказано о этом не было и не создавалось, но у меня не работало без создания
+`/Data/TalkProfile` - класса, который задает mapping между классами `Talk` и `TalkModel`:
+```csharp
+public class TalkProfile : Profile
+{
+    public TalkProfile()
+    {
+        CreateMap<Talk, TalkModel>();
+    }
+}
+```
+
+Запрос:
+```
+http://localhost:6600/api/camps
+```
+Покажет Camps в виде JSON с пустыми полями talks: `"talks": []`.
+
+Запрос:
+```
+http://localhost:6600/api/camps?includeTalks=true
+```
+Покажет Camps в виде JSON с заполненными полями talks.
+
+
+#### Получение Speaker в составе TalkModel
+
+Шаги.
+
+1. Создание `/Models/SpeakerModel`:
+```csharp
+public class SpeakerModel
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string MiddleName { get; set; }
+    public string Company { get; set; }
+    public string CompanyUrl { get; set; }
+    public string BlogUrl { get; set; }
+    public string Twitter { get; set; }
+    public string GitHub { get; set; }
+}
+```
+
+2. Добавление `SpeakerModel` в `TalkModel`:
+```csharp
+public class TalkModel
+{
+    ...
+    public SpeakerModel Speaker { get; set; }
+}
+```
+
+3. В видео сказано о этом не было и не создавалось, но у меня не работало без создания
+`/Data/SpeakerProfile` - класса, который задает mapping между классами `Speaker` и
+`SpeakerModel`:
+```csharp
+public class SpeakerProfile : Profile
+{
+    public SpeakerProfile()
+    {
+        CreateMap<Speaker, SpeakerModel>();
+    }
+}
+```
+
+Запрос:
+```
+http://localhost:6600/api/camps?includeTalks=true
+```
+Покажет Camps в виде JSON с заполненными полями talks. Для каждого поля talk будет свой speaker.
+
+
+#### Дополнительное добавление полей в `TalkModel` и `SpeakerModel`
+
+В последний момент в эти классы моделей добавляются свойства с id (взяты из entity),
+для идентификации talk и speaker:
+`TalkId` и `SpeakerId`.
