@@ -1004,3 +1004,84 @@ public CampProfile()
         .ForPath(c => c.Location.VenueName, o => o.MapFrom(m => m.Venue));
 }
 ```
+
+
+### 04-04. Adding Model Validation
+
+*Добавление Validation данных для POST запроса. Использование встроенных средств для валидации
+и написание своей валидации на уникальность Moniker.*
+
+Шаги.
+
+1. Добавление атрибутов в `CampModel` для некоторых свойств, для которых требуется проверка.
+```csharp
+public class CampModel
+{
+    [Required]
+    [StringLength(100)]
+    public string Name { get; set; }
+
+    [Required]
+    public string Moniker { get; set; }
+
+    [Range(1, 100)]
+    public int Length { get; set; } = 1;
+    ...
+}
+```
+
+2. При запросе POST
+```
+http://localhost:6600/api/camps
+```
+
+С Body без указания обязательного свойства "name" 
+```json
+{
+    "moniker": "SD2018",
+    "eventDate": "2018-05-05",
+    "length": 1,
+    "venue": "SD Community College",
+    "locationPostalCode": "12345"
+}
+```
+
+Возратится Status Code 400 (Bad Request) со следующим Body:
+```json
+{
+    "errors": {
+        "Name": [
+            "The Name field is required."
+        ]
+    },
+    "title": "One or more validation errors occurred.",
+    "status": 400,
+    "traceId": "8000000e-0001-fd00-b63f-84710c7967bb"
+}
+```
+
+Данная валидация обеспечивается благодаря добавленному ранее атрибуту `[ApiController]`.
+
+Если надо что-то дополнить/изменить в валидации, то можно дополнительно в метод `Post()`
+добавить что-то типа:
+```csharp
+if (ModelState.IsValid)
+...
+```
+
+#### Проверка moniker на уникальность
+
+В нашем случае, перед добавлением нового Camp требуется проверка на уникальность его "Moniker".
+
+Все требуемые изменения вносятся в метод `Post`. Следующее добавляется в начало метода:
+```csharp
+// Check for existing moniker
+var existingCamp = await _repository.GetCampAsync(model.Moniker);
+if (existingCamp != null)
+{
+    return BadRequest("Moniker in Use");
+}
+
+// Get URI for created Camp
+...
+```
