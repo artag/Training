@@ -990,18 +990,12 @@ http://localhost:6600/api/camps
 
 Создается новый Camp.
 
-4. В видео не было показано, но у меня не заработало. Добавил обратный mapping
-`CampModel -> Camp`:
+4. В видео не было показано, но у меня не заработало. Добавил обратный mapping:
 ```csharp
 public CampProfile()
 {
-    // Camp -> CampModel
     CreateMap<Camp, CampModel>()
-        .ForMember(c => c.Venue, o => o.MapFrom(m => m.Location.VenueName));
-
-    // CampModel -> Camp
-    CreateMap<CampModel, Camp>()
-        .ForPath(c => c.Location.VenueName, o => o.MapFrom(m => m.Venue));
+        .ForMember(c => c.Venue, o => o.MapFrom(m => m.Location.VenueName)).ReverseMap();
 }
 ```
 
@@ -1084,4 +1078,70 @@ if (existingCamp != null)
 
 // Get URI for created Camp
 ...
+```
+
+
+### 04-05. Implementing PUT
+
+*Обновление ресурса. Запрос PUT (обновление ресурса целиком).*
+
+Создается новый метод :
+```csharp
+[HttpPut("{moniker}")]
+public async Task<ActionResult<CampModel>> Put(string moniker, CampModel model)
+{
+    try
+    {
+        var oldCamp = await _repository.GetCampAsync(moniker);
+        if (oldCamp == null)
+        {
+            return NotFound($"Could not find camp with moniker of {moniker}");
+        }
+
+        _mapper.Map(model, oldCamp);
+
+        if (await _repository.SaveChangesAsync())
+        {
+            return _mapper.Map<CampModel>(oldCamp);
+        }
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+
+    return BadRequest();
+}
+```
+Особенности:
+
+1. `_mapper.Map(model, oldCamp)` - переписывает данные из `model` в `oldCamp`.
+
+2. Возврат `_mapper.Map<CampModel>(oldCamp)` и `Task<ActionResult<CampModel>>` автоматически
+возвращают Status Code "Ok".
+
+3. Как видно из кода, PUT переписывает объект целиком.
+
+Запрос PUT (Camp с таким Moniker уже существует в БД):
+```
+http://localhost:6600/api/camps/SD2018
+```
+
+Тело запроса:
+```json
+{
+    "name": "San Diego Code Camp",
+    "moniker": "SD2018",
+    "eventDate": "2018-05-05T00:00:00",
+    "length": 3,
+    "venue": "SD Community College",
+    "locationAddress1": "123 Main Street",
+    "locationAddress2": null,
+    "locationAddress3": null,
+    "locationCityTown": "San Diego",
+    "locationStateProvince": "CA",
+    "locationPostalCode": "98765",
+    "locationCountry": "USA",
+    "talks": []
+}
 ```
