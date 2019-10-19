@@ -784,7 +784,7 @@ DELETE (delete)  Status Code Only
 
 ### 04-02. Model Binding
 
-*Создание action для запроса POST (часть 1/2). Привязка модели к содержимому body запроса.*
+*Создание action для запроса POST (часть 1/3). Привязка модели к содержимому body запроса.*
 
 Шаги:
 
@@ -851,3 +851,156 @@ public class CampsController : ControllerBase
 ```
 будут взяты данные только для свойств 'Name' и 'Moniker'.
  
+
+### 04-03. Implementing POST
+
+*Создание action для запроса POST (часть 2/3).*
+
+Шаги:
+
+1. Модификация (неокончательная) метода Post, созданного в предыдущем разделе:
+```csharp
+public async Task<ActionResult<CampModel>> Post(CampModel model)
+{
+    try
+    {
+        var camp = _mapper.Map<Camp>(model);
+        _repository.Add(camp);
+
+        if (await _repository.SaveChangesAsync())
+        {
+            return Ok();
+        }
+
+        return BadRequest();
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+}
+```
+
+2. Возвращать Status Code `Ok` в данном случае неверно. Для запросов POST
+надо возвращать Status Code `Created`:
+```csharp
+public async Task<ActionResult<CampModel>> Post(CampModel model)
+{
+    try
+    {
+        var camp = _mapper.Map<Camp>(model);
+        _repository.Add(camp);
+
+        if (await _repository.SaveChangesAsync())
+        {
+            return Created($"/api/camps/{camp.Moniker}", _mapper.Map<CampModel>(camp));
+        }
+
+        return BadRequest();
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+}
+```
+Для `Created`:
+* `$"/api/camps/{camp.Moniker}"` - URI для созданного ресурса. Не рекомендуется использовать,
+т.к. путь захардкожен (правильный вариант в следующем пункте).
+
+* `_mapper.Map<CampModel>(camp)` - преобразует `Camp` обратно в `CampModel`.
+Рекомендуется так делать всегда, т.к. в `Camp` в процессе записи в БД могут записываться
+какие-либо дополнительные данные.
+
+
+3. Более грамотное задание URI (для ASP.NET Core версии 2.2 и выше).
+
+3.1. Воспользоваться сервисом `LinkGenerator`. Добавление ссылки на него через конструктор
+`CampsController`.
+
+3.2. В методе `Post()` получить URI на новый ресурс:
+```csharp
+var location = _linkGenerator.GetPathByAction(
+    "Get", "Camps", new {moniker = model.Moniker});
+
+if (string.IsNullOrWhiteSpace(location))
+{
+    return BadRequest("Could not use current moniker");
+}
+...
+return Created(location, _mapper.Map<CampModel>(camp));
+```
+`_linkGenerator.GetPathByAction("Get", "Camps", new {moniker = model.Moniker});`
+
+* `Get` - наменование action. Используя его routing получаем нужный URI.
+
+* `Camps` - наменование controller (пишется без окончания "Controller").
+
+* `new {moniker = model.Moniker}` - анонимный объект для указания параметра метода
+`Get(Moniker)`.
+
+**Итого**. Сейчас метод `Post` выглядит так:
+```csharp
+public async Task<ActionResult<CampModel>> Post(CampModel model)
+{
+    try
+    {
+        // Get URI for created Camp
+        var location = _linkGenerator.GetPathByAction(
+            "Get", "Camps", new {moniker = model.Moniker});
+
+        if (string.IsNullOrWhiteSpace(location))
+        {
+            return BadRequest("Could not use current moniker");
+        }
+
+        // Create a new Camp
+        var camp = _mapper.Map<Camp>(model);
+        _repository.Add(camp);
+
+        if (await _repository.SaveChangesAsync())
+        {
+            return Created(location, _mapper.Map<CampModel>(camp));
+        }
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+
+    return BadRequest();
+}
+```
+
+Делаем запрос POST
+```
+http://localhost:6600/api/camps
+```
+С таким Body:
+```json
+{
+    "name": "San Diego Code Camp",
+    "moniker": "SD2018",
+    "eventDate": "2018-05-05",
+    "length": 1,
+    "venue": "SD Community College",
+    "locationPostalCode": "12345"
+}
+```
+
+Создается новый Camp.
+
+4. В видео не было показано, но у меня не заработало. Добавил обратный mapping
+`CampModel -> Camp`:
+```csharp
+public CampProfile()
+{
+    // Camp -> CampModel
+    CreateMap<Camp, CampModel>()
+        .ForMember(c => c.Venue, o => o.MapFrom(m => m.Location.VenueName));
+
+    // CampModel -> Camp
+    CreateMap<CampModel, Camp>()
+        .ForPath(c => c.Location.VenueName, o => o.MapFrom(m => m.Venue));
+}
+```
