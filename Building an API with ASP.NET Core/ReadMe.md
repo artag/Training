@@ -1085,7 +1085,7 @@ if (existingCamp != null)
 
 *Обновление ресурса. Запрос PUT (обновление ресурса целиком).*
 
-Создается новый метод :
+В `CampsController` создается новый метод:
 ```csharp
 [HttpPut("{moniker}")]
 public async Task<ActionResult<CampModel>> Put(string moniker, CampModel model)
@@ -1118,7 +1118,7 @@ public async Task<ActionResult<CampModel>> Put(string moniker, CampModel model)
 1. `_mapper.Map(model, oldCamp)` - переписывает данные из `model` в `oldCamp`.
 
 2. Возврат `_mapper.Map<CampModel>(oldCamp)` и `Task<ActionResult<CampModel>>` автоматически
-возвращают Status Code "Ok".
+возвращают Status Code 200 (OK).
 
 3. Как видно из кода, PUT переписывает объект целиком.
 
@@ -1145,3 +1145,50 @@ http://localhost:6600/api/camps/SD2018
     "talks": []
 }
 ```
+
+
+### 04-06. Implementing DELETE
+
+В `CampsController` создается новый метод:
+```csharp
+[HttpDelete("{moniker}")]
+public async Task<IActionResult> Delete(string moniker)
+{
+    try
+    {
+        var oldCamp = await _repository.GetCampAsync(moniker);
+        if (oldCamp == null)
+        {
+            return NotFound();
+        }
+
+        _repository.Delete(oldCamp);
+
+        if (await _repository.SaveChangesAsync())
+        {
+            return Ok();
+        }
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+
+    return BadRequest("Failed to delete the camp");
+}
+```
+Особенности:
+
+1. `Task<IActionResult>` - возвращется `IActionResult` т.к. возвращается только Status Code.
+
+2. При удалении camp могут оставаться или удаляться все связанные с ним enitities: talks, locations
+и т.д. Поведение объектов при удалении из БД должно определяться business rules.
+
+Запрос DELETE (без Body):
+```
+http://localhost:6600/api/camps/MO2018
+```
+
+Удаление Camp с Moniker=MO2018.
+
+При успешном удалении возвращается только Status Code 200 (OK).
