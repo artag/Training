@@ -780,3 +780,74 @@ POST   (create)  Status Code Only (Error Status Code)
 PUT    (update)  Updated Item
 DELETE (delete)  Status Code Only
 ```
+
+
+### 04-02. Model Binding
+
+*Создание action для запроса POST (часть 1/2). Привязка модели к содержимому body запроса.*
+
+Шаги:
+
+1. Создание action'а для запроса POST в `CampsController`. Временный вариант.
+```csharp
+public async Task<ActionResult<CampModel>> Post(CampModel model)
+{
+    try
+    {
+        return Ok();
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+    }
+}
+```
+
+2. Запрос в `Postman`:
+* Тип запроса POST.
+
+* Тело запроса, Body -> raw -> JSON
+```json
+{
+    "name": "San Diego Code Camp",
+    "moniker": "SD2018",
+    "father": "foo bar"
+}
+```
+
+* Сам запрос
+```
+http://localhost:6600/api/camps
+```
+
+3. При выполнении запроса в метод приходит пустой `CampModel`. Необходимо выполнить Model Binding.
+* Способ 1. Установка атрибута `[FromBody]` в самом action (устаревший способ):
+```csharp
+public async Task<ActionResult<CampModel>> Post([FromBody]CampModel model)
+{
+    ...
+}
+```
+
+* Способ 2. Установка атрибута [ApiController] на весь контроллер (начиная с ASP.NET Core 2.1).
+Рекомендуемый способ:
+```csharp
+[Route("api/[controller]")]
+[ApiController]
+public class CampsController : ControllerBase
+{
+    ...
+}
+```
+
+4. Теперь, если выполнить запрос из шага 2, то в `CampModel` будут переданы данные из body запроса.
+Из тела запроса:
+```json
+{
+    "name": "San Diego Code Camp",
+    "moniker": "SD2018",
+    "father": "foo bar"
+}
+```
+будут взяты данные только для свойств 'Name' и 'Moniker'.
+ 
