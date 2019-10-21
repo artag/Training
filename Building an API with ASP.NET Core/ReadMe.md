@@ -1192,3 +1192,79 @@ http://localhost:6600/api/camps/MO2018
 Удаление Camp с Moniker=MO2018.
 
 При успешном удалении возвращается только Status Code 200 (OK).
+
+
+## 05. Creating Association APIs
+
+### 05-01. Introduction. Design Your API with Associations
+
+CampsController:
+```
+/api/camps
+/api/camps/atl2016
+```
+
+Контроллер имеющий дело с talks - TalksController:
+```
+/api/camps/atl2016/talks
+/api/camps/atl2016/talks/1
+```
+
+
+### 05-02. Create an Association Controller. Create GET for all Talks
+
+1. Создание контроллера для работы с Talk в `/Controllers/TalksController`.
+
+Особенности (почти все такие же как и у `CampsController`):
+* Базовый класс `ControllerBase`.
+
+* В конструктор передаются три ссылки на: `ICampRepository`, `IMapper` и `LinkGenerator`.
+
+* На контроллер добавляется атрибут `[ApiController]`.
+
+* Для контроллера задается маршрут `[Route("api/camps/{moniker}/talks")]`. Секция `moniker`
+может передаваться как соответствующий параметр в методы этого контроллера.
+
+
+2. Создание метода GET для всех Talks в Camp:
+```csharp
+[HttpGet]
+public async Task<ActionResult<TalkModel[]>> Get(string moniker)
+{
+    try
+    {
+        var talks = await _repository.GetTalksByMonikerAsync(moniker);
+        return _mapper.Map<TalkModel[]>(talks);
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Failed to get Talks");
+    }
+}
+```
+Значение `moniker` action получает из маршрута контроллера.
+
+3. Запрос:
+```
+http://localhost:6600/api/camps/atl2018/talks
+```
+
+Вывод:
+```json
+[
+    {
+        "talkId": 2,
+        "title": "Writing Sample Data Made Easy",
+        "abstract": "Thinking of good sample data examples is tiring.",
+        "level": 200,
+        "speaker": null
+    },
+    {
+        "talkId": 1,
+        "title": "Entity Framework From Scratch",
+        "abstract": "Entity Framework from scratch in an hour. Probably cover it all",
+        "level": 100,
+        "speaker": null
+    }
+]
+```
