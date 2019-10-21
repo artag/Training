@@ -1268,3 +1268,34 @@ http://localhost:6600/api/camps/atl2018/talks
     }
 ]
 ```
+
+
+### 05-03. GET an Individual Talk
+
+1. Создание метода GET для требуемого Talk:
+```csharp
+[HttpGet("{id:int}")]
+public async Task<ActionResult<TalkModel>> Get(string moniker, int id)
+{
+    try
+    {
+        var talk = await _repository.GetTalkByMonikerAsync(moniker, id);
+        return _mapper.Map<TalkModel>(talk);
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, "Failed to get Talks");
+    }
+}
+```
+
+2. Запрос:
+```
+http://localhost:6600/api/camps/atl2018/talks/2
+```
+
+Вывод:
+* Выводит один Talk с определенным `TalkId` = 2.
+
+* Для несуществующего `TalkId` сервер возвращает Status Code 204 (No Content).
+(Ниже данное поведение будет исправлено).
