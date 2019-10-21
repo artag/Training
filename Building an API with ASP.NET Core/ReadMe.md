@@ -1288,6 +1288,9 @@ public async Task<ActionResult<TalkModel>> Get(string moniker, int id)
     }
 }
 ```
+Атрибут `[HttpGet("{id:int}")]` задает новую секцию в routing, где секция должна содержать число
+типа `int`.
+
 
 2. Запрос:
 ```
