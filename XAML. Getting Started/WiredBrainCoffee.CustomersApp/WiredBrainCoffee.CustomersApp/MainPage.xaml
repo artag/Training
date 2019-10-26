@@ -1,0 +1,28 @@
+﻿<Page
+    x:Class="WiredBrainCoffee.CustomersApp.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:WiredBrainCoffee.CustomersApp"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Button
+            Margin="10"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Click="ButtonAddCustomer_Click">
+            <Button.Content>
+                <StackPanel Orientation="Horizontal">
+                    <SymbolIcon Symbol="AddFriend"/>
+                    <TextBlock
+                        Margin="5 0 0 0"
+                        Text="Add customer"/>
+                </StackPanel>
+            </Button.Content>
+        </Button>
+    </Grid>
+
+</Page>
