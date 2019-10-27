@@ -285,3 +285,13 @@ btn.SetValue(Grid.RowProperty, 1);
 var column =
 (int)btn.GetValue(Grid.RowProperty);
 ```
+
+
+### Как отключить генерацию метода `Main`
+
+Свойства проекта -> Build -> Conditional compilation symbols: вставить переменную
+```
+DISABLE_XAML_GENERATED_MAIN
+```
+
+

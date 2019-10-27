@@ -9,5 +9,6 @@
     <AppIconSource>E:\2Download\coffeeCup.png</AppIconSource>
     <SplashScreenSource>E:\2Download\coffeeCup.png</SplashScreenSource>
     <PackageLogoSource>E:\2Download\coffeeCup.png</PackageLogoSource>
+    <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
 </Project>
