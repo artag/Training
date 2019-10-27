@@ -107,7 +107,8 @@
                 Grid.Row="1"
                 Grid.Column="1"
                 x:Name="customerListView"
-                DisplayMemberPath="FirstName"/>
+                DisplayMemberPath="FirstName"
+                SelectionChanged="CustomerListView_SelectionChanged"/>
         </Grid>
 
         <!-- Customer Detail -->
@@ -115,14 +116,21 @@
             Grid.Row="1"
             Grid.Column="1">
             <TextBox
+                x:Name="txtFirstName"
                 Margin="10"
-                Header="First Name"/>
+                Header="First Name"
+                TextChanged="TextBox_TextChanged"/>
             <TextBox
+                x:Name="txtLastName"
                 Margin="10"
-                Header="Last Name"/>
+                Header="Last Name"
+                TextChanged="TextBox_TextChanged"/>
             <CheckBox
+                x:Name="chkIsDeveloper"
                 Margin="10"
-                Content="Is developer"/>
+                Content="Is developer"
+                Checked="CheckBox_IsCheckedChanged"
+                Unchecked="CheckBox_IsCheckedChanged"/>
         </StackPanel>
 
     </Grid>
