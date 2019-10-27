@@ -47,15 +47,22 @@ namespace WiredBrainCoffee.CustomersApp
             deferral.Complete();
         }
 
-        private async void ButtonAddCustomer_Click(object sender, RoutedEventArgs e)
+        private void ButtonAddCustomer_Click(object sender, RoutedEventArgs e)
         {
-            var messageDialog = new MessageDialog("Customer added!");
-            await messageDialog.ShowAsync();
+            var customer = new Customer { FirstName = "New" };
+            customerListView.Items.Add(customer);
+            customerListView.SelectedItem = customer;
         }
 
         private void ButtonDeleteCustomer_Click(object sender, RoutedEventArgs e)
         {
+            var customer = customerListView.SelectedItem as Customer;
+            if (customer == null)
+            {
+                return;
+            }
 
+            customerListView.Items.Remove(customer);
         }
 
         private void ButtonMove_Click(object sender, RoutedEventArgs e)
