@@ -295,3 +295,36 @@ DISABLE_XAML_GENERATED_MAIN
 ```
 
 
+### Create a 1:N Namespace Mapping (работает только для WPF)
+
+Создание namespace для xaml элементов, содержащего в себе несколько namespace'ов
+(наподобие default namespace: http://schemas.microsoft.com/winfx/2006/xaml/presentation).
+
+В default namespace содержатся namespace'ы всех Control'ов, кистей и т.п.
+
+Шаги.
+
+**1**. В проекте, где определены нужные UserControl открыть файл `AssemblyInfo.cs` и вставить туда:
+```
+[assembly: XmlnsDefinition("https://www.thomasclaudiushuber.com/wpf",
+    "WiredBrainCoffee.Controls.Common")]
+[assembly: XmlnsDefinition("https://www.thomasclaudiushuber.com/wpf",
+    "WiredBrainCoffee.Controls.Details")]
+[assembly: XmlnsPrefix("https://www.thomasclaudiushuber.com/wpf", "thomas")]
+```
+
+Здесь:
+* `"https://www.thomasclaudiushuber.com/wpf"` - уникальный namespace, который будет выступать
+идентификатором для нескольких namespace.
+
+* `WiredBrainCoffee.Controls.Common` и `WiredBrainCoffee.Controls.Details` - namespace'ы контролов.
+
+* `thomas` - предлагаемый префикс (будет предлагать такой префикс по умолчанию - `xmlns:thomas`).
+
+**2**. В xaml файле, где будет использоваться контролы:
+```xml
+xmlns:thomas="https://www.thomasclaudiushuber.com/wpf"
+...
+<thomas:NavigationControl/>
+<thomas:CustomerDetailControl Grid.Column="1" />
+```
