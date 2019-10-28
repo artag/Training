@@ -190,51 +190,51 @@ Tools -> Options -> Debugging -> General
 
 ```xml
 <Grid Width="200" Height="200">
-<Button Content="OK"
-HorizontalAlignment="Left"
-VerticalAlignment="Top"/>
+    <Button Content="OK"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top"/>
 </Grid>
 ```
 
 ```xml
 <Grid Width="200" Height="200">
-<Button Content="OK"
-HorizontalAlignment="Right"
-VerticalAlignment="Top"/>
+    <Button Content="OK"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Top"/>
 </Grid>
 ```
 
 ```xml
 <Grid Width="200" Height="200">
-<Button Content="OK"
-HorizontalAlignment="Stretch"
-VerticalAlignment="Bottom"/>
+    <Button Content="OK"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Bottom"/>
 </Grid>
 ```
 
 ```xml
 <Grid Width="200" Height="200">
-<Button Content="OK"
-HorizontalAlignment="Stretch"
-VerticalAlignment="Stretch"/>
+    <Button Content="OK"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"/>
 </Grid>
 ```
 
 ```xml
 <Grid Width="200" Height="200">
-<Button Content="OK"
-HorizontalAlignment="Stretch"
-VerticalAlignment="Stretch"
-Margin="50"/>
+    <Button Content="OK"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        Margin="50"/>
 </Grid>
 ```
 
 ```xml
 <Grid Width="200" Height="200">
-<Button Content="OK"
-HorizontalAlignment="Stretch"
-VerticalAlignment="Stretch"
-Margin="50 10 50 0"/>
+    <Button Content="OK"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        Margin="50 10 50 0"/>
 </Grid>
 ```
 
@@ -249,9 +249,9 @@ Attribute Syntax:
 Property Element Syntax:
 ```xml
 <Button>
-<Button.Content>
-OK
-</Button.Content>
+    <Button.Content>
+        OK
+    </Button.Content>
 </Button>
 ```
 
@@ -263,9 +263,9 @@ Attribute Syntax:
 Property Element Syntax:
 ```xml
 <Button>
-<Grid.Row>
-1
-</Grid.Row>
+    <Grid.Row>
+        1
+    </Grid.Row>
 </Button>
 ```
 
