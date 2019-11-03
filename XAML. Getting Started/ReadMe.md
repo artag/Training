@@ -328,3 +328,82 @@ xmlns:thomas="https://www.thomasclaudiushuber.com/wpf"
 <thomas:NavigationControl/>
 <thomas:CustomerDetailControl Grid.Column="1" />
 ```
+
+
+### How the XAML Processor Converts Types
+
+* In XAML every attribute value is by default a string
+* XAML processor converts primitive types like bool, int, and double
+* XAML processor converts enumeration values
+
+*Пример 1*. Конвертация типов "из коробки"
+
+XAML:
+```xml
+<Button
+    Content="Add customer"
+    Width="200"
+    VerticalAlignment="Top"/>
+```
+
+C#
+```csharp
+var btn = new Button
+{
+    Content = "Add customer",
+    Width = 200,
+    VerticalAlignment = VerticalAlignment.Top
+};
+```
+
+Кастомные конвертеры:
+
+* UWP - Integrated in the XAML processor
+* WPF - Specified with TypeConverters
+
+*Пример 2*. Кастомная конвертация
+
+XAML:
+```xml
+<Button
+    Margin="10 5 0 0"
+    Background="Black"/>
+```
+
+C#
+```csharp
+var btn = new Button
+{
+    Margin = new Thickness(10, 5, 0, 0),
+    Background = new SolidColorBrush(Colors.Black)
+};
+```
+
+
+### Ways to set the Customer property
+
+* Property Element Syntax
+* Content Syntax
+* Attribute Syntax
+
+Далее идут примеры установки значения Customer в `CustomerDetailControl` контрол различными
+способами.
+
+#### Property Element Syntax
+
+В `MainPage.xaml`:
+```xml
+...
+<!-- Customer Detail -->
+<controls:CustomerDetailControl
+    Grid.Row="1"
+    Grid.Column="1"
+    x:Name="customerDetailControl">
+    <controls:CustomerDetailControl.Customer>
+        <model:Customer FirstName="Thomas" LastName="Developer" IsDeveloper="True"/>
+    </controls:CustomerDetailControl.Customer>
+</controls:CustomerDetailControl>
+```
+
+Ничего более не надо делать.
+

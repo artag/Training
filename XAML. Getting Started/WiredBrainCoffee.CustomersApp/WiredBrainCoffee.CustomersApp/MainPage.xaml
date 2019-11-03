@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:WiredBrainCoffee.CustomersApp.Controls"
+    xmlns:model="using:WiredBrainCoffee.CustomersApp.Model"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     d:DesignWidth="600"
@@ -116,7 +117,11 @@
         <controls:CustomerDetailControl
             Grid.Row="1"
             Grid.Column="1"
-            x:Name="customerDetailControl"/>
+            x:Name="customerDetailControl">
+            <controls:CustomerDetailControl.Customer>
+                <model:Customer FirstName="Thomas" LastName="Developer" IsDeveloper="True"/>
+            </controls:CustomerDetailControl.Customer>
+        </controls:CustomerDetailControl>
 
     </Grid>
 </Page>
