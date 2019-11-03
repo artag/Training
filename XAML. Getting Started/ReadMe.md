@@ -477,3 +477,76 @@ public class Customer : Observable
     ...
 }
 ```
+
+
+### Convert from String to Customer in WPF
+
+1. В `MainPage.xaml`:
+```xml
+...
+<!-- Customer detail -->
+<controls:CustomerDetailControl
+    Grid.Row="1"
+    Grid.Column="1"
+    x:Name="customerDetailControl"
+    Customer="Thomas,Developer,true"/>
+```
+
+2. Создание конвертера `/Models/CustomerConverter.cs`:
+```csharp
+public class CustomerConverter : TypeConverter
+{
+    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+    {
+        return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+    }
+
+    public override object ConvertFrom(
+        ITypeDescriptorContext context, CultureInfo culture, object value)
+    {
+        if (value is string inputString)
+        {
+            var values = inputString.Split(',');
+            return new Customer
+            {
+                FirstName = values[0],
+                LastName = values[1],
+                IsDeveloper = bool.Parse(values[2]),
+            };
+        }
+
+        return base.ConvertFrom(context, culture, value);
+    }
+}
+```
+Особенности: базовый класс `TypeConverter`.
+
+3. Добавление атрибута `TypeConverter(typeof(CustomerConverter))`
+в класс `CustomerDetailControl.xaml.cs`:
+```csharp
+...
+[TypeConverter(typeof(CustomerConverter))]
+public Customer Customer
+{
+    get => _customer;
+    set
+    {
+        _customer = value;
+
+        _isSettingCustomer = true;
+
+        txtFirstName.Text = _customer?.FirstName ?? "";
+        txtLastName.Text = _customer?.LastName ?? "";
+        chkIsDeveloper.IsChecked = _customer?.IsDeveloper ?? false;
+
+        _isSettingCustomer = false;
+    }
+}
+...
+```
+Особенности: в данном случае атрибут с указанием на конвертер добавляется на уровень
+метода `Customer` в контрол `CustomerDetailControl`.
+
+При добавлении данного атрибута на класс `Customer` (как в видео), возникает ошибка при сохранении
+в json файл (направильная сериализация объектов Customer в формат json), файл json оказывается
+испорченным.
