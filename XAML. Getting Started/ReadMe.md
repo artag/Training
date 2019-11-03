@@ -407,3 +407,27 @@ var btn = new Button
 
 Ничего более не надо делать.
 
+
+#### Content Syntax
+
+В `MainPage.xaml`:
+```xml
+...
+<!-- Customer Detail -->
+<controls:CustomerDetailControl
+    Grid.Row="1"
+    Grid.Column="1"
+    x:Name="customerDetailControl">
+        <model:Customer FirstName="Thomas" LastName="Developer2" IsDeveloper="True"/>
+</controls:CustomerDetailControl>
+```
+
+В `CustomerDetailControl.xaml.cs` надо добавить атрибут для класса с указанием какой объект будет
+использоваться для установки `Context`:
+```csharp
+[ContentProperty(Name = nameof(Model.Customer))]
+public sealed partial class CustomerDetailControl : UserControl
+{
+}
+...
+```
