@@ -431,3 +431,49 @@ public sealed partial class CustomerDetailControl : UserControl
 }
 ...
 ```
+
+
+#### Attribute Syntax
+
+Будет рассмотрен в двух следующих разделах, отдельно для UWP и WPF.
+
+
+### Convert from String to Customer in UWP
+
+1. В `MainPage.xaml`:
+```xml
+...
+<!-- Customer Detail -->
+<controls:CustomerDetailControl
+    Grid.Row="1"
+    Grid.Column="1"
+    x:Name="customerDetailControl"
+    Customer="Thomas,Developer,true"/>
+```
+
+2. Создание конвертера `/Models/CustomerConverter.cs`:
+```csharp
+public static class CustomerConverter
+{
+    public static Customer CreateCustomerFromString(string inputString)
+    {
+        var values = inputString.Split(',');
+        return new Customer
+        {
+            FirstName = values[0],
+            LastName = values[1],
+            IsDeveloper = bool.Parse(values[2]),
+        };
+    }
+}
+```
+
+3. Добавление атрибута `CreateFromString(MethodName = ...)` в класс `Customer`:
+```csharp
+[CreateFromString(
+    MethodName = "WiredBrainCoffee.CustomersApp.Model.CustomerConverter.CreateCustomerFromString")]
+public class Customer : Observable
+{
+    ...
+}
+```

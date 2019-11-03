@@ -117,9 +117,8 @@
         <controls:CustomerDetailControl
             Grid.Row="1"
             Grid.Column="1"
-            x:Name="customerDetailControl">
-                <model:Customer FirstName="Thomas" LastName="Developer2" IsDeveloper="True"/>
-        </controls:CustomerDetailControl>
+            x:Name="customerDetailControl"
+            Customer="Thomas,Developer,true"/>
 
     </Grid>
 </Page>
