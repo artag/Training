@@ -113,6 +113,16 @@
                 SelectionChanged="CustomerListView_SelectionChanged"/>
         </Grid>
 
+        <Button
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="10"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Right"
+            Content="Toggle theme"
+            Click="ButtonToggleTheme_Click"/>
+
         <!-- Customer Detail -->
         <controls:CustomerDetailControl
             Grid.Row="1"
