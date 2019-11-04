@@ -36,7 +36,7 @@
             <TextBlock
                 Margin="20"
                 VerticalAlignment="Bottom"
-                Text="Coffee Customers"
+                Text="{StaticResource applicationTitle}"
                 FontSize="30"
                 FontWeight="ExtraBold"
                 Foreground="White"/>
@@ -52,7 +52,7 @@
             Grid.Row="1"
             Grid.Column="0"
             x:Name="customerListGrid"
-            Background="#EEEEEE">
+            Background="{ThemeResource customerListBackgroundBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition/>
