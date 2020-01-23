@@ -7,7 +7,7 @@
     Title="Shell">
 
     <DockPanel LastChildFill="True">
-        <ContentControl
+        <ItemsControl
             DockPanel.Dock="Top"
             prism:RegionManager.RegionName="{x:Static inf:RegionNames.ToolbarRegion}"/>
 

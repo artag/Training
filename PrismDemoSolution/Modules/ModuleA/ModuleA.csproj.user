@@ -8,12 +8,18 @@
     <Compile Update="ToolbarView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="ToolbarView2.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="ContentView.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="ToolbarView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="ToolbarView2.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
