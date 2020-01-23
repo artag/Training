@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrismDemo", "PrismDemo\PrismDemo.csproj", "{E9EF5C74-07A3-4F86-A749-8DE7839D7189}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrismDemo", "PrismDemo\PrismDemo.csproj", "{E9EF5C74-07A3-4F86-A749-8DE7839D7189}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrismDemo.Infrastructure", "PrismDemo.Infrastructure\PrismDemo.Infrastructure.csproj", "{6490907B-37E5-4824-B842-06931EC9DFDB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrismDemo.Infrastructure", "PrismDemo.Infrastructure\PrismDemo.Infrastructure.csproj", "{6490907B-37E5-4824-B842-06931EC9DFDB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Business", "Business", "{506FD53D-77AB-4DA2-B30E-194B94792A3E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{484035B8-15AC-4E35-8970-61F852E00635}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleA", "Modules\ModuleA\ModuleA.csproj", "{05C2A32B-2E3C-49DA-9EAA-1BF26DA1307F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,9 +27,16 @@ Global
 		{6490907B-37E5-4824-B842-06931EC9DFDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6490907B-37E5-4824-B842-06931EC9DFDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6490907B-37E5-4824-B842-06931EC9DFDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05C2A32B-2E3C-49DA-9EAA-1BF26DA1307F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05C2A32B-2E3C-49DA-9EAA-1BF26DA1307F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05C2A32B-2E3C-49DA-9EAA-1BF26DA1307F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05C2A32B-2E3C-49DA-9EAA-1BF26DA1307F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{05C2A32B-2E3C-49DA-9EAA-1BF26DA1307F} = {484035B8-15AC-4E35-8970-61F852E00635}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D9B3C39E-CF2E-4D7C-999F-F5D86DD5FC65}

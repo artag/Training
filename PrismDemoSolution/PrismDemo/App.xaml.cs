@@ -1,5 +1,7 @@
 ﻿using System.Windows;
+using ModuleA;
 using Prism.Ioc;
+using Prism.Modularity;
 using Prism.Unity;
 
 namespace PrismDemo
@@ -16,6 +18,14 @@ namespace PrismDemo
         protected override Window CreateShell()
         {
             return Container.Resolve<Shell>();
+        }
+
+        protected override IModuleCatalog CreateModuleCatalog()
+        {
+            var catalog = new ModuleCatalog();
+            catalog.AddModule(typeof(ModuleAModule));
+
+            return catalog;
         }
     }
 }
