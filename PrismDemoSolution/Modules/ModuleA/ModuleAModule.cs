@@ -1,6 +1,7 @@
 ﻿using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Regions;
+using PrismDemo.Infrastructure;
 
 namespace ModuleA
 {
@@ -19,8 +20,8 @@ namespace ModuleA
 
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            _regionManager.RegisterViewWithRegion("ToolbarRegion", typeof(ToolbarView));
-            _regionManager.RegisterViewWithRegion("ContentRegion", typeof(ContentView));
+            _regionManager.RegisterViewWithRegion(RegionNames.ToolbarRegion, typeof(ToolbarView));
+            _regionManager.RegisterViewWithRegion(RegionNames.ContentRegion, typeof(ContentView));
         }
     }
 }
