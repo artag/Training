@@ -6,13 +6,120 @@
     xmlns:inf="clr-namespace:PrismDemo.Infrastructure;assembly=PrismDemo.Infrastructure"
     Title="Shell">
 
-    <DockPanel LastChildFill="True">
-        <ItemsControl
-            DockPanel.Dock="Top"
-            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ToolbarRegion}"/>
+    <Grid>
+        <TabControl>
 
-        <ContentControl
-            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ContentRegion}"/>
-    </DockPanel>
+            <!--
+            Первая вкладка ContentControl
+            -->
+            <TabItem Header="ContentControl">
+                <TabItem.Content>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Text="ContentControl"/>
+                        <ContentControl
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ContentRegion}"/>
+                    </Grid>
+                </TabItem.Content>
+            </TabItem>
+
+            <!--
+            Вторая вкладка ItemControl
+            -->
+            <TabItem Header="ItemControl">
+                <TabItem.Content>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Text="ItemsControl"/>
+                        <ItemsControl
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ToolbarRegion}"/>
+                    </Grid>
+                </TabItem.Content>
+            </TabItem>
+
+            <!--
+            Третья вкладка Selector
+            -->
+            <TabItem Header="Selector">
+                <TabItem.Content>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Text="ComboBox"/>
+                        <ComboBox
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ComboBoxRegion}"/>
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Text="ListBox"/>
+                        <ListBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ListBoxRegion}"/>
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Text="TabControl"/>
+                        <TabControl
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.TabControlRegion}"/>
+                    </Grid>
+                </TabItem.Content>
+            </TabItem>
+        </TabControl>
+    </Grid>
 
 </Window>

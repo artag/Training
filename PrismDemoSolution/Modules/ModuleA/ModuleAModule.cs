@@ -16,18 +16,26 @@ namespace ModuleA
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            // Views for Item Control Region
             containerRegistry.Register(typeof(ToolbarView));
             containerRegistry.RegisterSingleton(typeof(ToolbarView2));
+
+            // Views for Selector Region
+            containerRegistry.Register<ComboBoxView1>();
+            containerRegistry.RegisterSingleton<ComboBoxView2>();
+            containerRegistry.Register<ListBoxView1>();
+            containerRegistry.RegisterSingleton<ListBoxView2>();
         }
 
         public void OnInitialized(IContainerProvider containerProvider)
         {
             AddViewsToItemsControl(containerProvider);
             AddViewToContentControl();
+            AddViewToSelectorRegion(containerProvider);
         }
 
         /// <summary>
-        /// Добавить Views в Shell, в ItemsControl (может содержать несколько контролов).
+        /// Добавить Views в Shell, в Items Control (может содержать несколько контролов).
         /// </summary>
         /// <param name="containerProvider"></param>
         private void AddViewsToItemsControl(IContainerProvider containerProvider)
@@ -44,11 +52,32 @@ namespace ModuleA
         }
 
         /// <summary>
-        /// Добавить Views в Shell, в ContentControl (может содержать один контрол).
+        /// Добавить Views в Shell, в Content Control (может содержать один контрол).
         /// </summary>
         private void AddViewToContentControl()
         {
             _regionManager.RegisterViewWithRegion(RegionNames.ContentRegion, typeof(ContentView));
+        }
+
+        /// <summary>
+        /// Добавить Views в Shell, в Selector Control.
+        /// </summary>
+        private void AddViewToSelectorRegion(IContainerProvider containerProvider)
+        {
+            var comboBoxRegion = _regionManager.Regions[RegionNames.ComboBoxRegion];
+            comboBoxRegion.Add(containerProvider.Resolve<ComboBoxView1>());
+            comboBoxRegion.Add(containerProvider.Resolve<ComboBoxView1>());
+            comboBoxRegion.Add(containerProvider.Resolve<ComboBoxView2>());
+
+            var listBoxRegion = _regionManager.Regions[RegionNames.ListBoxRegion];
+            listBoxRegion.Add(containerProvider.Resolve<ListBoxView1>());
+            listBoxRegion.Add(containerProvider.Resolve<ListBoxView1>());
+            listBoxRegion.Add(containerProvider.Resolve<ListBoxView2>());
+
+            var tabControlRegion = _regionManager.Regions[RegionNames.TabControlRegion];
+            tabControlRegion.Add(containerProvider.Resolve<TabControlView1>());
+            tabControlRegion.Add(containerProvider.Resolve<TabControlView1>());
+            tabControlRegion.Add(containerProvider.Resolve<TabControlView2>());
         }
     }
 }
