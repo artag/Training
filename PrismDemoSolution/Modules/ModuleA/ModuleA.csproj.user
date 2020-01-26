@@ -2,7 +2,7 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup />
   <ItemGroup>
-    <Compile Update="ContentControlViews\ContentView.xaml.cs">
+    <Compile Update="ContentControlViews\ContentControlView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="SelectorViews\ComboBoxView1.xaml.cs">
@@ -23,15 +23,15 @@
     <Compile Update="SelectorViews\TabControlView2.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="ItemControlViews\ToolbarView.xaml.cs">
+    <Compile Update="ItemsControlViews\ItemsControlView1.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="ItemControlViews\ToolbarView2.xaml.cs">
+    <Compile Update="ItemsControlViews\ItemsControlView2.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="ContentControlViews\ContentView.xaml">
+    <Page Update="ContentControlViews\ContentControlView.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="SelectorViews\ComboBoxView1.xaml">
@@ -52,10 +52,10 @@
     <Page Update="SelectorViews\TabControlView2.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="ItemControlViews\ToolbarView.xaml">
+    <Page Update="ItemsControlViews\ItemsControlView1.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="ItemControlViews\ToolbarView2.xaml">
+    <Page Update="ItemsControlViews\ItemsControlView2.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

@@ -4,17 +4,17 @@ using System.Windows.Controls;
 namespace ModuleA
 {
     /// <summary>
-    /// Interaction logic for ToolbarView.xaml
+    /// Interaction logic for ItemsControlView1.xaml
     /// </summary>
-    public partial class ToolbarView : UserControl
+    public partial class ItemsControlView1 : UserControl
     {
-        public ToolbarView()
+        public ItemsControlView1()
         {
             InitializeComponent();
 
             var guid = Guid.NewGuid().ToString();
             var shortGuid = guid.Substring(guid.Length - 4);
-            buttonOnToolbar.Content = $"Register as default. Guid: {shortGuid}";
+            buttonOnToolbar.Content = $"Items Control. Guid: {shortGuid}";
         }
     }
 }

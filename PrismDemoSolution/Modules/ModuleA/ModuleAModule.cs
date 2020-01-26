@@ -16,9 +16,9 @@ namespace ModuleA
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            // Views for Item Control Region
-            containerRegistry.Register(typeof(ToolbarView));
-            containerRegistry.RegisterSingleton(typeof(ToolbarView2));
+            // Views for Items Control Region
+            containerRegistry.Register(typeof(ItemsControlView1));
+            containerRegistry.RegisterSingleton(typeof(ItemsControlView2));
 
             // Views for Selector Region
             containerRegistry.Register<ComboBoxView1>();
@@ -40,15 +40,15 @@ namespace ModuleA
         /// <param name="containerProvider"></param>
         private void AddViewsToItemsControl(IContainerProvider containerProvider)
         {
-            var region = _regionManager.Regions[RegionNames.ToolbarRegion];
+            var region = _regionManager.Regions[RegionNames.ItemsControlRegion];
 
             // Создаются разные объекты одного типа и в ItemsControl можно добавить их все.
-            region.Add(containerProvider.Resolve(typeof(ToolbarView)));
-            region.Add(containerProvider.Resolve(typeof(ToolbarView)));
+            region.Add(containerProvider.Resolve(typeof(ItemsControlView1)));
+            region.Add(containerProvider.Resolve(typeof(ItemsControlView1)));
 
             // Получаем singleton. ItemsControl может содержать только 1 объект этого типа.
             // (Попытка добавления этого же объекта (singleton же!) вызовет исключение).
-            region.Add(containerProvider.Resolve(typeof(ToolbarView2)));
+            region.Add(containerProvider.Resolve(typeof(ItemsControlView2)));
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace ModuleA
         /// </summary>
         private void AddViewToContentControl()
         {
-            _regionManager.RegisterViewWithRegion(RegionNames.ContentRegion, typeof(ContentView));
+            _regionManager.RegisterViewWithRegion(RegionNames.ContentControlRegion, typeof(ContentControlView));
         }
 
         /// <summary>

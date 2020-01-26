@@ -33,15 +33,15 @@
                         <ContentControl
                             Grid.Row="1"
                             Grid.Column="0"
-                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ContentRegion}"/>
+                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ContentControlRegion}"/>
                     </Grid>
                 </TabItem.Content>
             </TabItem>
 
             <!--
-            Вторая вкладка ItemControl
+            Вторая вкладка ItemsControl
             -->
-            <TabItem Header="ItemControl">
+            <TabItem Header="ItemsControl">
                 <TabItem.Content>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -62,7 +62,7 @@
                         <ItemsControl
                             Grid.Row="1"
                             Grid.Column="0"
-                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ToolbarRegion}"/>
+                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.ItemsControlRegion}"/>
                     </Grid>
                 </TabItem.Content>
             </TabItem>

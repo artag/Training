@@ -3,11 +3,11 @@
 namespace ModuleA
 {
     /// <summary>
-    /// Interaction logic for ContentView.xaml
+    /// Interaction logic for ContentControlView.xaml
     /// </summary>
-    public partial class ContentView : UserControl
+    public partial class ContentControlView : UserControl
     {
-        public ContentView()
+        public ContentControlView()
         {
             InitializeComponent();
         }

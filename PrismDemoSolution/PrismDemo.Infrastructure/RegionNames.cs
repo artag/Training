@@ -2,8 +2,11 @@
 {
     public class RegionNames
     {
-        public static string ToolbarRegion = "ToolbarRegion";
-        public static string ContentRegion = "ContentRegion";
+        // Content Control Region
+        public static string ContentControlRegion = "ContentControlRegion";
+
+        // Items Control Region
+        public static string ItemsControlRegion = "ItemsControlRegion";
 
         // Selector Region
         public static string ComboBoxRegion = "ComboBoxRegion";
