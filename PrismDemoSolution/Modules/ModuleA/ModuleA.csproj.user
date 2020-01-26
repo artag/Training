@@ -5,6 +5,9 @@
     <Compile Update="ContentControlViews\ContentControlView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="ContentControlViews\LabelView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="SelectorViews\ComboBoxView1.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -32,6 +35,9 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="ContentControlViews\ContentControlView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="ContentControlViews\LabelView.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="SelectorViews\ComboBoxView1.xaml">

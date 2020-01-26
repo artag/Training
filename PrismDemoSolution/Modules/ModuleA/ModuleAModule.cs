@@ -25,6 +25,8 @@ namespace ModuleA
             containerRegistry.RegisterSingleton<ComboBoxView2>();
             containerRegistry.Register<ListBoxView1>();
             containerRegistry.RegisterSingleton<ListBoxView2>();
+            containerRegistry.Register<TabControlView1>();
+            containerRegistry.RegisterSingleton<TabControlView2>();
         }
 
         public void OnInitialized(IContainerProvider containerProvider)
@@ -57,6 +59,7 @@ namespace ModuleA
         private void AddViewToContentControl()
         {
             _regionManager.RegisterViewWithRegion(RegionNames.ContentControlRegion, typeof(ContentControlView));
+            _regionManager.RegisterViewWithRegion(RegionNames.LabelRegion, typeof(LabelView));
         }
 
         /// <summary>

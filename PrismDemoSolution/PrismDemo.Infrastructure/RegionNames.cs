@@ -4,6 +4,7 @@
     {
         // Content Control Region
         public static string ContentControlRegion = "ContentControlRegion";
+        public static string LabelRegion = "LabelRegion";
 
         // Items Control Region
         public static string ItemsControlRegion = "ItemsControlRegion";
