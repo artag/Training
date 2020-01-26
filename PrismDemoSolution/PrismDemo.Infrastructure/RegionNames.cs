@@ -13,5 +13,8 @@
         public static string ComboBoxRegion = "ComboBoxRegion";
         public static string ListBoxRegion = "ListBoxRegion";
         public static string TabControlRegion = "TabControlRegion";
+
+        // Custom Region (Region Adapter)
+        public static string StackPanelRegion = "StackPanelRegion";
     }
 }

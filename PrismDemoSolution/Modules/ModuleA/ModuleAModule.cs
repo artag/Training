@@ -27,6 +27,10 @@ namespace ModuleA
             containerRegistry.RegisterSingleton<ListBoxView2>();
             containerRegistry.Register<TabControlView1>();
             containerRegistry.RegisterSingleton<TabControlView2>();
+
+            // Views for Custom Region (Region Adapter)
+            containerRegistry.Register<StackPanelView1>();
+            containerRegistry.RegisterSingleton<StackPanelView2>();
         }
 
         public void OnInitialized(IContainerProvider containerProvider)
@@ -34,6 +38,7 @@ namespace ModuleA
             AddViewsToItemsControl(containerProvider);
             AddViewToContentControl();
             AddViewToSelectorRegion(containerProvider);
+            AddViewToRegionAdapter(containerProvider);
         }
 
         /// <summary>
@@ -81,6 +86,18 @@ namespace ModuleA
             tabControlRegion.Add(containerProvider.Resolve<TabControlView1>());
             tabControlRegion.Add(containerProvider.Resolve<TabControlView1>());
             tabControlRegion.Add(containerProvider.Resolve<TabControlView2>());
+        }
+
+        /// <summary>
+        /// Добавить Views в Shell, в Custom Region (Region Adapter).
+        /// </summary>
+        /// <param name="containerProvider"></param>
+        private void AddViewToRegionAdapter(IContainerProvider containerProvider)
+        {
+            var stackPanelRegion = _regionManager.Regions [RegionNames.StackPanelRegion];
+            stackPanelRegion.Add(containerProvider.Resolve<StackPanelView1>());
+            stackPanelRegion.Add(containerProvider.Resolve<StackPanelView1>());
+            stackPanelRegion.Add(containerProvider.Resolve<StackPanelView2>());
         }
     }
 }

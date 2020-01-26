@@ -132,6 +132,36 @@
                     </Grid>
                 </TabItem.Content>
             </TabItem>
+
+            <!--
+            Четвертая вкладка CustomRegion
+            -->
+            <TabItem Header="CustomRegion (RegionAdapter)">
+                <TabItem.Content>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Text="StackPanel"/>
+                        <StackPanel
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Orientation="Horizontal"
+                            prism:RegionManager.RegionName="{x:Static inf:RegionNames.StackPanelRegion}"/>
+                    </Grid>
+                </TabItem.Content>
+            </TabItem>
         </TabControl>
     </Grid>
 

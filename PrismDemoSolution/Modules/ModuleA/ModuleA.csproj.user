@@ -8,6 +8,9 @@
     <Compile Update="ContentControlViews\LabelView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="CustomRegion\StackPanelView2.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="SelectorViews\ComboBoxView1.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -32,12 +35,18 @@
     <Compile Update="ItemsControlViews\ItemsControlView2.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="CustomRegion\StackPanelView1.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="ContentControlViews\ContentControlView.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="ContentControlViews\LabelView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="CustomRegion\StackPanelView2.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="SelectorViews\ComboBoxView1.xaml">
@@ -62,6 +71,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="ItemsControlViews\ItemsControlView2.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="CustomRegion\StackPanelView1.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

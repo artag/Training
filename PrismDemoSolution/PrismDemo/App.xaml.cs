@@ -1,8 +1,11 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using ModuleA;
 using Prism.Ioc;
 using Prism.Modularity;
+using Prism.Regions;
 using Prism.Unity;
+using PrismDemo.Infrastructure;
 
 namespace PrismDemo
 {
@@ -26,6 +29,14 @@ namespace PrismDemo
             catalog.AddModule(typeof(ModuleAModule));
 
             return catalog;
+        }
+
+        protected override void ConfigureRegionAdapterMappings(RegionAdapterMappings regionAdapterMappings)
+        {
+            base.ConfigureRegionAdapterMappings(regionAdapterMappings);
+
+            regionAdapterMappings.RegisterMapping(
+                typeof(StackPanel), Container.Resolve<StackPanelRegionAdapter>());
         }
     }
 }
