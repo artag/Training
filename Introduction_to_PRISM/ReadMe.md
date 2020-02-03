@@ -160,3 +160,55 @@ System.Windows.Controls.Ribbon.Ribbon
 * Register your adapter
 
 
+## Modules
+
+### What is Module?
+
+* Building Block
+* Class library/XAP
+* Class that implements `IModule`
+
+### Module Lifetime
+
+1. Register Modules
+2. Discover Modules
+3. Load Modules
+4. Initialize Modules
+
+#### Register/Discover Modules
+
+*Способы загрузки/поиска модулей.*
+
+* ModuleCatalog
+* Code
+* XAML
+* Configuration File (WPF)
+* Disk (WPF)
+
+#### Loading Modules
+
+* From disk (WPF)
+* Download from web (Silverlight)
+* Control when to load
+  * When available
+  * On-demand
+
+#### Guidlines for Loading Modules
+
+*Загрузка модуля сразу или по требованию.*
+
+* Required to run?
+* Always used?
+* Rarely used?
+
+#### Initializing Modules
+
+*Что можно делать при инициализации модуля.*
+
+* `IModule.Initialize()`
+* Register types
+* Subscribe to services or events
+* Register shared services
+* Compose views into shell
+
+
