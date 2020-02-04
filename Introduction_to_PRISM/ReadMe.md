@@ -215,10 +215,19 @@ System.Windows.Controls.Ribbon.Ribbon
 
 Директория 02.Modules_Initialization.
 
-* `LoadModulesInCode` - загрузка модуля из кода (требует reference на модуль)
+* `LoadModulesInCode` - загрузка модуля из кода (требует reference на модуль).
 
-* `LoadModulesFromDirectory` - загрузка модуля из определенной директории (не требует reference на модуль)
+* `LoadModulesFromDirectory` - загрузка модуля из определенной директории (не требует reference на модуль).
 ```
 Post-build event для ModuleA:
 xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(TargetFramework)\Modules\" /Y
+```
+
+* `LoadModulesFromXaml` - загрузка модуля из xaml-файла (не получилось загрузить таким способом)
+```
+1. xaml-файл это Resource Dictionary (WPF)
+2. Build Action на данный xaml-файл устанавливается в Resource (через Properties файла)
+
+Post-build event для ModuleA:
+xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(TargetFramework)\" /Y
 ```
