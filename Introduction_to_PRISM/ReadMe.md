@@ -211,4 +211,14 @@ System.Windows.Controls.Ribbon.Ribbon
 * Register shared services
 * Compose views into shell
 
+#### Примеры
 
+Директория 02.Modules_Initialization.
+
+* `LoadModulesInCode` - загрузка модуля из кода (требует reference на модуль)
+
+* `LoadModulesFromDirectory` - загрузка модуля из определенной директории (не требует reference на модуль)
+```
+Post-build event для ModuleA:
+xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(TargetFramework)\Modules\" /Y
+```
