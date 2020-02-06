@@ -223,11 +223,23 @@ Post-build event для ModuleA:
 xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(TargetFramework)\Modules\" /Y
 ```
 
-* `LoadModulesFromXaml` - загрузка модуля из xaml-файла (не получилось загрузить таким способом)
+* `LoadModulesFromXaml` - загрузка модуля из xaml-файла (не требует reference на модуль).
+
+Не получилось загрузить точно таким способом (не нашелся файл ModuleA.dll по указанному неполному пути).
+Загрузить удалось только указав полный путь на dll файл.
 ```
 1. xaml-файл это Resource Dictionary (WPF)
 2. Build Action на данный xaml-файл устанавливается в Resource (через Properties файла)
 
 Post-build event для ModuleA:
 xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(TargetFramework)\" /Y
+```
+
+* `LoadModulesFromAppConfigFile` - загрузка модуля из config-файла (не требует reference на модуль).
+Все нормально заработало.
+```
+1. config-файл это Application Configuration File (в примере App.config).
+
+Post-build event для ModuleA:
+xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(TargetFramework)\Modules\" /Y
 ```
