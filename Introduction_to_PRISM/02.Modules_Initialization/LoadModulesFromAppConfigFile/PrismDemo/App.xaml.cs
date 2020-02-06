@@ -17,6 +17,8 @@ namespace PrismDemo
 
         protected override IModuleCatalog CreateModuleCatalog()
         {
+            // На модуль reference не требуется. dll модуля кладется в нужную директорию.
+            // Конфигурация задается в файле вида *.config (App.config).
             return new ConfigurationModuleCatalog();
         }
 
