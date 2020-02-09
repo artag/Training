@@ -205,7 +205,7 @@ System.Windows.Controls.Ribbon.Ribbon
 
 *Что можно делать при инициализации модуля.*
 
-* `IModule.Initialize()`
+* `IModule.Initialize()` - здесь происходит инициализация (на момент создания видео) 
 * Register types
 * Subscribe to services or events
 * Register shared services
@@ -242,4 +242,60 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 
 Post-build event для ModuleA:
 xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(TargetFramework)\Modules\" /Y
+```
+
+## Views
+
+### What is a View?
+
+* Portion of the user interface (в контексте Prism)
+* Can be made of multiple views (Composite View)
+* UserControl, Page, DataTemplate, etc... (что из себя может представлять)
+* Multiple instances (м.б. несколько экземпляров одного View)
+* Patterns not required (? т.к. уже некоторые паттерны реализованы в Prism?)
+
+### View Composition
+
+* Constructing of a view
+* Made up of many visual elements
+* Displayed in Regions
+* Два способа создания View:
+  * View Discovery
+  * View Injection
+
+### View Discovery
+
+* Views added automatically
+* `RegionManager.RegisterViewWithRegion(name, type)`
+* Region looks for view types
+* No explicit control (нет явного контроля при создании View)
+
+### View Injection
+
+* Views added programmatically ("ручками")
+Два способа добавления:
+  * `RegionManager.Region["Name"].Add(view, name)`
+  * `IRegion.Add(view, name)`
+* Activate/Deactivate (включение/выключение View при отображении в Region)
+* More control (больше контроля над View)
+* Can't add View to Region that hasn't been created
+
+### Примеры
+
+Директория 03.Views.
+
+`CreatingView` - создание View без MVVM.
+```
+Особенности:
+1. Регистрация модуля ModuleA из кода.
+2. Использование StackPanelRegionAdapter (кастомный Region адаптер для StackPanel).
+3. Демонстрация View Injection (двумя способами).
+```
+
+`CreatingView_MVVM` - создание View с MVVM. Традиционный подход.
+```
+Особенности:
+1. Регистрация модуля ModuleA из кода.
+2. Демонстрация View Injection (двумя способами).
+3. Для `ContentAView` демонстрируется установка свойства в его ViewModel перед созданием его View.
 ```
