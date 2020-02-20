@@ -265,8 +265,8 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 
 ### View Discovery
 
-* Views added automatically
-* `RegionManager.RegisterViewWithRegion(name, type)`
+* Views added automatically (добавляются в регионы автоматически)
+* `RegionManager.RegisterViewWithRegion(name, type)` (name - наименование Region, type - тип View)
 * Region looks for view types
 * No explicit control (нет явного контроля при создании View)
 
@@ -296,6 +296,18 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 ```
 Особенности:
 1. Регистрация модуля ModuleA из кода.
-2. Демонстрация View Injection (двумя способами).
-3. Для `ContentAView` демонстрируется установка свойства в его ViewModel перед созданием его View.
+2. `IView` имеет свойство `IViewModel`, `IViewModel` содержит свойство `IView`.
+3. Регистрация в контейнере UserControl'а с интерфейсами `I...View` и `I...ViewModel`.
+4. Демонстрация View Injection (двумя способами).
+5. Для `ContentAView` демонстрируется установка свойства в его ViewModel перед созданием его View.
+```
+
+`CreatingView_MVVM_ViewFirst` - создание View с MVVM. View ответственен за инициализацию ViewModel.
+```
+Особенности:
+1. Регистрация модуля ModuleA из кода.
+2. `IView` имеет свойство `IViewModel`, но `IViewModel` **не** содержит свойство `IView`.
+3. Регистрация в контейнере UserControl'ов с интерфейсом `I...ViewModel`.
+  Для View интерфейс не регистрируется.
+4. Демонстрация View Discovery.
 ```
