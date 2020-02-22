@@ -311,3 +311,11 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
   Для View интерфейс не регистрируется.
 4. Демонстрация View Discovery.
 ```
+
+`CreatingView_ViewDiscovery` - создание View при помощи View Discovery (автоматическое добавление View в регионы).
+```
+1. Регистрация модуля ModuleA из кода.
+2. Использование StackPanelRegionAdapter (кастомный Region адаптер для StackPanel).
+3. Используется полный MVVM.
+```
+
