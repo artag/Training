@@ -18,7 +18,8 @@ namespace ModuleA
         {
             // Регистрация модулей в регионах View Injection (2 способа).
             // Способ 1.
-            _regionManager.RegisterViewWithRegion(RegionNames.ToolbarRegion, typeof(ToolbarAView));
+            var toolbarAViewModel = containerProvider.Resolve<IToolbarAViewModel>();
+            _regionManager.AddToRegion(RegionNames.ToolbarRegion, toolbarAViewModel.View);
 
             // Способ 2. Здесь меняется свойство у ViewModel перед созданием View.
             var contentAViewModel = containerProvider.Resolve<IContentAViewModel>();

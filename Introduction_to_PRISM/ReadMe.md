@@ -269,6 +269,7 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 * `RegionManager.RegisterViewWithRegion(name, type)` (name - наименование Region, type - тип View)
 * Region looks for view types
 * No explicit control (нет явного контроля при создании View)
+* View автоматически создается вместе с Region
 
 ### View Injection
 
@@ -278,7 +279,7 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
   * `IRegion.Add(view, name)`
 * Activate/Deactivate (включение/выключение View при отображении в Region)
 * More control (больше контроля над View)
-* Can't add View to Region that hasn't been created
+* Can't add View to Region that hasn't been created (надо вручную создать View и добавить его в Region)
 
 ### Примеры
 
@@ -299,7 +300,7 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 2. `IView` имеет свойство `IViewModel`, `IViewModel` содержит свойство `IView`.
 3. Регистрация в контейнере UserControl'а с интерфейсами `I...View` и `I...ViewModel`.
 4. Демонстрация View Injection (двумя способами).
-5. Для `ContentAView` демонстрируется установка свойства в его ViewModel перед созданием его View.
+5. Для `ContentAView` демонстрируется установка свойства в его ViewModel.
 ```
 
 `CreatingView_MVVM_ViewFirst` - создание View с MVVM. View ответственен за инициализацию ViewModel.
