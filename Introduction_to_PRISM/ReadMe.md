@@ -313,10 +313,21 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 4. Демонстрация View Discovery.
 ```
 
-`CreatingView_ViewDiscovery` - создание View при помощи View Discovery (автоматическое добавление View в регионы).
+`CreatingView_ViewDiscovery` - создание View при помощи View Discovery (автоматическое добавление View в регион).
 ```
+Особенности:
 1. Регистрация модуля ModuleA из кода.
 2. Использование StackPanelRegionAdapter (кастомный Region адаптер для StackPanel).
 3. Используется полный MVVM.
 ```
 
+`CreatingView_ViewInjection` - создание View при помощи View Injection (ручное добавление View в регион)
+двумя способами.
+```
+Особенности:
+1. Регистрация модуля ModuleA из кода.
+2. Использование StackPanelRegionAdapter (кастомный Region адаптер для StackPanel).
+3. Используется полный MVVM.
+4. Демонстрация установки свойств во ViewModel.
+5. Для ContentA демонстрация Deactivate старого View и создание и установка нового View (в тот же регион).
+```
