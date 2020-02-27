@@ -1,0 +1,90 @@
+﻿<UserControl
+    x:Class="Module.People.Views.PersonView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid
+        x:Name="LayoutRoot"
+        Background="White">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!--
+        First Name
+        -->
+        <TextBlock
+            Margin="5"
+            Grid.Row="0"
+            Grid.Column="0"
+            Text="First Name:"/>
+        <TextBox
+            Margin="5"
+            Grid.Row="0"
+            Grid.Column="1"
+            Text="{Binding Person.FirstName, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
+
+        <!--
+        Last Name
+        -->
+        <TextBlock
+            Margin="5"
+            Grid.Row="1"
+            Grid.Column="0"
+            Text="Last Name:"/>
+        <TextBox
+            Margin="5"
+            Grid.Row="1"
+            Grid.Column="1"
+            Text="{Binding Person.LastName, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
+
+        <!--
+        Age
+        -->
+        <TextBlock
+            Margin="5"
+            Grid.Row="2"
+            Grid.Column="0"
+            Text="Age:"/>
+        <TextBox
+            Margin="5"
+            Grid.Row="2"
+            Grid.Column="1"
+            Text="{Binding Person.Age, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
+
+        <!--
+        Last Updated
+        -->
+        <TextBlock
+            Margin="5"
+            Grid.Row="3"
+            Grid.Column="0"
+            Text="Last Updated:"/>
+        <TextBlock
+            Margin="5"
+            Grid.Row="3"
+            Grid.Column="1"
+            Text="{Binding Person.LastUpdated}"/>
+
+        <!--
+        Save Button
+        -->
+        <Button
+            Margin="10"
+            Grid.Row="4"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Content="Save"/>
+
+    </Grid>
+
+</UserControl>
