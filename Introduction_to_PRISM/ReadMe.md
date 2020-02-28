@@ -331,3 +331,52 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 4. Демонстрация установки свойств во ViewModel.
 5. Для ContentA демонстрация Deactivate старого View и создание и установка нового View (в тот же регион).
 ```
+
+## Communication
+
+*Изучение способов взаимодействия между модулями*
+
+* Commanding
+* Event Aggregation
+* Shared Services
+* Region Context
+
+### Commanding Overview
+
+*Краткий обзор*
+
+* Binds a UI gesture to action (команда связывает UI и действия)
+* Execute (к каждой команде привязан метод, который она выполняет)
+* CanExecute (enable/disable command)
+* RoutedCommand (команда маршрутизируется по дереву элементов)
+* Custom Command (реализует `ICommand`)
+
+### Commanding
+
+*(какие команды есть в PRISM)*
+
+* DelegateCommand (вызов delegate при выполнении команды)
+* CompositeCommand (комбинирование нескольких команд)
+
+### DelegateCommand
+
+*Команда, которая использует делегаты.*
+
+* Uses delegates
+* Doesn't require a handler (не требует event handler'ов в коде)
+* Usually local
+  * Locally scoped
+  * Обычно создаются во ViewModel
+  * Обычно контекст использования ограничен ViewModel
+* `DelegateCommand` or `DelegateCommand<T>`
+  * T - тип передаваемого параметра в `Execute` и `CanExecute` методы
+
+### Примеры
+
+* `04.Commands\DelegateCommand` - пример использования `DelegateCommand` и `DelegateCommand<T>`
+  T может быть либо reference, либо Nullable типа.
+  ```
+  Особенности:
+  Используется валидация вводимых параметров (используется `IDataErrorInfo` для валидации
+  Entity объекта и RaiseCanExecuteChanged() для обновления статуса команды).
+  ```

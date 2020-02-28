@@ -5,10 +5,10 @@
     Height="Auto"
     Width="Auto">
 
-    <Grid>
+    <StatusBar>
         <StatusBarItem>
             <TextBlock Text="{Binding Message}"/>
         </StatusBarItem>
-    </Grid>
+    </StatusBar>
 
 </UserControl>

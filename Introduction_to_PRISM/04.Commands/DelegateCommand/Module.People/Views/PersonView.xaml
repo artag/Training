@@ -1,9 +1,16 @@
 ﻿<UserControl
     x:Class="Module.People.Views.PersonView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 
-    <Grid
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <sys:Int32 x:Key="Years">3</sys:Int32>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+        <Grid
         x:Name="LayoutRoot"
         Background="White">
 
@@ -12,6 +19,9 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -31,7 +41,7 @@
             Margin="5"
             Grid.Row="0"
             Grid.Column="1"
-            Text="{Binding Person.FirstName, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
+            Text="{Binding Person.FirstName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
 
         <!--
         Last Name
@@ -45,7 +55,7 @@
             Margin="5"
             Grid.Row="1"
             Grid.Column="1"
-            Text="{Binding Person.LastName, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
+            Text="{Binding Person.LastName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
 
         <!--
         Age
@@ -59,7 +69,7 @@
             Margin="5"
             Grid.Row="2"
             Grid.Column="1"
-            Text="{Binding Person.Age, Mode=TwoWay, ValidatesOnDataErrors=True}"/>
+            Text="{Binding Person.Age, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
 
         <!--
         Last Updated
@@ -76,14 +86,51 @@
             Text="{Binding Person.LastUpdated}"/>
 
         <!--
-        Save Button
+        Save Button (DelegateCommand Demo)
         -->
         <Button
-            Margin="10"
+            Margin="10, 10, 10, 5"
             Grid.Row="4"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            Content="Save"/>
+            Content="Save (using DelegateCommand)"
+            Command="{Binding SaveCommand}"/>
+
+        <!--
+        Save Button (DelegateCommand<T> Demo)
+        -->
+        <Button
+            Margin="10, 5, 10, 5"
+            Grid.Row="5"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Content="Save (using DelegateCommand_T_object)"
+            Command="{Binding SaveCommandObject}"
+            CommandParameter="2"/>
+
+        <!--
+        Save Button (DelegateCommand<T> Demo)
+        -->
+        <Button
+            Margin="10, 5, 10, 5"
+            Grid.Row="6"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Content="Save (using DelegateCommand_T_Nullable)"
+            Command="{Binding SaveCommandNullable}"
+            CommandParameter="{StaticResource Years}"/>
+
+        <!--
+        Save Button (DelegateCommand<T> Demo)
+        -->
+        <Button
+            Margin="10, 5, 10, 5"
+            Grid.Row="7"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Content="Save (using DelegateCommand_T_Person)"
+            Command="{Binding SaveCommandPerson}"
+            CommandParameter="{Binding Person}"/>
 
     </Grid>
 
