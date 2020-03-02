@@ -371,6 +371,17 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 * `DelegateCommand` or `DelegateCommand<T>`
   * T - тип передаваемого параметра в `Execute` и `CanExecute` методы
 
+### CompositeCommand
+
+* Usually global (обычно находится в общем (Common, Infrastructure, ...) классе)
+* Multiple child commands (содержит множество дочерних команд)
+* Local commands are registered with command
+* When invoked, all child commands are invoked
+* Supports enablement (если CanExecute какой-либо дочерней команды возвращает false, то CompositeCommand
+  также начинает возвращать false).
+
+Пример использования: реализация команды Save All для нескольких страниц.
+
 ### Примеры
 
 * `04.Commands\DelegateCommand` - пример использования `DelegateCommand` и `DelegateCommand<T>`
@@ -379,4 +390,13 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
   Особенности:
   Используется валидация вводимых параметров (используется `IDataErrorInfo` для валидации
   Entity объекта и RaiseCanExecuteChanged() для обновления статуса команды).
+  ```
+
+* `04.Commands\CompositeCommand` - пример использования `CompositeCommand`
+  ```
+  Особенности:
+  1. `CompositeCommand` находится в статическом классе, в "общем" проекте `Demo.Infrastructure`
+  2. В `CompositeCommand` регистрируется команда `SaveCommand` (DelegateCommand)
+  3. Регистрация производится в `PersonViewModel` (проект `Demo.People`)
+  4. Кнопка "Save All" становится активной, когда активны все кнопки "Save" на всех вкладках.
   ```

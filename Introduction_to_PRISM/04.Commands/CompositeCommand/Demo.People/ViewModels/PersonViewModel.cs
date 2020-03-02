@@ -14,6 +14,7 @@ namespace Demo.People.ViewModels
         public PersonViewModel(IPersonView view) : base(view)
         {
             SaveCommand = new DelegateCommand(Save, CanSave);
+            GlobalCommands.SaveAllCommand.RegisterCommand(SaveCommand);
         }
 
         public DelegateCommand SaveCommand { get; }
