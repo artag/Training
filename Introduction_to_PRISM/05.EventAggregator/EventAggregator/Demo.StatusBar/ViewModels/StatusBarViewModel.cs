@@ -1,24 +1,34 @@
 ﻿using Demo.Infrastructure;
 using Demo.StatusBar.Views;
+using Prism.Events;
 
 namespace Demo.StatusBar.ViewModels
 {
     public class StatusBarViewModel : ViewModelBase, IStatusBarViewModel
     {
-        private string message;
+        private readonly IEventAggregator _eventAggregator;
+        private string _message;
 
-        public StatusBarViewModel(IStatusBarView view) : base(view)
+        public StatusBarViewModel(IStatusBarView view, IEventAggregator eventAggregator)
+            : base(view)
         {
+            _eventAggregator = eventAggregator;
+            _eventAggregator.GetEvent<PersonUpdatedEvent>().Subscribe(OnPersonUpdated);
         }
 
         public string Message
         {
-            get => message;
+            get => _message;
             set
             {
-                message = value;
+                _message = value;
                 OnPropertyChanged();
             }
+        }
+
+        private void OnPersonUpdated(string fullName)
+        {
+            Message = $"{fullName} was updated.";
         }
     }
 }

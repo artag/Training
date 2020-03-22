@@ -382,6 +382,46 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
 
 Пример использования: реализация команды Save All для нескольких страниц.
 
+### Event Aggregation
+
+* Loosely coupled event based communication (основа - слабая связность на основе 
+  механизма событий)
+
+* Publisher and Subscribers 
+
+* Manages memory related to eventing (может управлять подписками на события - не надо 
+  вручную отписываться от событий).
+
+### EventAggregator
+
+*Основной сервис (резолвится из контейнера)*
+
+* `IEventAggregator` - ответственен за нахождение, создание и хранение event'ов в системе.
+
+* Multicast Pub/Sub (возможно использовать несколько publishers и subscribers).
+
+* Events are typed events derivde from `EventBase`.
+
+* `CompositePresentationEvent<T>` - основной класс.
+
+* `<T>` is the required Payload - где Payload определяет, что посылается subsriber'у,
+  когда event is published.
+
+### IEventAggregator
+
+*Возможности, которые обеспечивает этот интерфейс*.
+
+* Publish events
+
+* Subscribe to events
+
+* Subscribe using a strong reference - `keepSubscribeReferenceAlive` (нужно вручную
+  отписаться от события, когда уничтожается subscriber)
+
+* Event filtering - возможно отфильтровывать события.
+
+* Unsubscribe from events - "ручная" отписка от событий.
+
 ### Примеры
 
 * `04.Commands\DelegateCommand` - пример использования `DelegateCommand` и `DelegateCommand<T>`
@@ -399,4 +439,16 @@ xcopy "$(TargetDir)*.*" "$(SolutionDir)\PrismDemo\bin\$(ConfigurationName)\$(Tar
   2. В `CompositeCommand` регистрируется команда `SaveCommand` (DelegateCommand)
   3. Регистрация производится в `PersonViewModel` (проект `Demo.People`)
   4. Кнопка "Save All" становится активной, когда активны все кнопки "Save" на всех вкладках.
+  ```
+
+* `05.EventAggregator\EventAggregator` - пример использования Event Aggregation.
+  ```
+  Особенности:
+  1. Включает DelegateCommand и CompositeCommand, валидацию вводимых параметров.
+  2. Создан класс `PersonUpdatedEvent`, наследник от `PubSubEvent`. Для generic T - 
+  выбран тип `string`, т.к. будет передаваться имя Person.
+  3. В PersonViewModel через `IEventAggregator` выполняется publish события
+  `PersonUpdatedEvent` куда передается имя сохраненного Person.
+  4. В StatusBarViewModel через выполняется подписка `IEventAggregator` на событие
+  `PersonUpdatedEvent` и добавление обработчика данного события.
   ```

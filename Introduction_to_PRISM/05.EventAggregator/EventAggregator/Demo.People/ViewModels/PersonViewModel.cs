@@ -4,15 +4,19 @@ using Demo.Business;
 using Demo.Infrastructure;
 using Demo.People.Views;
 using Prism.Commands;
+using Prism.Events;
 
 namespace Demo.People.ViewModels
 {
     public class PersonViewModel : ViewModelBase, IPersonViewModel
     {
+        private readonly IEventAggregator _eventAggregator;
         private Person _person;
 
-        public PersonViewModel(IPersonView view) : base(view)
+        public PersonViewModel(IPersonView view, IEventAggregator eventAggregator) : base(view)
         {
+            _eventAggregator = eventAggregator;
+
             SaveCommand = new DelegateCommand(Save, CanSave);
             GlobalCommands.SaveAllCommand.RegisterCommand(SaveCommand);
         }
@@ -54,6 +58,9 @@ namespace Demo.People.ViewModels
         private void Save()
         {
             Person.LastUpdated = DateTime.Now;
+
+            var fullName = $"{Person.LastName}, {Person.FirstName}";
+            _eventAggregator.GetEvent<PersonUpdatedEvent>().Publish(fullName);
         }
 
         private bool CanSave()
