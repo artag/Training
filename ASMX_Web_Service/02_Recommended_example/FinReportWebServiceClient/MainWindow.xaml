@@ -1,0 +1,38 @@
+﻿<Window
+    x:Class="FinReportWebServiceClient.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="FinReport Client"
+    Height="250" Width="350">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Button
+            Grid.Column="1"
+            Grid.Row="1"
+            Height="24"
+            Content="GetReportIdArray"
+            Click="Button1_OnClick"/>
+
+        <Button
+            Grid.Column="1"
+            Grid.Row="2"
+            Height="24"
+            Content="GetReport"
+            Click="Button2_OnClick"/>
+
+    </Grid>
+</Window>
