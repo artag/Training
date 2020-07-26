@@ -76,7 +76,9 @@ REST, то вместо WCF стоит использовать технолог
 * Второй метод принимает идентификатор отчета и возвращает сами данные по
 отчету.
 
-Потребители веб-сервиса регулярно шлют запросы к первому методу, указывая период с момента их последнего запроса, и при наличии в ответе идентификаторов, запрашивают данные через второй метод.
+Потребители веб-сервиса регулярно шлют запросы к первому методу,
+указывая период с момента их последнего запроса,
+и при наличии в ответе идентификаторов, запрашивают данные через второй метод.
 
 Примеры демонстрируются на основе кода из «Рекомендуемой конструкции», и
 чтобы их протестировать достаточно вызвать веб-метод GetReportInfo как
@@ -86,7 +88,10 @@ REST, то вместо WCF стоит использовать технолог
 
 *Пример: 01_Simple_example*
 
-Начнем с описания простейшей конструкции веб-сервиса. Внимание, пример носит исключительно теоретический характер! Хоть он и рабочий, никогда так не делайте на практике. Это только демонстрация простоты самой технологии ASMX.
+Начнем с описания простейшей конструкции веб-сервиса.
+Внимание, пример носит исключительно теоретический характер!
+Хоть он и рабочий, никогда так не делайте на практике.
+Это только демонстрация простоты самой технологии ASMX.
 
 * Новый проект "ASP.NET Empty Web Application" (или "ASP.NET Web Service Application")
 
@@ -408,3 +413,254 @@ Web Reference», которая создает его уже по техноло
 
 ## 4. Серверный класс по данному wsdl
 
+*Пример: 03_WebService_By_Wsdl*
+
+wsdl описание веб-сервиса в технологии ASMX генерируется автоматически.
+Однако иногда возникает обратная задача: по данному wsdl файлу разработать
+соответствующий ему веб-сервис. Решается она с помощью той же утилиты
+`wsdl.exe`. Она может создать необходимый скелет из классов и вам останется
+только реализовать программную логику веб-методов.
+
+Для примера возьмем wsdl нашего веб-сервиса.
+Сохраните его из браузера как файл `FinReport.wsdl` либо скопируйте отсюда:
+
+Файл: `FinReport.wsdl`:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://asmx.report.ru/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://asmx.report.ru/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Фин. отчеты</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://asmx.report.ru/">
+      <s:element name="GetReportIdArray">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="arg" type="tns:GetReportIdArrayArg" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetReportIdArrayArg">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="DateBegin" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="DateEnd" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetReportIdArrayResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportIdArrayResult" type="tns:GetReportIdArrayResult" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetReportIdArrayResult">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ReportIdArray" type="tns:ArrayOfInt" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfInt">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="int" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetReport">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="arg" type="tns:GetReportArg" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetReportArg">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetReportResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportResult" type="tns:GetReportResult" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetReportResult">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Report" type="tns:FinReport" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="FinReport">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Date" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Info" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="GetReportIdArraySoapIn">
+    <wsdl:part name="parameters" element="tns:GetReportIdArray" />
+  </wsdl:message>
+  <wsdl:message name="GetReportIdArraySoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportIdArrayResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetReportSoapIn">
+    <wsdl:part name="parameters" element="tns:GetReport" />
+  </wsdl:message>
+  <wsdl:message name="GetReportSoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportResponse" />
+  </wsdl:message>
+  <wsdl:portType name="FinReportServiceSoap">
+    <wsdl:operation name="GetReportIdArray">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение списка ID отчетов по периоду</wsdl:documentation>
+      <wsdl:input message="tns:GetReportIdArraySoapIn" />
+      <wsdl:output message="tns:GetReportIdArraySoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetReport">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение отчета по ID</wsdl:documentation>
+      <wsdl:input message="tns:GetReportSoapIn" />
+      <wsdl:output message="tns:GetReportSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="FinReportServiceSoap" type="tns:FinReportServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetReportIdArray">
+      <soap:operation soapAction="http://asmx.report.ru/GetReportIdArray" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReport">
+      <soap:operation soapAction="http://asmx.report.ru/GetReport" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="FinReportServiceSoap12" type="tns:FinReportServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetReportIdArray">
+      <soap12:operation soapAction="http://asmx.report.ru/GetReportIdArray" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReport">
+      <soap12:operation soapAction="http://asmx.report.ru/GetReport" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="FinReportService">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Фин. отчеты</wsdl:documentation>
+    <wsdl:port name="FinReportServiceSoap" binding="tns:FinReportServiceSoap">
+      <soap:address location="http://localhost:3500/FinReport.asmx" />
+    </wsdl:port>
+    <wsdl:port name="FinReportServiceSoap12" binding="tns:FinReportServiceSoap12">
+      <soap12:address location="http://localhost:3500/FinReport.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+```
+
+* Создать в солюшене пустой web-проект с именем `FinReportWebServiceByWsdl`
+
+* В новый проект:
+
+  * Добавить папку `ServerClass`.
+
+  * В папку скопировать файлы `FinReport.wsdl` и `wsdl.exe`. 
+
+  * Здесь же создать bat файл `GenServerClass.bat`
+  ```
+  wsdl /server /n:FinReportWebServiceByWsdl.ServerClass FinReport.wsdl
+  pause
+  ```
+
+* После запуска `GenServerClass.bat` мы должны получить файл
+`FinReportService.cs`. Все четыре файла включить в солюшен.
+
+* В корне проекта создать FinReportService.cs с реализацией абстрактных
+методов из сгенеренного файла (пдробности см. ниже).
+
+* Добавить файл `FinReportByWsdl.asmx`, который будет указывать на новый класс:
+```
+<%@ Class="FinReportWebServiceByWsdl.FinReportService" %>
+```
+
+### Объяснение
+
+Единственное отличие от генерации прокси-класса – это атрибут `server` (в bat
+файле). При этом создается абстрактный класс наследованный от `WebService` с
+абстрактно описанными веб-методами.
+
+Можно от него наследоваться, но при этом все равно придется копировать все
+атрибуты, поэтому предлагаю сделать следующим образом.
+Скопировать определение класса в новый файл и пространство имен, убрать слово
+`abstract` и написать реализацию методов. На оставшиеся сгенеренные классы
+в сгенеренном файле можно ссылаться.
+
+После форматирования кода получился следующий файл. `FinReportService.cs`:
+```csharp
+using System;
+using System.Web.Services;
+using System.Web.Services.Description;
+using System.Web.Services.Protocols;
+
+// Здесь остальные сгенеренные классы
+using FinReportWebServiceByWsdl.ServerClass;
+
+namespace FinReportWebServiceByWsdl
+{
+    [WebService(Namespace = "http://asmx.report.ru/")]
+    [WebServiceBinding(Name = "FinReportServiceSoap", Namespace = "http://asmx.report.ru/")]
+    public class FinReportService : WebService
+    {
+        [WebMethod]
+        [SoapDocumentMethod(
+            "http://asmx.report.ru/GetReportIdArray",
+            RequestNamespace = "http://asmx.report.ru/",
+            ResponseNamespace = "http://asmx.report.ru/",
+            Use = SoapBindingUse.Literal,
+            ParameterStyle = SoapParameterStyle.Wrapped)]
+        public GetReportIdArrayResult GetReportIdArray(GetReportIdArrayArg arg)
+        {
+            return new GetReportIdArrayResult
+            {
+                ReportIdArray = new []{ 23, 666, 42 }
+            };
+        }
+
+        [WebMethod]
+        [SoapDocumentMethod(
+            "http://asmx.report.ru/GetReport",
+            RequestNamespace = "http://asmx.report.ru/",
+            ResponseNamespace = "http://asmx.report.ru/",
+            Use = SoapBindingUse.Literal,
+            ParameterStyle = SoapParameterStyle.Wrapped)]
+        public GetReportResult GetReport(GetReportArg arg)
+        {
+            return new GetReportResult
+            {
+                Report = new FinReport
+                {
+                    ReportID = arg.ReportID,
+                    Date = new DateTime(2015, 03, 15),
+                    Info = "ByWSDL"
+                }
+            };
+        }
+    }
+}
+```
+
+## 5. ajax

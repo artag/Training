@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://asmx.report.ru/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" targetNamespace="http://asmx.report.ru/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Фин. отчеты</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://asmx.report.ru/">
+      <s:element name="GetReportIdArray">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="arg" type="tns:GetReportIdArrayArg" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetReportIdArrayArg">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="DateBegin" type="s:dateTime" />
+          <s:element minOccurs="1" maxOccurs="1" name="DateEnd" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetReportIdArrayResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportIdArrayResult" type="tns:GetReportIdArrayResult" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetReportIdArrayResult">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="ReportIdArray" type="tns:ArrayOfInt" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfInt">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="int" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetReport">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="arg" type="tns:GetReportArg" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetReportArg">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="GetReportResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetReportResult" type="tns:GetReportResult" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="GetReportResult">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Report" type="tns:FinReport" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="FinReport">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ReportID" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Date" type="s:dateTime" />
+          <s:element minOccurs="0" maxOccurs="1" name="Info" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="GetReportIdArraySoapIn">
+    <wsdl:part name="parameters" element="tns:GetReportIdArray" />
+  </wsdl:message>
+  <wsdl:message name="GetReportIdArraySoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportIdArrayResponse" />
+  </wsdl:message>
+  <wsdl:message name="GetReportSoapIn">
+    <wsdl:part name="parameters" element="tns:GetReport" />
+  </wsdl:message>
+  <wsdl:message name="GetReportSoapOut">
+    <wsdl:part name="parameters" element="tns:GetReportResponse" />
+  </wsdl:message>
+  <wsdl:portType name="FinReportServiceSoap">
+    <wsdl:operation name="GetReportIdArray">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение списка ID отчетов по периоду</wsdl:documentation>
+      <wsdl:input message="tns:GetReportIdArraySoapIn" />
+      <wsdl:output message="tns:GetReportIdArraySoapOut" />
+    </wsdl:operation>
+    <wsdl:operation name="GetReport">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Получение отчета по ID</wsdl:documentation>
+      <wsdl:input message="tns:GetReportSoapIn" />
+      <wsdl:output message="tns:GetReportSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="FinReportServiceSoap" type="tns:FinReportServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetReportIdArray">
+      <soap:operation soapAction="http://asmx.report.ru/GetReportIdArray" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReport">
+      <soap:operation soapAction="http://asmx.report.ru/GetReport" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="FinReportServiceSoap12" type="tns:FinReportServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetReportIdArray">
+      <soap12:operation soapAction="http://asmx.report.ru/GetReportIdArray" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetReport">
+      <soap12:operation soapAction="http://asmx.report.ru/GetReport" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="FinReportService">
+    <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Фин. отчеты</wsdl:documentation>
+    <wsdl:port name="FinReportServiceSoap" binding="tns:FinReportServiceSoap">
+      <soap:address location="http://localhost:3500/FinReport.asmx" />
+    </wsdl:port>
+    <wsdl:port name="FinReportServiceSoap12" binding="tns:FinReportServiceSoap12">
+      <soap12:address location="http://localhost:3500/FinReport.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
