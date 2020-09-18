@@ -57,7 +57,7 @@ without clashing with another thread.
 
 badge
 If no object methods can modify its state, no matter how many of them and how
-often are being called parallel—they will work in their own memory space in stack.
+often are being called parallel - they will work in their own memory space in stack.
 
 Goetz et al. explained the advantages of immutable objects in more details
 in their very famous book [Java Concurrency in Practice](http://amzn.to/2bQVqBr)
@@ -294,7 +294,7 @@ entirely of immutable objects.
 
 ---
 
-If you like this article, you will definitely like these very relevant posts too:
+If you like this article, you will definitely like these **very relevant** posts too:
 
 * [Immutable Objects Are Not Dumb](https://www.yegor256.com/2014/12/22/immutable-objects-not-dumb.html)
 
