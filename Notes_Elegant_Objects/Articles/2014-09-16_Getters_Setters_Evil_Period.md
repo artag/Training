@@ -55,7 +55,7 @@ data holders.
 ```
 
 This misconception is the consequence of a huge misunderstanding! Objects are not
-"simple data holders." Objects are not data structures with attached methods. This
+"simple data holders." Objects are *not* data structures with attached methods. This
 "data holder" concept came to object-oriented programming from procedural languages,
 especially C and COBOL. I’ll say it again: an object is *not* a set of data elements
 and functions that manipulate them. An object is *not* a data entity.
@@ -70,7 +70,7 @@ In true object-oriented programming, objects are
 like you and me. They are living organisms, with their own behavior, properties and
 a life cycle.
 
-Can a living organism have a setter? Can you “set” a ball to a dog? Not really. But
+Can a living organism have a setter? Can you "set" a ball to a dog? Not really. But
 that is exactly what the following piece of software is doing:
 
 ```java
@@ -81,7 +81,7 @@ dog.setBall(new Ball());
 How does that sound?
 
 Can you get a ball from a dog? Well, you probably can, if she ate it and you’re
-doing surgery. In that case, yes, we can “get” a ball from a dog. This is what I’m
+doing surgery. In that case, yes, we can "get" a ball from a dog. This is what I’m
 talking about:
 
 ```java
@@ -138,15 +138,15 @@ int weight = dog.weight();
 The dog is an immutable living organism, which doesn’t allow anyone from the outside
 to change her weight, or size, or name, etc. She can tell, on request, her weight or
 name. There is nothing wrong with public methods that demonstrate requests for
-certain “insides” of an object. But these methods are not “getters” and they should
-never have the “get” prefix. We’re not “getting” anything from the dog. We’re not
+certain "insides" of an object. But these methods are not "getters" and they should
+never have the "get" prefix. We’re not "getting" anything from the dog. We’re not
 getting her name. We’re asking her to tell us her name. See the difference?
 
 We’re not talking semantics here, either. We are differentiating the procedural
 programming mindset from an object-oriented one. In procedural programming, we’re
 working with data, manipulating them, getting, setting, and deleting when necessary.
-We’re in charge, and the data is just a passive component. The dog is nothing to us
-- it’s just a "data holder". It doesn’t have its own life. We are free to get
+We’re in charge, and the data is just a passive component. The dog is nothing
+to us - it’s just a "data holder". It doesn’t have its own life. We are free to get
 whatever is necessary from it and set any data into it. This is how C, COBOL, Pascal
 and many other procedural languages work(ed).
 
