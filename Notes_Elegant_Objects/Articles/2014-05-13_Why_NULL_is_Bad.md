@@ -2,6 +2,8 @@
 
 [Link](https://www.yegor256.com/2014/05/13/why-null-is-bad.html)
 
+[What is Wrong About NULL in OOP? (webinar #3)](https://www.youtube.com/watch?v=o3aNJX7AP3M)
+
 A simple example of `NULL` usage in Java:
 
 ```java

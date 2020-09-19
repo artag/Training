@@ -2,6 +2,8 @@
 
 [Link](https://www.yegor256.com/2016/04/05/printers-instead-of-getters.html)
 
+[Printers Instead of Getters in OOP (webinar #18)](https://www.youtube.com/watch?v=_Q0cNykXB04)
+
 Getters and setters
 [are evil](https://www.yegor256.com/2014/09/16/getters-and-setters-are-evil.html).
 No need to argue about this, it’s settled. You disagree? Let’s discuss that later.

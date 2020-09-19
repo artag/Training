@@ -2,6 +2,10 @@
 
 [Link](https://www.yegor256.com/2014/09/16/getters-and-setters-are-evil.html)
 
+[Why Getters-and-Setters Is An Anti-Pattern? (webinar #4)](https://www.youtube.com/watch?v=WSgP85kr6eU)
+
+[Object Oriented Lies](https://www.youtube.com/watch?v=F4N25kZ2zQU)
+
 There is an old debate, started in 2003 by Allen Holub in this
 [Why getter and setter methods are evil](http://www.javaworld.com/article/2073723/core-java/why-getter-and-setter-methods-are-evil.html)
 famous article, about whether getters/setters is an

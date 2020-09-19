@@ -2,6 +2,12 @@
 
 [Link](https://www.yegor256.com/2014/06/09/objects-should-be-immutable.html)
 
+[Immutable Objects vs. Common Sense (webinar #2)](https://www.youtube.com/watch?v=KwP7Ay9Z-hc)
+
+[How Immutability Helps in OOP](https://www.youtube.com/watch?v=EnhRgXrHCC4)
+
+[How Much Immutability Is Enough?](https://www.youtube.com/watch?v=p7m7_iiqaHI)
+
 In object-oriented programming, an object is
 [immutable](http://en.wikipedia.org/wiki/Immutable_object)
 if its state can’t be modified after it is created. In Java,
@@ -55,7 +61,6 @@ The first and the most obvious argument is that immutable objects are thread-saf
 This means that multiple threads can access the same object at the same time,
 without clashing with another thread.
 
-badge
 If no object methods can modify its state, no matter how many of them and how
 often are being called parallel - they will work in their own memory space in stack.
 

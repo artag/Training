@@ -2,6 +2,10 @@
 
 [Link](https://www.yegor256.com/2014/05/05/oop-alternative-to-utility-classes.html)
 
+[Objects vs. Static Methods (webinar #1)](https://www.youtube.com/watch?v=D0dqC_3Bch8)
+
+[What's Wrong About Utility Classes? (webinar #6)](https://www.youtube.com/watch?v=psrp3TtaYYI)
+
 A utility class (aka helper class) is a "structure" that has only static methods
 and encapsulates no state. `StringUtils`, `IOUtils`, `FileUtils` from
 [Apache Commons](http://commons.apache.org/);
