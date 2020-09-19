@@ -16,7 +16,7 @@ public Employee getByName(String name) {
 
 What is wrong with this method?
 
-It may return `NULL` instead of an object—that’s what is wrong.
+It may return `NULL` instead of an object - that’s what is wrong.
 `NULL` is a terrible practice in an object-oriented paradigm and
 should be avoided at
 [all costs](https://www.yegor256.com/2016/03/22/try-finally-if-not-null.html).
