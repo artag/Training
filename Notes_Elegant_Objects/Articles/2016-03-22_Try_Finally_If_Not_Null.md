@@ -28,7 +28,7 @@ try {
 I already wrote about
 [`null`](https://www.yegor256.com/2014/05/13/why-null-is-bad.html)
 and its evil nature. Here it comes again. If you just follow the rule of "not
-using NULL anywhere ever," this code would need an immediate refactoring. Its
+using NULL anywhere ever", this code would need an immediate refactoring. Its
 correct version will look like this:
 
 ```java
