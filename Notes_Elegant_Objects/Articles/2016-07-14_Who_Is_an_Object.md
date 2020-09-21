@@ -40,7 +40,8 @@ What is common throughout all these definitions is the word "contains" (or
 "holds," "consists," "has," etc.). They all think that an object is *a box with
 data*. And this perspective is exactly what I’m strongly against.
 
-> They all think that an object is a box with data - this perspective is exactly > what I’m strongly against.
+> They all think that an object is a box with data - this perspective is exactly
+what I’m strongly against.
 
 If we look at how C++ or Java are implemented, such a definition of an object
 will sound *technically* correct. Indeed, for each object, Java Virtual Machine
