@@ -40,9 +40,7 @@ What is common throughout all these definitions is the word "contains" (or
 "holds," "consists," "has," etc.). They all think that an object is *a box with
 data*. And this perspective is exactly what I’m strongly against.
 
-```
-They all think that an object is a box with data - this perspective is exactly what I’m strongly against.
-```
+> They all think that an object is a box with data - this perspective is exactly > what I’m strongly against.
 
 If we look at how C++ or Java are implemented, such a definition of an object
 will sound *technically* correct. Indeed, for each object, Java Virtual Machine
@@ -93,9 +91,8 @@ true because there is no data technically *inside* the object. Instead, there is
 it would take just 8 bytes in memory, with none of them actually occupied by
 "data".
 
-```
-Objects are no longer boxes with data; they know where the data is, but they don’t contain the data.
-```
+> Objects are no longer boxes with data; they know where the data is, but they
+> don’t contain the data.
 
 Now, let’s get back to our new pseudo language. Let’s imagine it treats objects
 very differently than C++ - it doesn’t keep object attributes in memory at *all*.
@@ -123,6 +120,6 @@ languages that won’t store objects as in-memory data structures, even technica
 By the way, here is the definition of an object from my favorite book,
 [Object Thinking](http://amzn.to/266oJr4) by David West, p. 66:
 
-An object is the equivalent of the quanta from which the universe is constructed
+> An object is the equivalent of the quanta from which the universe is constructed
 
 What do you think? Is it close to the "representative" definition I just proposed?
