@@ -1336,3 +1336,97 @@ int main() {
 ```
 
 # Элегантные объекты. Vol.2
+
+## Gray
+
+### 5.1. Compound names (Составные имена)
+
+### 5.2. Validators and assertions (Валидаторы и утверждения)
+
+### 5.3. Printers instead of getters
+
+#### 5.3.1. Single Responsibility Principle
+
+#### 5.3.2. God object
+
+#### 5.3.3. Code duplication
+
+#### 5.3.4. Utility objects
+
+#### 5.3.5. Polymorphic media
+
+### 5.4. Private static literals
+
+### 5.5. Configurable objects
+
+### 5.6. Temporal coupling
+
+### 5.7. Inheritance
+
+#### 5.7.1. Subtyping
+
+#### 5.7.2. Implementation inheritance
+
+### 5.8. Gradients of immutability
+
+### 5.9. Law of Demeter
+
+### 5.10. Algorithms
+
+## Dark
+
+### 6.1. Annotations
+
+#### 6.1.1. Marshalling
+
+#### 6.1.2. Dependency injection
+
+#### 6.1.3. Access control
+
+#### 6.1.4. AOP and aspects
+
+### 6.2. MVC
+
+### 6.3. Dependency injection containers
+
+### 6.4. Reflection
+
+#### 6.4.1. Type introspection
+
+#### 6.4.2. Type casting
+
+#### 6.4.3. Annotations
+
+#### 6.4.4. Instatiating by class name
+
+#### 6.4.5. Method invocation by name
+
+#### 6.4.6. Setting and getting attributes
+
+#### 6.4.7. Serialization
+
+#### 6.4.8. Byte code manipulations
+
+### 6.5. ORM
+
+#### 6.5.1. Horizontal DoR
+
+#### 6.5.2. Vertical DoR
+
+#### 6.5.3. Mapping engine
+
+#### 6.5.4. DTO
+
+#### 6.5.5. SQL speaking objects
+
+#### 6.5.6. Too many round trips
+
+#### 6.5.7. Duplicated SQL manipulations
+
+#### 6.5.8. "JOIN" and foreign keys
+
+#### 6.5.9. "INSERT"
+
+#### 6.5.10. "UPDATE"
+
+#### 6.5.11. Transactions
