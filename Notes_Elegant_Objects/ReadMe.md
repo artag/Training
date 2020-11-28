@@ -1370,6 +1370,133 @@ int main() {
 
 ### 5.2. Validators and assertions (Валидаторы и утверждения)
 
+В главе 4.1.1 было утверждение: чтобы сделать стабильное ПО, требуется, чтобы оно было как
+можно более хрупким.
+
+Любое ПО имеет бесконечное число багов. Задача обнаружить их как можно больше и "доставить" их
+пользователю как можно меньше.
+
+Обнаружение багов должно быть как можно более простым ("дешевым"). Для этого необходимо делать
+ПО как можно более *хрупким* - при любом подозрении на ошибку ПО должно сообщать об этой
+ошибке пользователю.
+
+#### Режимы работы при аварийных ситуациях
+
+* **fail safe**. Ошибка прячется, пытаемся прожолжить работу. Плохой подход.
+
+* **fail fast**. Аварийное завершение работы с сообщением об ошибке. Предпочтительный подход.
+
+#### Варианты сообщений об авариях в ПО
+
+* При continuous integration и тестировании должно быть много технических логов.
+
+* В staging environment можно скрывать некоторые технические данные в логах, но добавить
+информацию для manual testers о техподдержке.
+
+* В конечном продукте тенические детали свести к минимуму, но предоставить пользователю
+максимально возможную информацию куда и как обращаться за техподдержкой.
+
+#### Два способа обеспечения хрупкости ПО
+
+1. Выброс исключения. Предпочтительный вариант.
+
+2. Assertions. Менее предпочтителен. (Менее заметен в коде - может быть случайно удален).
+
+#### Два места где проверяются подозрительные данные
+
+1. Входные данные
+
+2. Предположения, после вычисления данных
+
+Пример:
+
+```java
+// Проверка входных данных (input validation).
+int daysBetween(Date start, Date end) {
+    if (start.compareTo(end) > 0) {
+        throw new IllegalArgumentException(String.Format(
+            "Start (%s) must be earlier than end (%s)", start, end));
+    }
+    return (int)((end.getTime() - start.getTime() / (24 * 60 * 60 * 1000L)));
+}
+
+
+// Предположение (assertion), после вычисления дней, перед casting в int.
+int daysBetween(Date start, Date end) {
+    final long days = (end.getTime() - start.getTime())
+        / (24 * 60 * 60 * 1000L);
+    if (days > Integer.MAX_VALUE) {
+        throw new IllegalArgimentException(String.Format(
+            "Distance btwn %s and %s is bigger than INT", start, end));
+    }
+    return (int)days;
+}
+```
+
+**НО**: Проверки засоряют код - их становиться слишком много. Выход:
+использование validating decorators и assertions with object.
+
+Дополнительный плюсы использования последних - гибкость (отключение, если требуется высокая
+производительность, расширяемость, тестируемость).
+
+#### Validating decorators (input validation)
+
+```java
+interface Day {
+    int distanceTo(Day end)
+}
+
+// Чистый класс, без проверок.
+class JdkDay implements Day {
+    private final Date date;
+    JdkDate(Date d) {
+        this.date = d;
+    }
+    @Override
+    public int distanceTo(Day end) {
+        return (int) ((end.date.getTime() - this.date.getTime())
+            / (24 * 60 * 60 * 1000L));
+    }
+}
+
+// Проверка входных параметров, validating decorator
+class StrictDay implements Day {
+    private final Day origin;
+    StrictDay (Day d) {
+        this.origin = d;
+    }
+    @Override
+    public int distanceTo(Day end) {
+        if (end.compareTo(this) < 0) {
+            throw new IllegalArgumentException(
+                "Start (%s) must be earlier than end (%s)", this, end);
+        }
+        return this.origin.distanceTo(end);
+    }
+}
+```
+
+#### Assertions with object
+
+*Предположение* (assertion) делается с использованием стороннего объекта класса `LongAsInteger`.
+
+```java
+class JdkDay implements Day {
+    private final Date date;
+    JdkDate(Date d) {
+        this.date = d;
+    }
+    @Override
+    public int distanceTo(Day end) {
+        return new LongAsInteger(
+            (end.date.getTime() - this.date.getTime()) / (24 * 60 * 60 * 1000L)
+        ).intValue();
+    }
+}
+```
+
+Объект класса `LongAsInteger` при неудачном casting `long` в `int` выбросит исключение.
+
 ### 5.3. Printers instead of getters
 
 #### 5.3.1. Single Responsibility Principle
