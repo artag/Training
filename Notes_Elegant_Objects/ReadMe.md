@@ -1499,15 +1499,227 @@ class JdkDay implements Day {
 
 ### 5.3. Printers instead of getters
 
-#### 5.3.1. Single Responsibility Principle
+В главе 3.5 было объяснено почему использование геттеров и сеттеров в классах это очень плохо.
+Кратко почему:
 
-#### 5.3.2. God object
+* Объекты превращаются в контейнеры данных, мешки данных и т.п.
 
-#### 5.3.3. Code duplication
+* Объекты из "черного ящика" превращаются "стеклянный ящик".
+
+Каким образом избегать сеттеров понятно, но, что же использовать вместо геттеров?
+
+Ответ: **принтеры**. Объект сам себя должен печатать по просьбе внешнего объекта (или в сам внешний объект).
+
+Пример (еще не идеальный, но уже ближе к нему):
+
+```java
+class Book {
+    private final String isbn;
+    private final String title;
+    private final String author;
+    Book(String i, String t, String a) {    // альтернатива сеттерам (конструктор)
+        this.isbn = i;
+        this.title = t;
+        this.author = a;
+    }
+    String print(Page page, String prefix) {    // альтернатива геттерам
+        return page
+            .with(prefix + ".isbn", this.isbn)
+            .with(prefix + ".title", this.title)
+            .with(prefix + ".author", this.author)
+            .html();
+    }
+}
+
+// Использование
+Book book = database.fetch(123);
+Page page = new Page("book.html");
+String html = book.print(page, "b");    // "Печать" книги на page.
+```
+
+#### 5.3.1. - 5.3.3 Single Responsibility Principle, God object, Code duplication
+
+Но, что если надо "печатать" объект не только на страницу (page) в html, но и отобразить данные
+в виде JSON, байтового массива, XML, и т.д.:
+
+```java
+class Book {
+    ...
+    void printToPage(Page page) { /*...*/ }
+    byte[] printToByteArray) { /*...*/ }
+    JsonObject printToJSON() { /*...*/}
+    ...
+}
+```
+
+Т.е. класс начинает увеличиваться в размерах: все более уходит от состояния "Solid", больше начинает
+походить на God object. Плюс, увеличивается вероятность дублирования кода.
+
+Но, как утверждает автор, уж лучше это чем нарушение инкапсуляции объекта, вызванного использованием
+геттеров и сеттеров.
+
+Но есть более изящные решения: см. 5.3.4 и 5.3.5 (The best).
 
 #### 5.3.4. Utility objects
 
+Решение #1. Использование служебных неизменяемых объектов. Вся самая тяжелая функциональность
+выносится в отдельные служебные классы. Уже лучше, но не идеально. Лучше смотреть решение 5.3.5.
+
+```java
+class Book {
+    Book(String i, String t, String a) {    // конструктор
+        ...
+    }
+    String printToJSON() throws IOException {
+        return new JSONPage()                   // служебный класс
+            .with(prefix + ".isbn", this.isbn)
+            .with(prefix + ".title", this.title)
+            .with(prefix + ".author", this.author)
+            .json();
+    }
+}
+
+class JSONPage implements Page {                // immutable class
+    private final Map<String, String> attrs;
+    JSONPage() {                                // второй конструктор
+        this(new HashMap<String, String>());
+    }
+    JSONPage(Map<String, String map> map) {     // главный конструктор
+        this.attrs = map;
+    }
+    @Override
+    public Page with(String name, String value) {
+        Map<String, String> map = new HashMap<>();
+        map.putAll(this.attrs);
+        map.put(name, value);
+        return new JSONPage(map);
+    }
+    String json() {
+        // ...
+    }
+}
+
+```
+
 #### 5.3.5. Polymorphic media
+
+Решение #2. Использовать полиморфизм. Самое элегантное решение.
+
+```java
+interface Media {
+    Media with(String k, String v);
+    byte[] bytes();
+}
+
+class Book {
+    Book(String i, String t, String a) {
+        ...
+    }
+    byte[] printTo(Media media) {       // Один общий принтер
+        return media
+            .with(prefix + ".isbn", this.isbn)
+            .with(prefix + ".title", this.title)
+            .with(prefix + ".author", this.author)
+            .bytes();
+    }
+}
+
+class ToPacket implements Media {       // Первый принтер
+    private final Packet packet;
+    ToPacket(Packet p) {
+        this.packet = p;
+    }
+    @Override
+    public Media with(String name, String value) {
+        return new ToPacket(
+            this.packet.add(value.getBytes())
+        );
+    }
+    @Override
+    public byte[] bytes() {
+        // ..
+    }
+}
+
+class ToJSON implements Media {         // Второй принтер
+    private final JSONPage page;
+    ToJSON() {
+        this(new JSONPage())
+    }
+    ToJSON(JSONPage p) {
+        this.page = p;
+    }
+    @Override
+    public Media with(String name, String value) {
+        return new JSON(this.page.with(name, value));
+    }
+    @Override
+    public byte[] bytes() {
+        // ..
+    }
+}
+```
+
+Использование:
+
+```java
+Media media = new ToPacket();
+byte[] bytes = book.printTo(media);
+```
+
+или
+
+```java
+Media media = new ToJSON();
+byte[] bytes = book.printTo(media);
+```
+
+#### 5.3.6. Polymorphic media (ver 2 - from site)
+
+Или сделать так (что еще лучше). **Окончательный вариант**:
+
+```java
+public class Book {
+  Book(String isbn, String title) {
+      ...
+  }
+  public Media print(Media media) {     // Принимает и возвращает Media
+    return media
+      .with("isbn", this.isbn)
+      .with("title", this.title);
+  }
+}
+
+class JsonMedia implements Media {      // Реализация Media (одна из)
+  private final JsonObjectBuilder builder;
+  JsonMedia() {
+    this("book");
+  }
+  JsonMedia(String head) {
+    this(Json.createObjectBuilder().add(head));
+  }
+  JsonMedia(JsonObjectBuilder bdr) {
+    this.builder = bdr;
+  }
+  @Override
+  public Media with(String name, String value) {
+    return new JsonMedia(
+      this.builder.add(name, value)
+    );
+  }
+  public JsonObject json() {
+    return this.builder.build();
+  }
+}
+```
+
+Использование:
+
+```java
+JsonMedia media = new JsonMedia("book");
+media = book.print(media);
+JsonObject json = media.json();
+```
 
 ### 5.4. Private static literals
 
