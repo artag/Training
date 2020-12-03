@@ -1723,6 +1723,156 @@ JsonObject json = media.json();
 
 ### 5.4. Private static literals
 
+В главе 2.5. говорилось о том, что использовать public константы очень плохо.
+
+Кратко: public константы создают бессмысленные сязи между разными классами (могут использоваться
+в разных контекстах, иметь разный смысл).
+
+Здесь пример почему плохо использовать private static constants. Пример:
+
+```java
+class Book {
+    private static final String BOOK_NOT_FOUND = "book not found";
+    void print() throws Exception {
+        if (/* book not found */) {
+            throw new Exception(Book.BOOK_NOT_FOUND);
+        }
+    }
+    void sell() throws Exception {
+        if (/* book not found */) {
+            throw new Exception(Book.BOOK_NOT_FOUND);
+        }
+    }
+}
+```
+
+Причины использования private static constants:
+
+1. Замена "магических чисел/слов" на константу. Часто требуется только в больших классах.
+В компактных, связных классах, такие константы **излишни**.
+
+2. Введенная константа `BOOK_NOT_FOUND` вроде как избавляет нас от дублирования строк.
+Но это ошибочное мнение - внедрение такой константы **маскирует ошибки**.
+Рассмотрим примеры ошибок в 5.4.1. и 5.4.2.
+
+#### 5.4.1. Исключения по своей сути разные - требуются разные строки для сообщений
+
+Пример:
+
+```java
+class Book {
+    void print() throws Exception {
+        if (/* book not found */) {     // Одна ошибка
+            throw new Exception("book not found, can't print it");
+        }
+    }
+    void sell() throws Exception {
+        if (/* book not found */) {     // Совершенно другая ошибка
+            throw new Exception("book not found, can't sell it");
+        }
+    }
+}
+```
+
+Здесь не требуется статической константы, т.к. по своей сути, исключения отличаются друг от друга.
+
+#### 5.4.2. Ошибки одинаковые - нужно одно место для обработки ошибок
+
+Пример:
+
+```java
+class Book {
+    void print() throws Exception {
+        x = find();
+    }
+    void sell() throws Exception {
+        x = find();
+    }
+    private X find() throws Exception {
+        if (/* book not found */) {
+            throw new Exception("book not found");
+        }
+        return /* книга найдена */;
+    }
+}
+```
+
+Обратный случай: было дублирование проверок `if` - убрали дублирование и сделали проверку в одном
+месте. Опять, статическая константа не требуется.
+
+#### 5.4.3. Если все же необходимо использовать private static literals
+
+**Решение #1**. Инжектирование константы через конструктор (можно через вторичный).
+
+```java
+class Book {
+    private final String notFound;
+    Book() {                        // Вторичный конструктор
+        this("book not found");
+    }
+    Book(String msg) {              // Основной конструктор
+        this.notFound = msg;
+    }
+    private X find() throws Exception {
+        if (/* book not found */) {
+            throw new Exception(this.notFound);
+        }
+    }
+}
+```
+
+**Решение #2**. Если не хочется "загрязнять" класс `Book`, то можно создать декоратор,
+который ловит исключение и перебрасывает его с нужным сообщением. Более многословно.
+
+```java
+class BookNotFoundException extends Exception {
+    BookNotFoundException() {
+        super();
+    }
+    BookNotFoundException(Throwable ex, String msg) {
+        super(ex, msg);
+    }
+}
+
+class DefaultBook implements Book {     // "Чистый класс"
+    private X find() {                  // Ничего не знает о сообщениях.
+        if (/* book not found */) {
+            throw new BookNotFoundException();
+        }
+    }
+    public void print() { ... }
+    public void sell() { ... }
+}
+
+class VerboseBook implements Book {     // "Класс декоратор". Перебрасывает исключения.
+    private final Book book;
+    private final String msg;
+    VerboseBook(Book b) {               // Вторичный конструктор
+        this(b, "book not found");
+    }
+    VerboseBook(Book b, String m) {     // Основной конструктор
+        this.book = b;
+        this.msg = m;
+    }
+    @Override
+    public void print() {
+        try {
+            this.book.print();
+        } catch (BookNotFoundException ex) {
+            throw new BookNotFoundException(ex, this.msg);
+        }
+    }
+    @Override
+    public void sell() {
+        try {
+            this.book.sell();
+        } catch (BookNotFoundException ex) {
+            throw new BookNotFoundException(ex, this.msg);
+        }
+    }
+}
+```
+
 ### 5.5. Configurable objects
 
 ### 5.6. Temporal coupling
