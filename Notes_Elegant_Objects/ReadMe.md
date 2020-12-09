@@ -2076,13 +2076,240 @@ printfn("f(7) = %d", new Fibo(7).intValue())
 
 ### 5.7. Inheritance
 
-#### 5.7.1. Subtyping
+**Общая рекомендация**: отдавайте предпочтение композиции объектов перед наследованием классов.
 
-#### 5.7.2. Implementation inheritance
+Есть два вида наследования:
+
+* Subtyping (подтипы)
+* Implementation inheritance (наследование реализации)
+
+#### 5.7.1. Subtyping (подтипы) - можно использовать
+
+Пример:
+
+```java
+interface Pet {
+    String name();
+}
+interface Lizard extends Pet {
+}
+class RealLizard imlements Lizard {
+    private final String n;
+    RealLizard(String name) {
+        this.n = name;
+    }
+    @Override
+    public String name() {
+        return this.n;
+    }
+}
+```
+
+Наследование здесь используется как реализация интерфейса.
+В таком виде наследованием можно пользоваться.
+
+#### 5.7.2. Implementation inheritance (наследование реализации) - использовать нельзя
+
+Пример:
+
+```java
+class Iguana extends RealLizard {
+    Iguana(String name) {
+        super(name);
+    }
+    String color() {
+        return "green";
+    }
+}
+```
+
+Наследование здесь используется как расширение родительского класса.
+
+**Плохо**:
+
+* Такие расширения родительского класса могут копировать, переопределять части родительского класса.
+
+* Получаемый класс является своего рода "Франкенштейном", сшитым из разных кусков кода.
+
+* Переопределяемые части базового класса могут "убиваться" (переопределяться) наследником:
+базовый класс в совокупности с дочерним получается "полуживым".
+
+**Вывод**: вместо наследования реализации надо использовать композицию объектов.
 
 ### 5.8. Gradients of immutability
 
-### 5.9. Law of Demeter
+Из главы 2.6: объект неизменяем, если состояние объекта не может быть модифицировано после его
+создания.
+
+### 5.8.1. Состояние неизменяемости - константа
+
+```java
+class Gauge {                       // Какой-то шаблон
+    private final Number value;
+    Gauge(double v) {
+        this(new ZeroToOne(v));
+    }
+    Gauge(Number v) {
+        this.value = v;
+    }
+    String html() {
+        return String.format(this.value.doubleValue() * 100);
+    }
+}
+class ZeroToOne extends Number {    // Валидация
+    private final double value;
+    ZeroToOne(double v) {
+        this.value = v;
+    }
+    @Override
+    public double doubleValue() {
+        if (this.value < 0 || this.value > 1) {
+            throw new IllegalStateException("Value must be in [0..1] range");
+        }
+        return this.value;
+    }
+}
+```
+
+Использование:
+
+```java
+Gauge gauge1 = new Gauge(0.15);
+Gauge gauge2 = new Gauge(0.15);
+print gauge1.html();    // Один и тот же результат. Всегда.
+print gauge2.html();    // Один и тот же результат. Всегда.
+```
+
+Здесь неизменяемые объекты одного класса при одинаковых начальных условиях ведут себя одинаково,
+как **константы**.
+
+### 5.8.2. Состояние неизменяемости - не константа
+
+1. Похожий класс, только метод `html()` возвращает значения с небольшим разбросом:
+
+```java
+class RandomizedGauge {             // Похож на Gauge
+    private final Number value;     // Конструктор опущен.
+    String html() {
+        return String.format(this.value.doubleValue() * 95 * Math.random());
+    }
+}
+```
+
+Объект класса `RandomizedGauge` все еще **неизменяем**, но уже выдает разные результаты.
+
+2. Похожий класс, только метод `html()` содержит ссылку на файл, откуда берет значение.
+Плюс, мы можем сохранять значения в этот же файл:
+
+```java
+class GaugeInFile {             // Похож на Gauge
+    private final Path path;    // Конструктор опущен.
+    String html() {             // Чтение из файла.
+        return String.format(
+            Double.parseDouble(
+                new String(Files.readAllBytes(this.path))));
+    }
+    void update(double v) {     // Запись в файл.
+        Files.write(this.path, Double.toString(v).getBytes());
+    }
+}
+```
+
+Объект класса `GaugeInFile` также **неизменяем**, но т.к. он ссылается на внешний файл, то
+прочитанное значение может отличаться (файл может быть изменен/удален). Плюс мы можем
+переписать содержимое этого файла.
+
+Чтобы сделать возможным многопоточное использование данного класса, автор предлагает
+использовать **thread-safety декоратор** (правда такой декоратор не deadlock-free):
+
+```java
+class SyncGauge implements Gauge {
+    private final Gauge origin;
+    void update(double v) {
+        syncronized (this.origin) {
+            this.origin.update(v);
+        }
+    }
+    String html() {         // При чтении всегда thread-safety.
+        return this.origin.html();
+    }
+}
+```
+
+Использование thread-safety декоратора:
+
+```java
+Gauge = new SyncGauge(new GaugeInFile(path));
+```
+
+### 5.9. Law of Demeter (Закон Деметры)
+
+Известен как "Закон одной точки". Вот например, так якобы делать нельзя:
+
+```java
+class Report {
+    void print(Garage garage) {
+        int price = garage.getCar("BMW").getPrice();
+        System.out.println("price: " + price);
+    }
+}
+```
+
+А вот так якобы делать можно:
+
+```java
+class Report {
+    void print(Garage garage) {
+        int price = garage.getCarPrice("BMW");
+        System.out.println("price: " + price);
+    }
+}
+```
+
+В результате объекты типа `garage` содержат сотни методов с именами около 30 символов.
+
+#### 5.9.1. Суть закона Деметры на самом деле
+
+Суть: закон против доступа ко внутренним аттрибутам объекта. Но ничего не имеет против
+доступа к другим объектам, которые порождаются этим объектом.
+
+**Плохо**. Для получения года используются геттеры, которые только *возвращаются* объектами:
+
+```java
+void print(Garage garage) {
+    int year = garage.getCar().getEngine().getModel().getYear();
+    System.out.println("year: " + year);
+}
+```
+
+**Плохо**. Для получения года используются открытые поля класса:
+
+```java
+void print(Garage garage) {
+    int year = garage.car.engine.model.year;
+    System.out.println("year: " + year);
+}
+```
+
+**Как надо**. Все получаемые значения *создаются* методами-строителями объектов
+(правила именования таких методов см. в главе 2.4.1.):
+
+```java
+void print(Garage garage) {
+    int year = garage.car().engine().model().year();
+    System.out.println("year: " + year);
+}
+```
+
+**Выводы**:
+
+* Мы *не можем* просить машину предоставить нам свой двигатель.
+
+* Но мы *можем* просить машину построить нам новый двигатель.
+
+* Закон Деметры - это *не* "закон одной точки".
+
+* Закон Деметры - это "закон против использования геттеров".
 
 ### 5.10. Algorithms
 
