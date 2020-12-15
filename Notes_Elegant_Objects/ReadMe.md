@@ -2360,13 +2360,156 @@ public class Program {
 
 ### 6.1. Annotations
 
-#### 6.1.1. Marshalling
+Пример аннотации:
+
+```java
+@Important      // Аннотация в Java
+class Book {
+    private final String title;
+    Book(String name) {
+        this.title = name;
+    }
+}
+```
+
+**Недостатки** использования аннотаций:
+
+* Аннотации хуже, чем геттеры и сеттеры
+
+* Объект ничего не знает о манипуляциях, которые происходят "благодаря" использованию аннотации
+
+* Объект не может как-то повлиять на действие аннотации
+
+#### 6.1.1. Marshalling (процесс преобразования объекта в какой-либо формат)
+
+Пример Marshalling с использованием аннотаций:
+
+```java
+@XmlRootElement
+class Car {
+    @XmlElement
+    public String getModel() {
+        return this.model;
+    }
+    @XmlElement
+    public String getMileage() {
+        return this.mileage;
+    }
+}
+
+// Использование - конвертация объекта в документ XML
+final JAXBContext ctx = JABContext.newInstance(Car.class);
+final Marshaller marshaller = ctx.createMarshaller();
+marshaller.marshal(car, System.out);
+```
+
+* Marshaller знает о структуре объекта благодаря аннотациям (аннотации указывают на геттеры,
+где можно получить информацию из объекта)
+
+* Объект не видит этих манипуляций над ним и не может вмешаться
+
+**Решение** (далеко от совершенства, но все же лучше) - добавление "печати" в XML формат:
+
+```java
+class XmlCar {
+    private final Car car;
+    XmlCar(Car origin) {
+        this.car = origin;
+    }
+    String toXML() {    // Данные "вытигиваются" из объекта
+        return "<car><model>" + this.car.getModel() + "</model><mileage>" +
+            this.car.getMileage() + "</mileage></car>";
+    }
+}
+// Для печати в JSON
+class JsonCar {
+    ...
+    String toJSON() { ... }
+}
+
+// Использование (печать в XML)
+car = new XmlCar(new Car());
+xml = car.toXML();
+```
+
+* Лучше реализовать это решение через "printer" (см. главу 5.3)
+
+* Объект должен руководить Marshaller
+
+* Marshaller не должен "вытягивать" данные из объекта
+
+* Объект должен контролировать все, связанное с его данными
 
 #### 6.1.2. Dependency injection
 
-#### 6.1.3. Access control
+Пример DI:
+
+```java
+class CarRental {
+    @Inject
+    private Payments payments;
+    @Inject
+    private Garage garage;
+}
+
+// Использование DI контейнера для создания объекта:
+rental = container.build(CarRental.class);
+```
+
+**Недостатки**:
+
+* Данные в объект должны попадать только через конструктор
+
+* Аннотации поощряют такой вид DI
+
+* (*Притянуто за уши*) Не видно рождения объекта, все создается при помози контейнера
+
+**Решение**:
+
+Вручную создавать все объекты при помощи оператора `new`.
+
+#### 6.1.3. Access control (контроль доступа)
+
+```java
+class Car {
+    @Roles("admin")
+    public String getPrice() { ... }
+}
+
+// Использование
+car = service.make(Car.class, "Mercedes-Benz SL63");
+```
+
+Здесь `service` - объект, который понимает аннотацию `@Roles` и ограничивает доступ к методу
+`getPrice()`.
+
+Почему такой подход **ошибочен**:
+
+* Участвует singleton (*? - наверное имеется в виду service*)
+
+* Объект ничего не знает об ограничении доступа
+
+* Для того, чтобы инициализировать объект, мы обращаемя к сервисному слою
+
+* Аннотации статичны, их нельзя менять во время выполнения программы
+
+**Решение** - использование *security decorator*:
+
+```java
+car = new SecureCar(
+    new Car("Mercedes-Benz SL63"),
+    "admin"
+);
+```
 
 #### 6.1.4. AOP and aspects
+
+Несколько сумбурная глава лично для меня. Приводится примеры использования `AspectJ` framework.
+
+Написано, что AOP "decomposes responsibility vertically".
+
+Потом приводятся примеры, каким был бы `Java`, если бы в нем использовались некоторые дополнительные
+конструкции, которые являлись бы функциональной заменой AOP.
 
 ### 6.2. MVC
 
