@@ -2513,19 +2513,258 @@ car = new SecureCar(
 
 ### 6.2. MVC
 
+MVC - это скорее не паттерн проектирования, а сочетание трех шагов:
+
+1. получить данные
+2. преобразовать данные
+3. отобразить данные
+
+Эти три шага должны быть четко отделены друг от друга для улучшения поддерживаемости кода.
+
+**Недостатки** традиционной реализации MVC:
+
+* Horizontal decomposition of responsibility
+
+* Последовательное (процедурное) выполнение шагов
+
+* Контроллер пересылает данные между Model и View
+
+* Появление открытых данных
+
+Пример. Стандартный метод стандартного контроллера MVC (взято из какой-то книги):
+
+```java
+class AlbumController {
+    public void doGet(HttpServletRequest request, ...) {
+        Album album = Album.find(request.getParameter("id"));
+        if (album == null) {
+            forward("/missingAlbumError.jsp", request, response);
+            return;
+        }
+        request.setAttrbute("helper", album);
+        if (album instanceof ClassicalAlbum)
+            forward("/classicalAlbum.jsp", request, response);
+        else
+            forward("/album.jsp", request, response);
+    }
+}
+```
+
+Данные здесь открыты, мы легко можем сделать так и компилятор ничего нам не скажет:
+
+```java
+Integer id = request.getParameter("id");
+id += 100;      // id открыт и пересылается между объектами
+Album album = Album.find(id);
+```
+
+Плюс, при добавлении функциональности код будет увеличиваться в размерах. Например, добавили
+проверку на `id == null` и проверку на то, что значение закешировано:
+
+```java
+Integer id = request.getParameter("id");
+if (id == null) {
+    throw new Exception("ID is required");
+}
+Album album;
+if (cache.contains(id)) {
+    album = cache.get(id);
+} else {
+    album = Album.find(id);
+}
+```
+
+**Лучше** сделать так (вертикальное разделение ответственности):
+
+```java
+Album album = new CachedAlbum(
+    new AlbumOfRequest(
+        new NotNullRequest(
+            request
+        )
+    )
+);
+```
+
+* `request` знает об `id`
+
+* `NotNullRequest` знает как проверять его на `null`
+
+* `AlbumOfRequest` знает как конвертировать `request` в `album`
+
+Еще пример типичного MVC:
+
+```java
+class Controller {                                  // Проблема 2
+    public String index() {
+        String title = new Model().getTitle();      // Проблема 1 и 3
+        View view = new View();                     // Проблема 4
+        view.setTitle(title);
+        return view.renderHTML();
+    }
+}
+```
+
+Список проблем в этом коде:
+
+1. Данные `title` открыты.
+
+2. `Controller` больше походит на utility класс (см. главу 3.2.3) - `Controller` и метод
+`index()` не используют локальные поля класса.
+
+3. Model является DTO (см. главу 6.5), что является антипаттерном.
+
+4. View является изменяемым через использование сеттеров (см. главу 3.5), что также
+является антипаттерном.
+
+**Решение:**
+
+```java
+new View(new Model()).html();
+```
+
+* Данные из Model передаются во View через printers (см. главу 5.3). Model "печатает" себя
+в некоторую "media", предоставляемую View.
+
+* В *крайнем* случае вместо printers в Model можно использовать геттер, который будет напрямую
+передаваться между Model и View.
+
+* Автор в web-приложениях в качестве media использует XML, в качестве rendering инструмента XSL.
+
+**Вывод:**
+
+1. MVC - процедурный паттерн, который не подходит для ООП.
+
+2. Альтернатива - композиция объектов.
+
 ### 6.3. Dependency injection containers
+
+О DI упоминалось в главе 3.6.
+
+Наилучший вариант DI - через конструкторы объекта.
+
+Пример использования DI контейнера:
+
+```java
+page = container.lookup('Page');
+```
+
+**Недостатки использования контейнера**:
+
+* container - синглтон (*прим.: необязательно синглтон*).
+
+* Все объекты должны знать, где находится контейнер, чтобы создавать объекты (*прим.: необязательно*).
+
+* Контейнер связывает приложение целиком, все объекты зависят от него (*прим.: необязательно*).
+
+* Контейнер лишает "удовольствия" ручного создания объекта (см. главу 6.1.2) (*прим.: спорно*).
+
+* Контейнер скрывает структуру программы от программиста.
+
+**Решение:** не пользоваться контейнерами DI, а вручную компоновать объекты.
+На вершине программы виден только верхний класс `Application` с единственным методом `run()`,
+который содержит в себе более мелкие классы. Пример:
+
+```java
+Applicatiob app = new Application(      // Псевдо-приложение заказа пиццы
+    new WebFront(
+        new Orders(
+            new Payments(
+                new PayPal("secret-key"),
+                new WellsFargo("login")
+            )
+        )
+    ),
+    new Kitchen(
+        new Queue(),
+        new Ovens(
+            new Oven("big"),
+            new Oven("small")
+        )
+    )
+);
+app.run();
+```
 
 ### 6.4. Reflection
 
-#### 6.4.1. Type introspection
+Рефлексия - способность программы изучать, анализировать и модифицировать свою структуру и поведение
+во время выполнения.
 
-#### 6.4.2. Type casting
+Любая рефлексия - это **очень плохо**.
+
+#### 6.4.1 - 6.4.2. Type introspection (интроспекция типов, instanceof). Type casting
+
+Пример type introspection:
+
+```java
+void print(Manuscript script) {
+    if (script instanceof Book) {
+        System.out.println(script.contents());      // Печать оглавления
+    }
+    // Печать остального текста.
+}
+```
+
+Недостатки:
+
+* Сложность добавления пожжержки новых классов.
+
+* Объекты должны быть ответственны за свое поведение, сторонний класс не должен за них решать,
+что им делать.
+
+* Объекты должны выполнять свой контракт (интерфейс) - выполнять ожидаемую от них работу.
+
+Пример type casting:
+
+```java
+void print(Manuscript script) {
+    System.out.println(
+        Book.class.cast(script).contents()      // Печать оглавления
+    );
+    // Печать остального текста.
+}
+```
+
+Недостатки:
+
+* Такой кастинг без проверки типа может привести к exception.
+
+* Все недостатки из предыдущего случая.
+
+**Решение** использование полиморфизма:
+
+```java
+interface Manuscript {
+    void print();
+}
+class Book implements Manuscript {
+    @Override
+    public void print() {
+        // Печать оглавления
+        // Печать остального текста.
+    }
+}
+class Article implements Manuscript {
+        @Override
+    public void print() {
+        // Печать остального текста.
+    }
+}
+```
 
 #### 6.4.3. Annotations
 
-#### 6.4.4. Instatiating by class name
+Аннотации не должны использоваться (см. главу 6.1). Использовать рефлексию для манипуляции
+с аннотациями также запрещено.
 
-#### 6.4.5. Method invocation by name
+#### 6.4.4 - 6.4.5 . Instatiating by class name. Method invocation by name
+
+Приводится пример чтения названия класса/метода из внешнего источника (XML файла),
+а потом с помощью рефлексии создания объекта или вызов метода.
+
+Это категорически запрещено делать - мы должны точно знать имя класса и метода.
+Эти имена не должны приходить откуда-то из файлов, сети и т.д.
 
 #### 6.4.6. Setting and getting attributes
 
