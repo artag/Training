@@ -1,4 +1,5 @@
 ﻿open System
+open System.IO
 
 let parse (person:string) =
     let parts = person.Split(' ')
@@ -8,3 +9,10 @@ let parse (person:string) =
     playername, game, score
 
 let playername, game, score = parse "Mary Asteroids 2500"
+
+let loadFile filename =
+    let fileInfo = FileInfo filename
+    let lastWriteTime = fileInfo.LastWriteTime
+    filename, lastWriteTime
+
+let file, date = loadFile "E:\file.txt"

@@ -112,10 +112,10 @@ form.Show()
 
 ### Statements and expressions compared
 
-- |Returns something? | Has side-effects?
---|-----------|------------------
-Statements |Never|Always
-Expressions|Always| Rarely
+| -          | Returns something? | Has side-effects?
+|------------|--------------------|------------------
+| Statements | Never              | Always
+| Expressions| Always             | Rarely
 
 C# - statement-based language
 
@@ -193,6 +193,11 @@ let getDistance destination =                   // Function definition
 
 ### Tuples
 
+* Tuples желательно использовать только для работы с элементами до 3-х штук. Если больше, то лучше
+использовать `record`.
+
+* Tuples желательно использовать только локально, в публичных API надо использовать `record`.
+
 ```fsharp
 let parse (person:string) =
     let parts = person.Split(' ')
@@ -206,4 +211,105 @@ let playername, game, score = parse "Mary Asteroids 2500"
 // val playername : string = "Mary"
 // val game : string = "Asteroids"
 // val score : int = 2500
+```
+
+### Nested (grouped) tuples
+
+You can also nest, or group, tuples together:
+
+```fsharp
+// (string * string) * int 
+let nameAndAge = ("Joe", "Bloggs"), 28          // Creating a nested tuple
+let name, age = nameAndAge                      // Deconstructing a tuple
+let (forename, surname), theAge = nameAndAge    // Deconstructing with the nested component
+```
+
+### Wildcards
+
+If there are elements of a tuple that you’re not interested in, you can discard them while
+deconstructing a tuple by assigning those parts to the underscore symbol:
+
+```fsharp
+let nameAndAge = "Jane", "Smith", 25
+let forename, surname, _ = nameAndAge       // Discarding the third element
+```
+
+### Implicit mapping of out parameters to tuples
+
+```fsharp
+var number = "123";
+var result = 0;                                     // (1)
+var parsed = Int32.TryParse(number, out result);    // (2)
+let result, parsed = Int32.TryParse(number);        // (3)
+
+// (1) - Declaring the "out" result variable with a default value
+// (2) - Trying to parse number in C#
+// (3) - Replacing "out" parameters with a tuple in a single call in F#
+```
+
+## Lesson 10
+
+### Creating records
+
+Declaring records on a single line:
+
+```fsharp
+ type Address = { Line1 : string; Line2 : string }
+```
+
+Constructing a nested record in F#:
+
+```fsharp
+// Declaring the Customer record type
+type Customer =
+    { Forename : string
+      Surname : string
+      Age : int
+      Address : Address
+      EmailAddress : string }
+// Creating a Customer with Address inline
+let customer =
+    { Forename = "Joe"
+      Surname = "Bloggs"
+      Age = 30
+      Address =
+        { Street = "The Street"
+          Town = "The Town"
+          City = "The City" }
+          EmailAddress = "joe@bloggs.com" }
+```
+
+### Providing explicit types for constructing records
+
+```fsharp
+// Explicitly declaring the type of the address value
+let address : Address =
+    { Street = "The Street"
+      Town = "The Town"
+      City = "The City" }
+// Explicitly declaring the type that the Street field belongs to
+let addressExplicit =
+    { Address.Street = "The Street"
+      Town = "The Town"
+      City = "The City" }
+```
+
+### Copy-and-update record syntax
+
+```fsharp
+// Creating a new version of a record by using the 'with' keyword
+let updatedCustomer =
+    { customer with
+        Age = 31
+        EmailAddress = "joe@bloggs.co.uk" }
+```
+
+### Equality checking
+
+You can safely compare two F# records of the same type with a single `=` for full, deep
+**structural** equality checking.
+
+```fsharp
+// Comparing two records by using the = operator
+let isSameAddress = (address = addressExplicit)
 ```
