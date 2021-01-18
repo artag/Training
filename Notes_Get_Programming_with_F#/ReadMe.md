@@ -310,6 +310,51 @@ You can safely compare two F# records of the same type with a single `=` for ful
 **structural** equality checking.
 
 ```fsharp
-// Comparing two records by using the = operator
-let isSameAddress = (address = addressExplicit)
+// Все поля address1 структурно равны полям address2
+// Structure comparing two records by using the = operator
+let isSameAddress = (address1 = address2)                               // true
+// Structure comparing
+let isSameAddress = address1.Equals address2                            // true
+// Comparing by reference(!)
+let isSameAddress = System.Object.ReferenceEquals(address1, address2)   // false
+```
+
+### Comparing classes and records
+
+| -                          | .NET classes       | F# records            |
+|----------------------------|--------------------|-----------------------|
+| Default mutability of data | Mutable            | Immutable             |
+| Default equality behavior  | Reference equality | Structural equality   |
+| Copy-and-update syntax?    | No                 | Rich language support |
+| F# type-inference support? | Limited            | Full                  |
+| Guaranteed initialization  | No                 | Yes                   |
+
+## Lesson 11
+
+### Comparing methods and functions
+
+| -           | C# methods                         | F# let -bound functions                  |
+|-------------|------------------------------------|------------------------------------------|
+| Behavior    | Statements or expressions          | Expressions by default                   |
+| Scope       | Instance (object) or static (type) | Static (module level or nested function) |
+| Overloading | Allowed                            | Not supported                            |
+| Currying    | Not supported                      | Native support                           |
+
+### Constraining functions
+
+Explicitly creating wrapper functions in F#:
+
+```fsharp
+open System
+let buildDt year month day = DateTime(year, month, day)
+let buildDtThisYear month day = buildDt DateTime.UtcNow.Year month day
+let buildDtThisMonth day = buildDtThisYear DateTime.UtcNow.Month day
+```
+
+Creating wrapper functions by **currying**:
+
+```fsharp
+let buildDt year month day = DateTime(year, month, day)
+let buildDtThisYear = buildDt DateTime.UtcNow.Year
+let buildDtThisMonth = buildDtThisYear DateTime.UtcNow.Mont
 ```

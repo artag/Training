@@ -9,9 +9,13 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "02_WebPage", "02_WebPage\02
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "03_DriveCode", "03_DriveCode\03_DriveCode.fsproj", "{C09C642F-1385-40FB-AAC0-3AFA3848987D}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "04_Capstone1", "04_Capstone1\04_Capstone1.fsproj", "{48DAC498-28F0-4B01-B73A-245C336FBCC8}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "04_Capstone1", "04_Capstone1\04_Capstone1.fsproj", "{48DAC498-28F0-4B01-B73A-245C336FBCC8}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "05_Tuples", "05_Tuples\05_Tuples.fsproj", "{16974038-78A3-4081-9B5C-A08051B453C0}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "05_Tuples", "05_Tuples\05_Tuples.fsproj", "{16974038-78A3-4081-9B5C-A08051B453C0}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "06_Records", "06_Records\06_Records.fsproj", "{542A4ABF-B061-4288-8ABE-6789E102795A}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "07_DriveCodeImproved", "07_DriveCodeImproved\07_DriveCodeImproved.fsproj", "{08485DE1-FA96-40CC-97CD-0125EF5E30B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +43,14 @@ Global
 		{16974038-78A3-4081-9B5C-A08051B453C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16974038-78A3-4081-9B5C-A08051B453C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16974038-78A3-4081-9B5C-A08051B453C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{542A4ABF-B061-4288-8ABE-6789E102795A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{542A4ABF-B061-4288-8ABE-6789E102795A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{542A4ABF-B061-4288-8ABE-6789E102795A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{542A4ABF-B061-4288-8ABE-6789E102795A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08485DE1-FA96-40CC-97CD-0125EF5E30B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08485DE1-FA96-40CC-97CD-0125EF5E30B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08485DE1-FA96-40CC-97CD-0125EF5E30B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08485DE1-FA96-40CC-97CD-0125EF5E30B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
