@@ -7,7 +7,7 @@ let drive distance petrol  =
      elif distance = "medium" then { petrol with Value = petrol.Value - 10.0 }
      else { petrol with Value = petrol.Value - 1.0 }
 
-let mutable petrol = { Value = 100.0 }
+let petrol = { Value = 100.0 }
 
 [<EntryPoint>]
 let main argv =

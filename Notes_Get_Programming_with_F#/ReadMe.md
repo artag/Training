@@ -351,10 +351,171 @@ let buildDtThisYear month day = buildDt DateTime.UtcNow.Year month day
 let buildDtThisMonth day = buildDtThisYear DateTime.UtcNow.Month day
 ```
 
+* **Первый** аргумент curried функции может использоваться для организации wrapper.
+* Для такого wrapper не требуется указывать остальные аргументы.
+
 Creating wrapper functions by **currying**:
 
 ```fsharp
 let buildDt year month day = DateTime(year, month, day)
-let buildDtThisYear = buildDt DateTime.UtcNow.Year
-let buildDtThisMonth = buildDtThisYear DateTime.UtcNow.Mont
+let buildDtThisYear = buildDt DateTime.UtcNow.Year              // year (used arg)
+let buildDtThisMonth = buildDtThisYear DateTime.UtcNow.Mont     // month (used arg)
 ```
+
+### Pipelines
+
+* **Последний** аргумент curried функции может использоваться для организации pipeline.
+* Используется оператор `|>`
+* Можно использовать C# методы если они имеют только **один** аргумент
+
+Logical flow:
+
+```text
+ ()                        string                   DateTime                  string
+----> getCurrentDirectory -------> getCreationTime ----------> checkCreation ------->
+```
+
+Calling functions arbitrarily:
+
+```fsharp
+let time =
+    let directory = Directory.GetCurrentDirectory()
+    Directory.GetCreationTime directory
+checkCreation time
+```
+
+**Плохо**: you have a set of temporary variables that are used to pass data to the next method in
+the call.
+
+Simplistic chaining of functions:
+
+```fsharp
+checkCreation(
+    Directory.GetCreationTime(
+        Directory.GetCurrentDirectory()))
+```
+
+**Плохо**: read the code is now the opposite of the order of operation.
+
+Chaining three functions together using the **pipeline** operator `|>`:
+
+```fsharp
+Directory.GetCurrentDirectory()     // Returns a string
+|> Directory.GetCreationTime        // Takes in a string, returns a DateTime
+|> checkCreation                    // Takes in a DateTime, prints to the console
+```
+
+### Sample F# pipelines and DSLs (domain-specific languages)
+
+```fsharp
+let answer = 10 |> add 5 |> timesBy 2 |> add 20 |> add 7 |> timesBy 3
+
+loadCustomer 17 |> buildReport |> convertTo Format.PDF |> postToQueue    // An example DSL
+
+let customersWithOverdueOrders =
+    getSqlConnection “DevelopmentDb”
+    |> createDbConnection
+    |> findCustomersWithOrders Status.Outstanding (TimeSpan.FromDays 7.0)
+```
+
+### Composing functions together
+
+* Build a *new* function by plugging a *set* of compatible functions together.
+* Используется оператор `>>`
+* The output of the first function must be the same type as the input of the second function.
+
+```fsharp
+let checkCurrentDirectoryAge =                  // Creating a function by composing
+    Directory.GetCurrentDirectory
+    >> Directory.GetCreationTime
+    >> checkCreation
+let description = checkCurrentDirectoryAge()    // Calling the newly created composed function
+```
+
+## Lesson 12
+
+### Sets of rules for organizing code
+
+* Place related types together in namespaces.
+* Place related stateless functions together in modules.
+
+**Выводы**:
+
+* Use namespaces as in C#, to logically group types and modules.
+
+* Use modules primarily to store functions, and secondly to store types that are tightly related
+to those functions.
+
+### Namespaces and Modules
+
+1)
+* Namespaces can hold **only** types.
+* Namespaces can span multiple files.
+
+2)
+* Modules can hold types and functions.
+* Module can’t span multiple files.
+* Modules can be **private** (*nested module*).
+
+3)
+* Modules are like static classes in C#.
+* Modules are like namespaces but can also store functions.
+
+Example:
+
+```fsharp
+// File domain.fs         (domain.fs must live above dataAccess.fs)
+namespace MyApplication.BusinessLogic
+
+type Customer = { ... }
+type Account = { .. }
+
+// File dataAccess.fs     (References to domain.fs)
+module MyApplication.BusinessLogic.DataAccess
+
+type private DbError = { … }
+let private getDbConnection() = ...
+let saveCustomer = ...
+let loadCustomer = ...
+
+module private Helpers =            // Nested module - visible only in DataAccess module
+    let handleDbError ex = ...
+    let checkDbVersion conn = ...
+```
+
+```fsharp
+// Domain.fs     (выше чем Operation.fs)
+namespace Domain        // Namespace declaration
+// ...
+
+// Operation.fs
+module Operations       // Declaring a module
+open Domain             // Opening the Domain namespace
+// ...
+```
+
+### Tips for working with modules and namespaces
+
+#### Access modifiers
+
+* By default, types and functions are always public in F#.
+
+* If you want to use a function within a module (or a nested module) but don’t want to expose it
+publicly, mark it as **private**.
+
+#### The global namespace
+
+If you don’t supply a *parent* namespace when declaring namespaces or modules, it’ll
+appear in the `global` namespace, which is always open.
+
+#### Automatic opening of modules
+
+Add the `[<AutoOpen>]` attribute on the module.
+
+#### Scripts
+
+You can create `let`-bound functions directly in a script.
+This is possible because an implicit module is created for you based on the name of the script
+(similar to automatic namespacing).
+You can explicitly specify the module in code if you want, but with scripts it’s generally not
+needed.
