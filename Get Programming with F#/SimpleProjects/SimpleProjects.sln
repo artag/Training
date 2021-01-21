@@ -17,9 +17,13 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "06_Records", "06_Records\06
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "07_DriveCodeImproved", "07_DriveCodeImproved\07_DriveCodeImproved.fsproj", "{08485DE1-FA96-40CC-97CD-0125EF5E30B8}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "08_CurriedFunctions", "08_CurriedFunctions\08_CurriedFunctions.fsproj", "{175F64F3-BCC8-4A3A-B3E8-6899A95F732D}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "08_CurriedFunctions", "08_CurriedFunctions\08_CurriedFunctions.fsproj", "{175F64F3-BCC8-4A3A-B3E8-6899A95F732D}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "09_ChainedFunctions", "09_ChainedFunctions\09_ChainedFunctions.fsproj", "{9BC90DAE-C3DB-4E30-B0D3-5C00AF3B87F3}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "09_ChainedFunctions", "09_ChainedFunctions\09_ChainedFunctions.fsproj", "{9BC90DAE-C3DB-4E30-B0D3-5C00AF3B87F3}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "10_HofAsDI", "10_HofAsDI\10_HofAsDI.fsproj", "{C60E649C-8D78-4FC4-8F22-EA7487CBF196}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "11_Capstone2", "11_Capstone2\11_Capstone2.fsproj", "{C63E7F16-2BE9-410E-AFCA-D97CC28D4D2F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +67,14 @@ Global
 		{9BC90DAE-C3DB-4E30-B0D3-5C00AF3B87F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BC90DAE-C3DB-4E30-B0D3-5C00AF3B87F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BC90DAE-C3DB-4E30-B0D3-5C00AF3B87F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C60E649C-8D78-4FC4-8F22-EA7487CBF196}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C60E649C-8D78-4FC4-8F22-EA7487CBF196}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C60E649C-8D78-4FC4-8F22-EA7487CBF196}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C60E649C-8D78-4FC4-8F22-EA7487CBF196}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C63E7F16-2BE9-410E-AFCA-D97CC28D4D2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C63E7F16-2BE9-410E-AFCA-D97CC28D4D2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C63E7F16-2BE9-410E-AFCA-D97CC28D4D2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C63E7F16-2BE9-410E-AFCA-D97CC28D4D2F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
