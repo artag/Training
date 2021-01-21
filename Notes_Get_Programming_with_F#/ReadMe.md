@@ -519,3 +519,31 @@ This is possible because an implicit module is created for you based on the name
 (similar to automatic namespacing).
 You can explicitly specify the module in code if you want, but with scripts it’s generally not
 needed.
+
+## Lesson 13
+
+### Higher-order function (HOF) in F#. Dependency Injection (DI)
+
+* Dependencies in F# tend to be functions; in C#, they’re interfaces.
+
+```fsharp
+type Customer = { Age : int }
+let where filter customers =          // filer acts like a dependency injection
+    seq {
+        for customer in customers do
+            if filter customer then   // Calling the filter function with customer as an argument
+                yield customer }
+
+let customers = [ { Age = 21 }; { Age = 35 }; { Age = 36 } ]
+let isOver35 customer = customer.Age > 35    // filter
+
+// Supplying the isOver35 function into the where function
+customers |> where isOver35
+// Passing a function inline using lambda syntax
+customers |> where (fun customer -> customer.Age > 35)
+```
+
+* `seq { }` - This is a type of *computation expression*. Generate a sequence of customers by using
+the `yield` keyword.
+
+* `[ ; ; ; ] syntax` - F# list.
