@@ -547,3 +547,194 @@ customers |> where (fun customer -> customer.Age > 35)
 the `yield` keyword.
 
 * `[ ; ; ; ] syntax` - F# list.
+
+## Lesson 14
+
+### Accessing .fs files from a script
+
+```fsharp
+#load "Domain.fs"           // Loading .fs files into a script
+#load "Operations.fs"
+#load "Auditing.fs"
+
+open Capstone2.Operations   // Opening namespaces of .fs files
+open Capstone2.Domain
+open Capstone2.Auditing
+open System
+```
+
+## Lesson 15
+
+### Mutable DTO
+
+Example:
+
+```fsharp
+type TeamSummary = { Name : string; mutable AwayWins : int }
+```
+
+### Object Initializer
+7
+Create an instance of `IComparer` without having to first define a concrete type:
+
+```fsharp
+let comparer =
+    { new IComparer<TeamSummary> with
+        member this.Compare(x,y) =
+            if x.AwayWins > y.AwayWins then -1
+            elif x.AwayWins < y.AwayWins then 1
+            else 0 }
+```
+
+### Comparing F# sequences, lists, and arrays
+
+| -                        | Seq       | List        | Array  |
+|--------------------------|-----------|-------------|--------|
+| Eager/lazy               | Lazy      | Eager       | Eager  |
+| Forward-only             | Sometimes | Never       | Never  |
+| Immutable                | Yes       | Yes         | No     |
+| Performance              | Medium    | Medium/High | High   |
+| Pattern matching support | None      | Good        | Medium |
+| Interop with C#          | Good      | Medium      | Good   |
+
+### Sequences
+
+* Alias for the `IEnumerable<T>` type in the BCL
+* Lazily evaluated
+* Don’t cache evaluations (by default)
+* *Arrays* and *Lists* implement `IEnumerable<T>` => you can use functions in the
+Seq module over both of them as well.
+
+```fsharp
+seq { 1; 2; 3 }     // Create sequence
+```
+
+### Arrays
+
+* *Slice* allow you to extract a subset of an array
+* High performance, but ultimately mutable
+
+```fsharp
+let numbersArray = [| 1; 2; 3; 4; 6 |]          // Creating an array by using [| |] syntax
+let firstNumber = numbersArray.[0]              // Accessing an item by index
+let firstThreeNumbers = numbersArray.[0 .. 2]   // Array-slicing syntax
+numbersArray.[0] <- 99                          // Mutating the value of an item in an array
+```
+
+### Lists
+
+* Immutable
+
+```fsharp
+let numbers = [ 1; 2; 3; 4; 5; 6 ]  // Creating a list of six numbers
+let numbersQuick = [ 1 .. 6 ]       // Shorthand form of list creation (works for arrays and sequences)
+let head :: tail = numbers          // Decomposing a list into head (1) and a tail (2 .. 6)
+let moreNumbers = 0 :: numbers      // Creating a new list by placing 0 at the front of numbers
+let evenMoreNumbers = moreNumbers @ [ 7 .. 9 ]    // Append [ 7 .. 9 ] to create a new list
+```
+
+## Lesson 16
+
+### map (Select() in LINQ)
+
+```fsharp
+let numbers = [ 1 .. 10 ]       // Input data
+let timesTwo n = n * 2          // Mapping function
+let outputFunctional = numbers |> List.map timesTwo
+// int list = [2; 4; 6; 8; 10; 12; 14; 16; 18; 20]
+
+let helloGood = 
+    let list = [ "a"; "b"; "c" ]
+    list |> List.map (fun element -> "hello " + element)
+// string list = ["hello a"; "hello b"; "hello c"]
+
+let add1 x = x + 1
+[1..5] |> List.map add1
+// [2; 3; 4; 5; 6]
+```
+
+### map2, map3, mapi, mapi2, indexed
+
+(TIP use the `||>` operator to pipe a tuple as two arguments)
+
+```fsharp
+let intList1 = [ 2; 3; 4 ]
+let intList2 = [ 5; 6; 7 ]
+let intList3 = [ 8; 9; 10 ]
+
+List.map2 (fun i1 i2 -> i1 + i2) intList1 intList2 
+// [7; 9; 11]
+List.map3 (fun i1 i2 i3 -> i1 + i2 + i3 ) intList1 intList2 intList3
+// [15; 18; 21]
+(intList1) |> List.mapi (fun index i1 -> index, i1)         // map with index
+// [(0, 2); (1, 3); (2, 4)]
+(intList1, intList2) ||> List.mapi2 (fun index i1 i2 -> index, i1 + i2) 
+// [(0, 7); (1, 9); (2, 11)]
+['a' .. 'c' ] |> List.indexed           // "indexed" is a shorter version of above
+// [(0, 'a'); (1, 'b'); (2, 'c')]
+intList1 |> List.indexed
+// [(0, 2); (1, 3); (2, 4)]
+```
+
+### Tuples in higher-order functions
+
+F# allows you to "unpack" tuples within lambda expressions directly within a higher-order function:
+
+```fsharp
+type Person = { Name : string; Age : int }
+[ "Isaac", 30; "John", 25; "Sarah", 18; "Faye", 27 ]
+|> List.map(fun (name, age) -> { Name = name; Age = age})
+```
+
+### iter, iter2, iteri, iteri2
+
+```fsharp
+let intList1 = [ 2; 3; 4 ]
+let intList2 = [ 5; 6; 7 ]
+
+intList1 |> List.iter (printf "num = %i; ")
+// num = 2; num = 3; num = 4;
+
+let sirs = [{ Name = "Isaac"; Age = 30 }; { Name = "John"; Age = 25 }; { Name = "Peter"; Age = 18 }]
+let ladies = [{ Name = "Sarah"; Age = 28 }; { Name = "Amy"; Age = 21 }; { Name = "Mary"; Age = 20 }]
+(sirs, ladies) ||> List.iter2 (fun sir lady -> printfn "Pair: %s and %s" sir.Name lady.Name)
+// Pair: Isaac and Sarah
+// Pair: John and Amy
+// Pair: Peter and Mary
+
+intList1 |> List.iteri(printf "(idx = %i num = %i); ")
+// (idx = 0 num = 2); (idx = 1 num = 3); (idx = 2 num = 4);
+
+(intList1, intList2) ||> List.iteri2 (fun idx n1 n2 -> printf "(index = %i sum = %i) " idx (n1 + n2))
+// (index = 0 sum = 7) (index = 1 sum = 9) (index = 2 sum = 11)
+```
+
+### collect
+
+```fsharp
+type Order = { Id : int }
+type Customer = { Id : int; Orders : Order list; Town : string }
+let customers = [
+    { Id = 1; Orders = [{ Id = 1 }; { Id = 2 }]; Town = "Moscow" }
+    { Id = 2; Orders = [{ Id = 39 }]; Town = "Paris" }
+    { Id = 4; Orders = [{ Id = 43 }; { Id = 56 }]; Town = "Rome" }
+]
+let orders = customers |> List.collect(fun c -> c.Orders)
+// [{ Id = 1 }; { Id = 2 }; { Id = 39 }; { Id = 43 }; { Id = 56 }]
+```
+
+### pairwise
+
+```fsharp
+['a'..'e'] |> List.pairwise
+// [('a', 'b'); ('b', 'c'); ('c', 'd'); ('d', 'e')]
+
+[ System.DateTime(2010,5,1)
+  System.DateTime(2010,6,1)
+  System.DateTime(2010,6,12)
+  System.DateTime(2010,7,3) ]           // A list of dates
+|> List.pairwise                        // Pairwise for adjacent dates
+|> List.map(fun (a, b) -> b - a)        // Subtracting the dates from one another as a TimeSpan
+|> List.map(fun time -> time.TotalDays) // Return the total days between the two dates
+// [31.0; 11.0; 21.0]
+```
