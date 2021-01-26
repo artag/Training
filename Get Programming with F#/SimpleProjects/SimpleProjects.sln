@@ -25,7 +25,9 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "10_HofAsDI", "10_HofAsDI\10
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "11_Capstone2", "11_Capstone2\11_Capstone2.fsproj", "{C63E7F16-2BE9-410E-AFCA-D97CC28D4D2F}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "12_CollectionTypes", "12_CollectionTypes\12_CollectionTypes.fsproj", "{FB4F5765-460A-4815-8254-5494421A4169}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "12_CollectionTypes", "12_CollectionTypes\12_CollectionTypes.fsproj", "{FB4F5765-460A-4815-8254-5494421A4169}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "13_TryCollections", "13_TryCollections\13_TryCollections.fsproj", "{1D3B821B-38CC-4208-8238-F751A73EB6C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +83,10 @@ Global
 		{FB4F5765-460A-4815-8254-5494421A4169}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB4F5765-460A-4815-8254-5494421A4169}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB4F5765-460A-4815-8254-5494421A4169}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D3B821B-38CC-4208-8238-F751A73EB6C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D3B821B-38CC-4208-8238-F751A73EB6C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D3B821B-38CC-4208-8238-F751A73EB6C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D3B821B-38CC-4208-8238-F751A73EB6C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -738,3 +738,302 @@ let orders = customers |> List.collect(fun c -> c.Orders)
 |> List.map(fun time -> time.TotalDays) // Return the total days between the two dates
 // [31.0; 11.0; 21.0]
 ```
+
+### groupBy
+
+```fsharp
+let firstLetter (str:string) = str.[0]
+["apple"; "alice"; "bob"; "carrot"] |> List.groupBy firstLetter
+// [('a', ["apple"; "alice"]); ('b', ["bob"]); ('c', ["carrot"])]
+
+type Customer = { Name : string; Town : string }
+let customers = [
+    { Name = "Isaac"; Town = "London" }
+    { Name = "Sara"; Town = "Birmingham" }
+    { Name = "Tim"; Town = "London" }
+    { Name = "Michelle"; Town = "Manchester" } ]
+customers |> List.groupBy (fun person -> person.Town)
+// [("London", [{ Name = "Isaac"; Town = "London" }
+//              { Name = "Tim"; Town = "London" }])
+//  ("Birmingham", [{ Name = "Sara"; Town = "Birmingham" }]);
+//  ("Manchester", [{ Name = "Michelle"; Town = "Manchester" }])]
+```
+
+### countBy
+
+```fsharp
+[ ("a","A"); ("b","B"); ("a","C") ] |> List.countBy fst
+// [("a", 2); ("b", 1)]
+
+[ ("a","A"); ("b","B"); ("a","C") ] |> List.countBy snd
+// [("A", 1); ("B", 1); ("C", 1)]
+
+customers |> List.countBy (fun person -> person.Town)
+// [("London", 2); ("Birmingham", 1); ("Manchester", 1)]
+```
+
+### partition
+
+```fsharp
+let isEven i = (i % 2 = 0)
+[1..10] |> List.partition isEven
+// ([2; 4; 6; 8; 10], [1; 3; 5; 7; 9])
+
+// Decomposing the tupled result into the two lists
+let londonCustomers, otherCustomers =
+    customers |> List.partition(fun c -> c.Town = "London")
+```
+
+### chunkBySize, splitInto, splitAt
+
+```fsharp
+[1..10] |> List.chunkBySize 3
+// [[1; 2; 3]; [4; 5; 6]; [7; 8; 9]; [10]]
+[1] |> List.chunkBySize 3
+// [[1]]
+
+[1..10] |> List.splitInto 3
+// [[1; 2; 3; 4]; [5; 6; 7]; [8; 9; 10]]
+[1] |> List.splitInto 3
+// [[1]]
+
+['a'..'i'] |> List.splitAt 3
+// (['a'; 'b'; 'c'], ['d'; 'e'; 'f'; 'g'; 'h'; 'i'])
+
+['a'; 'b'] |> List.splitAt 3
+// InvalidOperationException: The input sequence has an insufficient number of elements.
+```
+
+### Aggregation functions (sum, average, max, min)
+
+```fsharp
+let numbers = [1.0..10.0]
+let total = numbers |> List.sum         // 55.0
+let average = numbers |> List.average   // 5.5
+let max = numbers |> List.max           // 10.0
+let min = numbers |> List.min           // 1.0
+```
+
+### Miscellaneous functions
+
+| F#       | LINQ        | Comments                                                                                                            |
+|----------|-------------|---------------------------------------------------------------------------------------------------------------------|
+| find     | Single()    | Equivalent to the `Single()` overload that takes a predicate; see also `findIndex`, `findback`, and `findIndexBack` |
+| head     | First()     | Returns the first item in the collection; see also `last`                                                           |
+| item     | ElementAt() | Gets the element at a given index                                                                                   |
+| take     | Take()      | The F# take implementation throws an exception if there are insufficient elements in the collection; use `truncate` for equivalent behavior to LINQ’s `Take()`. See also `takeWhile`, `skip`, and `skipWhile` |
+| exists   | Any()       | See also `exists2`                                                                                                  |
+| forall   | All()       | See also `forall2`                                                                                                  |
+| contains | Contains()  |                                                                                                                     |
+| filter   | Where()     | See also `where`                                                                                                    |
+| length   | Count()     | See also `distinctBy`                                                                                               |
+| distinct | Distinct()  |                                                                                                                     |
+| sortBy   | OrderBy()   | See also `sort`, `sortByDescending`, `sortDescending`, and `sortWith`                                               |
+
+#### find, findIndex, findback, findIndexBack
+
+```fsharp
+let listOfTuples = [ (1,"a"); (2,"b"); (3,"b"); (4,"a"); ]
+listOfTuples |> List.find(fun (x,y) -> y = "b")
+// (2, "b")
+
+listOfTuples |> List.findIndex(fun (x,y) -> y = "b")
+// 1
+
+listOfTuples |> List.findBack(fun (x,y) -> y = "b")
+// (3, "b")
+
+listOfTuples |> List.findIndexBack(fun (x,y) -> y = "b")
+// 2
+```
+
+#### head, last
+
+```fsharp
+[2..10] |> List.head    // 2
+[2..10] |> List.last    // 10
+```
+
+#### item
+
+```fsharp
+[3..12] |> List.item(3)      // 6
+[3..12] |> List.item(10)     // System.ArgumentException
+```
+
+#### take, truncate, takeWhile, skip, skipWhile
+
+```fsharp
+[1..10] |> List.take 3          // [1; 2; 3]
+[1..10] |> List.take 11         // InvalidOperationException
+
+[1..5] |> List.truncate 4       // [1; 2; 3; 4]
+[1..5] |> List.truncate 11      // [1; 2; 3; 4; 5]
+
+[1..10] |> List.takeWhile(fun i -> i < 3)    // [1; 2]
+[1..10] |> List.takeWhile(fun i -> i < 1)    // []
+
+[1..10] |> List.skip 3      // [4; 5; 6; 7; 8; 9; 10]
+[1..10] |> List.skip 11     // ArgumentException
+
+[1..5] |> List.skipWhile (fun i -> i < 2)    // [2; 3; 4; 5]
+[1..5] |> List.skipWhile (fun i -> i < 6)    // []
+```
+
+#### exists, exists2
+
+```fsharp
+[1..10] |> List.exists(fun i -> i > 3 && i < 5)    // true
+[1..10] |> List.exists(fun i -> i > 5 && i < 3)    // false
+
+let ints1 = [2; 3; 4]
+let ints2 = [5; 6; 7]
+(ints1, ints2) ||> List.exists2(fun i1 i2 -> i1 + 10 > i2)     // true
+```
+
+#### forall, forall2
+
+```fsharp
+ints1 |> List.forall(fun i -> i > 5)                        // false
+(ints1, ints2) ||> List.forall2(fun i1 i2 -> i1 < i2)       // true
+```
+
+#### contains
+
+```fsharp
+[1..10] |> List.contains 5      // true
+[1..10] |> List.contains 42     // false
+```
+
+#### filter, where
+
+`where` is a synonym for `filter`
+
+```fsharp
+[1..10] |> List.filter(fun i -> i % 2 = 0)      // [2; 4; 6; 8; 10]
+[1..10] |> List.where(fun i -> i % 2 = 0)       // [2; 4; 6; 8; 10]
+```
+
+#### length, distinctBy
+
+```fsharp
+[1..11] |> List.length      // 11
+
+[(1,"a"); (1,"b"); (1,"c"); (2,"d")] |> List.distinctBy fst    // [(1, "a"); (2, "d")]
+```
+
+#### distinct
+
+
+```fsharp
+[1; 1; 1; 2; 3; 3; 1] |> List.distinct      // [1; 2; 3]
+```
+
+#### rev, sort, sortBy, sortDescending, sortByDescending, sortWith
+
+```fsharp
+[1..5] |> List.rev
+// [5; 4; 3; 2; 1]
+
+[2; 4; 1; 3; 5] |> List.sort
+// [1; 2; 3; 4; 5]
+
+[ ("b","2"); ("a","3"); ("c","1") ] |> List.sortBy fst
+// [("a", "3"); ("b", "2"); ("c", "1")]
+
+[ ("b","2"); ("a","3"); ("c","1") ] |> List.sortBy snd
+// [("c", "1"); ("b", "2"); ("a", "3")]
+
+[2; 4; 1; 3; 5] |> List.sortDescending
+// [5; 4; 3; 2; 1]
+
+[ ("b","2"); ("a","3"); ("c","1") ] |> List.sortByDescending fst
+// [("c", "1"); ("b", "2"); ("a", "3")]
+
+[ ("b","2"); ("a","3"); ("c","1") ] |> List.sortByDescending snd
+// [("a", "3"); ("b", "2"); ("c", "1")]
+```
+
+`sortWith`:
+
+```fsharp
+// example of a comparer
+let tupleComparer tuple1 tuple2  =
+    if tuple1 < tuple2 then 
+        -1 
+    elif tuple1 > tuple2 then 
+        1 
+    else
+        0
+
+[ ("b","2"); ("a","3"); ("c","1") ] |> List.sortWith tupleComparer
+// [("a", "3"); ("b", "2"); ("c", "1")]
+```
+
+### Converting between collections
+
+* Each module has functions to easily convert to and from each collection type.
+
+* There are functions in all three modules that begin with `of` or `to`.
+
+```fsharp
+let numberOne =
+    [ 1 .. 5 ]          // Construct an int list.
+    |> List.toArray     // Convert from an int list to an int array.
+    |> Seq.ofArray      // Convert from an int array to an int sequence.
+    |> Seq.head
+```
+
+## Lesson 17
+
+### Standard mutable dictionary in F#
+
+```fsharp
+open System.Collections.Generic
+
+let inventory = Dictionary<string, float>()     // Creating a dictionary
+inventory.Add("Apples", 0.33)                   // Adding items to the dictionary
+inventory.Add("Oranges", 0.23)
+inventory.Add("Bananas", 0.45)
+inventory.Remove "Oranges"                      // Removing an item from the dictionary
+let bananas = inventory.["Bananas"]             // Retrieving an item
+let oranges = inventory.["Oranges"]             // Doesn’t exist - exception is raised
+```
+
+Generic type inference with Dictionary:
+
+```fsharp
+let inventory = Dictionary<_,_>()    // Explicit placeholders for generic type arguments
+inventory.Add("Apples", 0.33)
+let inventory = Dictionary()         // Omitting generic type arguments completely
+inventory.Add("Apples", 0.33)
+```
+
+### Immutable dictionaries
+
+```fsharp
+// (1) Creating a (string * float) list of your inventory
+// (2) Creating an IDictionary from the list
+let inventory : IDictionary<string, float> =
+    [ "Apples", 0.33; "Oranges", 0.23; "Bananas", 0.45 ]    // (1)
+    |> dict                                                 // (2)
+
+let bananas = inventory.["Bananas"]     // Retrieving an item
+inventory.Add("Pineapples", 0.85)       // System.NotSupportedException thrown
+inventory.Remove("Bananas")             // System.NotSupportedException thrown
+```
+
+We implemented `IDictionary` as immutable.
+Next methods throw exceptions:
+
+* `Add`
+
+* `Clear`
+
+* `Remove`
+
+Quickly creating full dictionaries:
+
+```fsharp
+[ "Apples", 10; "Bananas", 20; "Grapes", 15 ] |> dict |> Dictionary
+```
