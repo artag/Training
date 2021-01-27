@@ -1037,3 +1037,133 @@ Quickly creating full dictionaries:
 ```fsharp
 [ "Apples", 10; "Bananas", 20; "Grapes", 15 ] |> dict |> Dictionary
 ```
+
+### The F# Map
+
+The F# `Map` is an immutable key/value lookup.
+
+* Calling `Add` on a Map that already contains the key won’t throw an exception.
+Instead, it’ll replace the old value with the new one as it creates the new Map
+
+* You can also safely access a key in a Map by using `TryFind`.
+This doesn’t return the value, but a wrapped `option`.
+
+```fsharp
+// (1) Creating a (string * float) list of your inventory
+// (2) Converting the list into a Map for quick lookups
+let inventory =
+    [ "Apples", 0.33; "Oranges", 0.23; "Bananas", 0.45 ]    // (1)
+    |> Map.ofList                                           // (2)
+
+let apples = inventory.["Apples"]           // Retrieving an item
+let pineapples = inventory.["Pineapples"]   // KeyNotFoundException thrown
+
+let newInventory =
+    inventory
+    |> Map.add "Pineapples" 0.87    // Copying the map with a new item added
+    |> Map.remove "Apples"          // Copying the map with an existing item removed
+```
+
+### Useful Map functions
+
+`Map` module has other useful functions that are similar in nature to those in the `List`, `Array`, and `Seq` module. The most popular:
+
+* add
+* remove
+* map
+* filter
+* iter
+* partition
+
+Example:
+
+```fsharp
+// (1) Two maps, partitioned on cost
+// (2) Partition HOF that receives both key (fruit) and value (cost) as arguments.
+let cheapFruit, expensiveFruit =                    // (1)
+    inventory
+    |> Map.partition(fun fruit cost -> cost < 0.3)  // (2)
+```
+
+### Dictionaries, dict, or Map?
+
+My advice is as follows:
+
+* Use `Map` as your *default* lookup type. It’s immutable, and has good support for F#
+tuples and pipelining.
+
+* Use the `dict` function to quickly generate an `IDictionary` that’s needed for
+*interoperability* with other code (for example, BCL code).
+The syntax is lightweight and is easier to create than a full `Dictionary`.
+
+* Use `Dictionary` if you need a *mutable* dictionary, or have a block of code with
+specific *performance* requirements. Generally, the performance of `Map` will be fine,
+but if you’re in a tight loop performing thousands of additions or removals to a
+lookup, a `Dictionary` will perform better. As always, optimize as needed, rather
+than prematurely.
+
+### Sets
+
+`Set` can’t contain duplicates and will automatically remove repeated items in the set.
+
+Creating a set from a sequence:
+
+```fsharp
+// Input data
+let myBasket = [ "Apples"; "Apples"; "Apples"; "Bananas"; "Pineapples" ]
+let fruitsILike = myBasket |> Set.ofList        // Converting to a set
+// val fruitsILike : Set<string> = set ["Apples"; "Bananas"; "Pineapples"]
+```
+
+```fsharp
+let yourBasket = [ "Kiwi"; "Bananas"; "Grapes" ]
+// Combining the two baskets by using @, then distinct
+let allFruitsList = (fruits @ otherFruits) |> List.distinct
+// Creating a second set
+let fruitsYouLike = yourBasket |> Set.ofList
+// "Summing" two Sets together performs a Union operation
+let allFruits = fruitsILike + fruitsYouLike
+```
+
+* `Set.union` <-> operator overloads for addition
+
+* `Set.difference` <-> operator overloads for subtraction
+
+* `Set.difference`
+
+* `Set.intersect`
+
+* `Set.isSubset`
+
+Sample `Set`-based operation:
+
+```fsharp
+// Gets fruits in A that are not in B
+let fruitsJustForMe = allFruits – fruitsYouLike
+// Gets fruits that exist in both A and B
+let fruitsWeCanShare = fruitsILike |> Set.intersect fruitsYouLike
+// Are all fruits in A also in B?
+let doILikeAllYourFruits = fruitsILike |> Set.isSubset fruitsYouLike
+```
+
+## Lesson 18
+
+### Creating your first aggregation function
+
+Any aggregation, or `fold`, generally requires three things:
+
+* The *input collection*
+
+* An *accumulator* to hold the state of the output result as it’s built up
+
+* An *initial (empty) value* for the accumulator to start with
+
+### Imperative implementation of sum
+
+```fsharp
+let sum inputs =    // seq<int> -> int
+    let mutable accumulator = 0                 // Empty accumulator
+    for input in inputs do                      // Go through every item
+        accumulator <- accumulator + input      // Apply aggregation
+    accumulator                                 // Return accumulator
+```
