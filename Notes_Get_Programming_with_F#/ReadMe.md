@@ -1167,3 +1167,160 @@ let sum inputs =    // seq<int> -> int
         accumulator <- accumulator + input      // Apply aggregation
     accumulator                                 // Return accumulator
 ```
+
+### fold
+
+Signature for `Seq.fold`:
+
+```fsharp
+folder:( 'State -> 'T -> 'State) -> state:'State -> source:seq<'T> -> 'State
+```
+
+* `folder` - A function that’s passed into fold that handles the accumulation (summing,
+averaging, or getting the length, for example).
+
+* `state` - The initial start state
+
+* `source` - The input collection
+
+Implement `sum` by using the `fold` function (put the arguments on different lines to
+make clearer):
+
+```fsharp
+// (1) Folder function to sum the accumulator and input let sum inputs
+let sum inputs =
+    Seq.fold
+        (fun state input -> state + input)      // (1)
+        0                                       // Initial state
+        inputs                                  // Input collection
+```
+
+### Making fold more readable
+
+Using `|>` (*pipeline*) and `||>` (*double pipeline*) operators:
+
+```fsharp
+// By default
+Seq.fold (fun state input -> state + input) 0 inputs
+
+// Using pipeline to move "inputs" to the left side
+inputs |> Seq.fold (fun state input -> state + input) 0
+
+// Using the double pipeline to move both the initial state and “inputs” to the left side
+(0, inputs) ||> Seq.fold (fun state input -> state + input)
+```
+
+### Using related fold functions
+
+* `foldBack` - Same as `fold`, but goes backward from the last element in the collection.
+
+* `mapFold` - Combines `map` and `fold`, emitting a sequence of mapped results and a
+final state.
+
+* `reduce` - A simplified version of `fold` , using the first element in the collection
+as the initial state, so you don’t have to explicitly supply one. Perfect for simple folds such as `sum` (although it’ll throw an exception on an empty input-beware!)
+
+* `scan` - Similar to `fold` , but generates the intermediate results as well as the
+final state. Great for calculating running totals.
+
+* `unfold` - Generates a sequence from a single starting state. Similar to the `yield`
+keyword.
+
+### Folding instead of while loops
+
+Accumulating through a `while` loop. Example: counts the number of characters in the
+file:
+
+```fsharp
+open System.IO
+let mutable totalChars = 0                              // Initial state
+let sr = new StreamReader(File.OpenRead "book.txt")     // Opening a stream to a file
+
+while (not sr.EndOfStream) do                               // Stopping condition
+    let line = sr.ReadLine()
+    totalChars <- totalChars + line.ToCharArray().Length    // Accumulation function
+```
+
+We have an unknown "end" to this stream of data, rather than a fixed, up-front
+collection.
+
+**Better**: simulating a collection through sequence expressions:
+
+```fsharp
+open System.IO
+let lines : string seq =
+    seq {                                   // Sequence expression
+        use sr = new StreamReader(File.OpenRead @"book.txt")
+        while (not sr.EndOfStream) do
+            yield sr.ReadLine() }           // Yielding a row from the StreamReader
+
+(0, lines) ||> Seq.fold(fun total line -> total + line.Length)  // A standard fold
+```
+
+* The `seq { }` block is a form of *computation expression*.
+
+* Here, `yield` has the same functionality as in C#. It yields items to *lazily generate*
+a sequence.
+
+* `seq` (to create a sequence block) and `yield` (to yield back values)
+
+### Alias to a specific type. Create and use a list of rules
+
+Alias example:
+
+```fsharp
+type Rule = string -> bool * string
+```
+
+Creating a list of rules:
+
+```fsharp
+type Rule = string -> bool * string
+
+let rules : Rule list =    // List definition
+    [ fun text -> (text.Split ' ').Length = 3, "Must be three words"
+      fun text -> text.Length <= 30, "Max length is 30 characters"
+      fun text -> text
+                  |> Seq.filter Char.IsLetter
+                  |> Seq.forall Char.IsUpper, "All letters must be caps" ]
+```
+
+**Not true way** - composing rules manually:
+
+```fsharp
+let validateManual (rules: Rule list) word =
+    let passed, error = rules.[0] word      // Testing the first rule
+    if not passed then false, error         // Checking whether the rule failed
+        else
+        let passed, error = rules.[1] word  // Repeat for all remaining rules
+        if not passed then false, error
+            else
+            let passed, error = rules.[2] word
+            if not passed then false, error
+            else true, ""
+```
+
+**True way** - composing a list of rules by using `reduce`:
+
+*(похоже на composite pattern в ООП)*
+
+```fsharp
+// Rule seq -> Rule
+// (string -> bool * string) seq -> (string -> bool * string)
+let buildValidator (rules : Rule list) =
+    rules
+    |> List.reduce(fun firstRule secondRule ->
+        fun word ->                                 // Higher-order function
+            let passed, error = firstRule word      // Run first rule
+            if passed then                          // Passed, move on to next rule
+                let passed, error = secondRule word
+                if passed then true, ""
+                else false, error
+            else false, error)                      // Failed, return error
+
+// Использование
+let validate = buildValidator rules
+let word = "HELLO FrOM F#"
+validate word
+// val it : bool * string = (false, "All letters must be caps")
+```
