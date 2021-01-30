@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>_16_RulesUsingReduce</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Rules.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Scratchpad.fsx" />
+  </ItemGroup>
+
+</Project>
