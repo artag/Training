@@ -12,16 +12,31 @@ let deposit amount account =
     { account with Balance = account.Balance + amount }
 
 /// Runs some account operation such as withdraw or deposit with auditing.
-let auditAs operationName audit operation amount account =
-    let print = audit account.Id account.Owner.Name
-    print (sprintf "%O: Performing a %s operation for $%M..." DateTime.UtcNow operationName amount)
+let auditAs operationName (audit : Guid -> string -> Transaction -> unit) operation amount account =
     let updatedAccount = operation amount account
 
     let accountIsUnchanged = (updatedAccount = account)
 
-    if accountIsUnchanged then
-        print (sprintf "%O: Transaction rejected!" DateTime.UtcNow) 
-    else
-        print (sprintf "%O: Transaction accepted! Balance is now $%M." DateTime.UtcNow updatedAccount.Balance)
+    let transaction =
+        let transaction = { Operation = operationName; Amount = amount; Accepted = true; Timestamp = DateTime.Now }
+        if accountIsUnchanged then { transaction with Accepted = false }
+        else transaction
 
+    audit account.Id account.Owner.Name transaction
     updatedAccount
+
+let loadAccount id owner transactions =
+    let sortedTransactions =
+        transactions
+        |> Seq.sortBy(fun t -> t.Timestamp)
+
+    let updateAccount transaction account =
+        if transaction.Operation = "deposit" then
+            deposit transaction.Amount account
+        elif transaction.Operation = "withdraw" then
+            withdraw transaction.Amount account
+        else
+            account
+
+    let account = { Id = id; Owner = owner; Balance = 0M }
+    (account, sortedTransactions)||> Seq.fold(fun acc trans -> updateAccount trans acc)

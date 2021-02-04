@@ -1,6 +1,6 @@
 ﻿module Capstone3.Program
 
-open Operations
+open Commands
 
 open System
 
@@ -10,16 +10,24 @@ let main argv =
         Console.Write "Please enter your name: "
         Console.ReadLine()
 
-    let withdrawWithAudit = auditAs "withdraw" Auditing.printTransaction withdraw
-    let depositWithAudit = auditAs "deposit" Auditing.printTransaction deposit
-
-    let openingAccount = { Owner = { Name = name }; Balance = 0M; Id = Guid.Empty }
+    let accountId, transactions = FileRepository.findTransactionsOnDisk name 
+    let owner = { Name = name }
+    let openingAccount = Operations.loadAccount accountId owner transactions
+    Console.WriteLine $"Current Balance is ${openingAccount.Balance}"
 
     let closingAccount =
-        // Fill in the main loop here...
-        openingAccount
+        let consoleCommands = seq {
+            while true do
+                Console.Write "(d)eposit, (w)ithdraw or e(x)it: "
+                yield Console.ReadKey().KeyChar }
+
+        consoleCommands
+        |> Seq.filter isValidCommand
+        |> Seq.takeWhile (not << isStopCommand)
+        |> Seq.map getAmountConsole
+        |> Seq.fold processCommand openingAccount
 
     Console.Clear()
-    printfn "Closing Balance:\r\n %A" closingAccount
+    printfn "Closing Balance: $%M" closingAccount.Balance
     Console.ReadKey() |> ignore
     0

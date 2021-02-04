@@ -1,9 +1,10 @@
 ﻿module Capstone3.Auditing
 
-open Operations
+open Transactions
 
 /// Logs to the console
-let printTransaction _ accountId message = printfn "Account %O: %s" accountId message
+let printTransaction _ accountId transaction =
+    printfn "Account %O: %s" accountId (serialize transaction)
 
 /// Logs to both console and file system
 let composedLogger = 
