@@ -1441,6 +1441,8 @@ let limit =
 
 ### Pattern-matching
 
+**!** Sequences can’t be pattern matched against; only arrays and lists are supported.
+
 ```fsharp
 // (1) Implicitly matching on a tuple of rating and years
 // (2) If medium score with one-year history, limit is $500
@@ -1481,4 +1483,136 @@ let getCreditLimit customer =
         | 2 -> 1000
         | _ -> 2000
     | _ -> 250                  // Global catchall
+```
+
+### Pattern-matching. Matching against lists example
+
+```fsharp
+// (1) Matching against an empty list
+// (2) Matching against a list of one customer
+// (3) Matching against a list of two customers
+// (4) Matching against all other lists
+let handleCustomer customers =
+    match customers with
+    | [] -> failwith "No customers supplied!"                                   // (1)
+    | [ customer ] -> printfn "Single customer, name is %s" customer.Name       // (2)
+    | [ first; second ] ->
+        printfn "Two customers, balance = %d" (first.Balance + second.Balance)  // (3)
+    | customers -> printfn "Customers supplied: %d" customers.Length            // (4)
+```
+
+### Pattern-matching. Matching records example
+
+```fsharp
+// (1) Match against Balance field
+// (2) Match against Name field
+// (3) Catchall, binding Name to name symbol
+let getStatus customer =
+    match customer with
+    | { Balance = 0 } -> "Customer has empty balance!"              // (1)
+    | { Name = "Isaac" } -> "This is a great customer!"             // (2)
+    | { Name = name; Balance = 50 } -> sprintf "%s has a large balance!" name
+    | { Name = name } -> sprintf "%s is a normal customer" name     // (3)
+```
+
+### Pattern-matching. Combining multiple patterns
+
+Checking the following three conditions *all at the same time*:
+
+1. The list of customers has three elements.
+2. The first customer is called "Tanya".
+3. The second customer has a balance of 25.
+
+```fsharp
+// Pattern matching against a list of three items with specific fields
+match customers with
+| [ { Name = "Tanya" }; { Balance = 25 }; _ ] -> "It's a match!"
+| _ -> "No match!
+```
+
+### When to use `if`/`then` over match
+
+* Use pattern matching **by default**.
+
+* Use `if`/`then` is when you’re working with code that returns `unit`, and you’re
+implicitly missing the default branch:
+
+```fsharp
+// If/then with implicit default else branch
+if customer.Name = "Isaac" then printfn "Hello!"
+```
+
+## Lesson 21
+
+### Composition in F#
+
+Моделируют отношение *имеет* (*has-a*) из ООП.
+
+```fsharp
+// Defining two record types - Computer is dependent on Disk
+type Disk = { SizeGb : int }
+type Computer =
+    { Manufacturer : string
+      Disks: Disk list }
+
+// Creating an instance of a Computer
+let myPc =
+    { Manufacturer = "Computers Inc."
+      Disks =
+        [ { SizeGb = 100 }
+          { SizeGb = 250 }
+          { SizeGb = 500 } ] }
+```
+
+### Units of measure in F#. Example
+
+Specific type of integer: GB and MB, or meters and feet
+
+```fsharp
+type Disk = { Size : int<gb> }
+```
+
+```fsharp
+[<Measure>] type kB
+
+// Single case active pattern to convert from kB to raw Byte value
+let (|Bytes|) (x : int<kB>) = int(x * 1024)
+
+// Use pattern matching in the declaration
+// val printBytes : int<kB> -> unit
+let printBytes (Bytes(b)) = 
+    printfn "It's %d bytes" b
+
+printBytes 7<kB>
+// "It's 7168 bytes"
+```
+
+### Discriminated unions (DU) in F#
+
+Unions моделируют отношение *является* (*is-a*) из ООП. Похожи на `enum` из C#.
+
+```fsharp
+// (1) Base type
+// (2) Hard Disk subtype, containing two custom fields as metadata
+// (3) SolidState - no custom fields
+// (4) MMC - single custom field as metadata
+type Disk =                             // (1)
+| HardDisk of RPM:int * Platters:int    // (2)
+| SolidState                            // (3)
+| MMC of NumberOfPins:int               // (4)
+```
+
+#### Creating discriminated unions in F#:
+
+```fsharp
+let myHardDisk = HardDisk(RPM = 250, Platters = 7)  // Explicitly named arguments
+let myHardDiskShort = HardDisk(250, 7)              // Lightweight syntax
+let myMMC = MMC 5
+
+// Passing all values as a single argument, can omit brackets
+let args = 250, 7
+let myHardDiskTupled = HardDisk args
+
+// Creating a DU case without metadata 
+let mySsd = SolidState
 ```
