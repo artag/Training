@@ -1501,6 +1501,20 @@ let handleCustomer customers =
     | customers -> printfn "Customers supplied: %d" customers.Length            // (4)
 ```
 
+Another example:
+
+```fsharp
+// Is a specific length
+// Is empty
+// Has the first item equal to 5
+let checkList (numbers : int list) =
+    match numbers with
+    | numbers when numbers.Length = 7 -> printfn "List has seven numbers"
+    | [] -> printfn "List is empty"
+    | head::tail when head = 5 -> printfn "The first number is %i" head
+    | _ -> printfn "Not match"
+```
+
 ### Pattern-matching. Matching records example
 
 ```fsharp
@@ -1615,4 +1629,87 @@ let myHardDiskTupled = HardDisk args
 
 // Creating a DU case without metadata 
 let mySsd = SolidState
+```
+
+### Writing functions for a discriminated union
+
+```fsharp
+// (1) Matches on any type of hard disk
+// (2) Matches on any type of MMC
+let seek disk =
+    match disk with
+    | HardDisk _ -> "Seeking loudly at a reasonable speed!" // (1)
+    | MMC _ -> "Seeking quietly but slowly"                 // (2)
+    | SolidState -> "Already found it!"
+
+let mySsd = SolidState
+seek mySsd              // Returns “Already found it!”
+```
+
+Pattern matching on values:
+
+```fsharp
+// (1) Matching a hard disk with 5400 RPM and 5 spindles
+// (2) Matching on a hard disk with 7 spindles and binding RPM for usage on the RHS of the case
+// (3) Matching an MMC disk with 3 pins
+let seek disk =
+    match disk with
+    | HardDisk(5400, 5) -> "Seeking very slowly!"                       // (1)
+    | HardDisk(rpm, 7) -> sprintf "I have 7 spindles and RPM %d!" rpm   // (2)
+    | MMC 3 -> "Seeking. I have 3 pins!"                                // (3)
+```
+
+### Nested discriminated unions
+
+```fsharp
+// Nested DU with associated cases
+type MMCDisk =
+| RsMmc
+| MmcPlus
+| SecureMMC
+
+// Adding the nested DU to your parent case in the Disk DU
+type Disk =
+// ... было ранее
+| MMC of MMCDisk * NumberOfPins:int
+
+// Matching on both top-level and nested DUs simultaneously
+match disk with
+// ... было ранее
+| MMC(MmcPlus, 3) -> "Seeking quietly but slowly"
+| MMC(SecureMMC, 6) -> "Seeking quietly with 6 pins."
+```
+
+### Shared fields in DUs (combination of records and discriminated unions)
+
+```fsharp
+// Composite record, starting with common fields
+type DiskInfo = {
+    Manufacturer : string   // Common field
+    SizeGb : int            // Common field
+    DiskData : Disk         // DU
+}
+
+// Computer record - contains manufacturer and a list of disks
+type Computer = { Manufacturer : string; Disks : DiskInfo list }
+
+// Creating a list of disks using [ ] syntax
+// Common fields and varying DU as a Hard Disk
+let myPc =
+    { Manufacturer = "Computers Inc."
+      Disks =
+        [ { Manufacturer = "HardDisks Inc."
+            SizeGb = 100
+            DiskData = HardDisk(5400, 7) }
+          { Manufacturer = "SuperDisks Corp."
+            SizeGb = 250
+            DiskData = SolidState } ] }
+```
+
+### Printing out DUs
+
+Print out the contents of a DU in a human-readable form
+
+```fsharp
+sprintf "%A"
 ```
