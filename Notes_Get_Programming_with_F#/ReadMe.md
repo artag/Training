@@ -1713,3 +1713,74 @@ Print out the contents of a DU in a human-readable form
 ```fsharp
 sprintf "%A"
 ```
+
+###  Comparing OO hierarchies and discriminated unions
+
+| -                         | Inheritanc           | Discriminated unions                     |
+|---------------------------|----------------------|------------------------------------------|
+| Usage                     | Heavyweight          | Lightweight                              |
+| Complexity                | Hard to reason about | Easy to reason about                     |
+| Extensibility             | Open set of types    | Closed set, compile-time, fixed location |
+| Useful for plugin models? | Yes                  | No                                       |
+| Add new subtypes          | Easy                 | Update all DU-related functions          |
+| Add new methods           | Breaking change      | Easy                                     |
+
+* **Not use** discriminated union for:
+
+  * Plugin models (DU fixed at compile time)
+  * Unstable (or rapidly changing) extremely large hierarchies (cases)
+
+* **Use** discriminated union for:
+
+  * Fixed (or slowly changing) set of cases
+
+### Creating an enum in F#
+
+```fsharp
+type Printer =      // Enum type
+| Injket = 0        // Enum case with explicit ordinal value
+| Laserjet = 1
+| DotMatrix = 2
+```
+
+## Lesson 22
+
+### Mandatory and optional values in C#
+
+| Data type |  Example           | Support for "mandatory" | Support for "optional" |
+|-----------|--------------------|-------------------------|------------------------|
+| Classes   | String, WebClient  | No                      | Yes                    |
+| Structs   | Int, Float         | Yes                     | Partial                |
+
+### The option type
+
+`Option<T>` is a simple two-case discriminated union: `Some (value)` or `None`
+
+Sample code to calculate a premium:
+
+```fsharp
+let aNumber : int = 10
+let maybeANumber : int option = Some 10  // Creating an optional number
+let calculateAnnualPremiumUsd score =
+    match score with
+    | Some 0 -> 250                      // Handling a safety score of (Some 0)
+    | Some score when score < 0 -> 400
+    | Some score when score > 0 -> 150
+    | None ->                            // Handling the case when no safety score is found
+        printfn "No score supplied! Using temporary premium."
+        300
+
+// Calculating a premium with a wrapped score of (Some 250) and then None
+calculateAnnualPremiumUsd (Some 250)
+calculateAnnualPremiumUsd None
+```
+
+### `Option` properties
+
+* `IsSome` - Better to use matching or helper functions
+
+* `IsNone` - Better to use matching or helper functions
+
+* `Value` - value of the object without even checking whether it exists. **Don’t ever use this!**
+Instead, use pattern matching to force you to deal with both `Some` and `None` cases in your
+code up front
