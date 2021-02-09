@@ -1784,3 +1784,99 @@ calculateAnnualPremiumUsd None
 * `Value` - value of the object without even checking whether it exists. **Don’t ever use this!**
 Instead, use pattern matching to force you to deal with both `Some` and `None` cases in your
 code up front
+
+### Option.map (Mapping)
+
+`Option.map` - higher-order function that takes in an optional value and a mapping function
+to act on it, but calls mapping only if the value is `Some`.
+
+If the value is `None`, it does nothing.
+
+```fsharp
+type Customer = { Id : int; Name : string; Score : int option }
+
+// Function "describe" not designed to work with optional scores
+// int -> string
+let describe score =
+    match score with
+    | 0 -> "Standard Risk"
+    | score when score < 0 -> "Safe"
+    | score when score > 0 -> "Hard Risk"
+
+// Customer -> string option
+let descriptionOne customer =
+    match customer.Score with
+    | Some score -> Some(describe score)
+    | None -> None
+
+// Customer -> string option
+let descriptionTwo customer =
+    customer.Score
+    |> Option.map(fun score -> describe score)
+
+// Customer -> string option
+let descriptionThree customer =
+    customer.Score |> Option.map describe
+
+// int option -> string option
+let optionalDescribe = Option.map describe
+```
+
+Another small example:
+
+```fsharp
+Some 99 |> Option.map(fun v -> v * 2)       // Some 198
+None |> Option.map(fun v -> v * 2)          // None
+```
+
+### Option.iter
+
+```fsharp
+None |> Option.iter(fun n -> printfn "Num = %i" n)      // Нет печати
+Some 0 |> Option.iter(fun n -> printfn "Num = %i" n)    // Num = 0
+Some 1 |> Option.iter(fun n -> printfn "Num = %i" n)    // Num = 1
+```
+
+### Option.bind (Binding)
+
+`Option.bind` is more or less the equivalent of `List.collect` (or `SelectMany` in LINQ).
+
+It can flatten an `Option<Option<string>>` to `Option<string>`,
+just as `collect` can flatten a `List<List<string>>` to `List<string>`.
+
+```fsharp
+// int -> Customer option
+let tryFindCustomer cId =
+    if cId = 10 then Some drivers.[0]
+    else None
+
+// Two functions that each return an optional value
+// Customer -> int option
+let getScore customer = customer.Score
+
+// Binding both functions together
+// int -> int option
+let score = tryFindCustomer 10 |> Option.bind getScore
+```
+
+### Option.filter (Filtering)
+
+`Option.filter` - run a predicate over an optional value.
+If the value is `Some`, run the predicate. If it passes, keep the
+optional value; otherwise, return `None`.
+
+```fsharp
+let test1 = Some 5 |> Option.filter(fun x -> x > 5)     // None
+let test2 = None |> Option.filter(fun x -> x = 5)       // None
+let test3 = Some 5 |> Option.filter(fun x -> x = 5)     // Some 5
+```
+
+### Other Option functions
+
+| Function        | Description                                                     |
+|-----------------|-----------------------------------------------------------------|
+| `Option.count`  | If optional value is `None` , returns 0; otherwise, returns 1.  |
+| `Option.exists` | Runs a predicate over an optional value and returns the result. |
+|                 | If `None`, returns `false`                                      |
+
+and the others in the `Option` module...
