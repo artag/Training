@@ -113,3 +113,15 @@ let test3 = Some 5 |> Option.filter(fun x -> x = 5)     // Some 5
 None |> Option.iter(fun n -> printfn "Num = %i" n)      // Нет печати
 Some 0 |> Option.iter(fun n -> printfn "Num = %i" n)    // Num = 0
 Some 1 |> Option.iter(fun n -> printfn "Num = %i" n)    // Num = 1
+
+// Let’s imagine you have a database of customers with associated IDs, and a list of cus-
+// tomer IDs. You want to load the names of those customers from the database, but you’re
+// not sure whether all of your customer IDs are valid. How can you easily get back only
+// those customers that exist?
+let tryLoadCustomer id =
+    match id with
+    | id when 2 < id && id < 7 -> Some (sprintf "Customer %i" id)
+    | _ -> None
+
+[ 1..10 ]
+|> List.choose(fun id -> tryLoadCustomer id)

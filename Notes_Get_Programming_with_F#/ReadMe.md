@@ -1785,7 +1785,7 @@ calculateAnnualPremiumUsd None
 Instead, use pattern matching to force you to deal with both `Some` and `None` cases in your
 code up front
 
-### Option.map (Mapping)
+### `Option.map` (Mapping)
 
 `Option.map` - higher-order function that takes in an optional value and a mapping function
 to act on it, but calls mapping only if the value is `Some`.
@@ -1829,7 +1829,7 @@ Some 99 |> Option.map(fun v -> v * 2)       // Some 198
 None |> Option.map(fun v -> v * 2)          // None
 ```
 
-### Option.iter
+### `Option.iter`
 
 ```fsharp
 None |> Option.iter(fun n -> printfn "Num = %i" n)      // Нет печати
@@ -1837,7 +1837,7 @@ Some 0 |> Option.iter(fun n -> printfn "Num = %i" n)    // Num = 0
 Some 1 |> Option.iter(fun n -> printfn "Num = %i" n)    // Num = 1
 ```
 
-### Option.bind (Binding)
+### `Option.bind` (Binding)
 
 `Option.bind` is more or less the equivalent of `List.collect` (or `SelectMany` in LINQ).
 
@@ -1859,7 +1859,7 @@ let getScore customer = customer.Score
 let score = tryFindCustomer 10 |> Option.bind getScore
 ```
 
-### Option.filter (Filtering)
+### `Option.filter` (Filtering)
 
 `Option.filter` - run a predicate over an optional value.
 If the value is `Some`, run the predicate. If it passes, keep the
@@ -1873,10 +1873,152 @@ let test3 = Some 5 |> Option.filter(fun x -> x = 5)     // Some 5
 
 ### Other Option functions
 
-| Function        | Description                                                     |
-|-----------------|-----------------------------------------------------------------|
-| `Option.count`  | If optional value is `None` , returns 0; otherwise, returns 1.  |
-| `Option.exists` | Runs a predicate over an optional value and returns the result. |
-|                 | If `None`, returns `false`                                      |
+| Function        | Description                                                                                |
+|-----------------|--------------------------------------------------------------------------------------------|
+| `Option.count`  | If optional value is `None` , returns 0; otherwise, returns 1.                             |
+| `Option.exists` | Runs a predicate over an optional value and returns the result. If `None`, returns `false` |
 
 and the others in the `Option` module...
+
+### `Option.toList`, `Option.toArray`
+
+Takes in an optional value, and if it’s `Some` value, returns a list/array with that single
+value in it. Otherwise, it returns an empty list/array.
+
+### `List.choose`
+
+You can think of it as a specialized combination of `map` and `filter` in one.
+It allows you to apply a function that might return a value, and then automatically
+strip out any of the items that returned `None`.
+
+```fsharp
+// int -> string option
+let tryLoadCustomer id =
+    match id with
+    | id when 2 < id && id < 7 -> Some (sprintf "Customer %i" id)
+    | _ -> None
+
+[ 1..10 ] |> List.choose(fun id -> tryLoadCustomer id)
+// ["Customer 3"; "Customer 4"; "Customer 5"; "Customer 6"]
+```
+
+### "Try" functions
+
+В коллекциях встречаются функции, которые начинаются с try:
+
+* `tryFind`
+* `tryHead`
+* `tryItem`
+
+По функционалу они примерно эквивалентны `OrDefault` из LINQ. Отличие в том, что вместо `null`
+они возвращают `Option`: `Some` если что-то было найдено и `None` если нет.
+
+## Lesson 23
+
+### Single-case discriminated unions (DU)
+
+```fsharp
+// Creating a single-case DU to store a string Address
+type Address = Address of string
+
+// Creating an instance of a wrapped Address
+let myAddress = Address "1 The Street"
+
+// Comparing a wrapped Address and a raw string won’t compile
+let isTheSameAddress = (myAddress = "1 The Street")
+
+// Unwrapping an Address into its raw string as addressData
+let (Address addressData) = myAddress
+```
+
+### Combining single-case discriminated unions
+
+```fsharp
+// Only one of the contact details should be allowed at any point in time.
+type ContactDetails =
+| Address of string
+| Telephone of string
+| Email of string
+
+let customer = createCustomer (CustomerId "Nicki") (Email "nicki@myemail.com")
+```
+
+### Using optional values within a domain
+
+Adding an option field for optional secondary contact details:
+
+```fsharp
+type Customer =
+    { CustomerId : CustomerId
+      PrimaryContactDetails : ContactDetails
+      SecondaryContactDetails : ContactDetails option }
+```
+
+### Creating custom types to represent business states
+
+```fsharp
+// Single-case DU to wrap around Customer
+type GenuineCustomer = GenuineCustomer of Customer
+
+let validateCustomer customer =
+    match customer.PrimaryContactDetails with
+    | Email e when e.EndsWith "SuperCorp.com" -> Some(GenuineCustomer customer)
+    | Address _ | Telephone _ -> Some(GenuineCustomer customer)
+    | Email _ -> None
+
+// The sendWelcomeEmail accepts only a GenuineCustomer as input
+let sendWelcomeEmail (GenuineCustomer customer) =
+    printfn "Hello, %A, and welcome to our site!" customer.CustomerId
+
+// Usage
+unknownCustomer                             // Customer
+|> validate                                 // Customer -> GenuineCustomer option
+|> Option.map(fun c -> sendWelcomeEmail c)  // unit option
+```
+
+### When and when not to use marker types
+
+You can use them for all sorts of things (examples):
+
+* email (verified, unverified)
+* order (unpaid, paid, dispatched, or fulfilled)
+* data (checked, unchecked)
+
+But be careful not to take it too far, as it can become difficult to wade through a sea of
+types if overdone.
+
+### Using `Result` (instead of using exceptions)
+
+F# 4.1 contains a `Result` type built into the standard library.
+
+Creating a result type to encode success or failure:
+
+```fsharp
+// Defining a simple Result discriminated union
+type Result<'a> =
+| Success of 'a
+| Failure of string
+```
+
+```fsharp
+// Type signature of a function that might fail
+insertCustomer : contactDetails:ContactDetails -> Result<CustomerId>
+
+// Handling both success and failure cases up front
+match insertContact (Email "nicki@myemail.com") with
+| Success customerId -> printfn "Saved with %A" customerId
+| Failure error -> printfn "Unable to save: %s" error
+```
+
+Internally in `insertCustomer`, you’d execute the code in a `try/catch` statement;
+any caught errors would be returned as a failure.
+
+### When to use `Result` and exceptions.
+
+* If an error occurs and is something that you *don't* want to reason
+about (for example, a catastrophic error that leads to an end of the application),
+stick to **exceptions**.
+
+* If it's something that you *do* want to reason about (for example, depending
+on success or failure, you want to do some custom logic and then resume processing
+in the application), a `Result` type is a useful tool to have.
