@@ -2,48 +2,30 @@
 
 open System
 
-type Customer = {
-    Name : string
-}
-
-type Account = {
-    AccountId : Guid
-    Owner : Customer
-    Balance : decimal
-}
-
-type Transaction = {
-    Timestamp : DateTime
-    Operation : string
-    Amount : decimal
-    Accepted : bool
-}
-
 type BankOperation = Deposit | Withdraw
-type Command = AccountCommand of BankOperation | Exit
+type Customer = { Name : string }
+type Account = { AccountId : Guid; Owner : Customer; Balance : decimal }
+type Transaction = { Timestamp : DateTime; Operation : string; Amount : decimal }
+
+/// Represents a bank account that is known to be in credit.
+type CreditAccount = CreditAccount of Account
+/// A bank account which can either be in credit or overdrawn.
+type RatedAccount =
+    | InCredit of CreditAccount
+    | Overdrawn of Account
+    member this.GetField getter =
+        match this with
+        | InCredit (CreditAccount account) -> getter account
+        | Overdrawn account -> getter account
 
 module Transactions =
     /// Serializes a transaction
     let serialize transaction =
-        sprintf "%O***%s***%M***%b" transaction.Timestamp transaction.Operation transaction.Amount transaction.Accepted
-
+        sprintf "%O***%s***%M" transaction.Timestamp transaction.Operation transaction.Amount
+    
     /// Deserializes a transaction
     let deserialize (fileContents:string) =
         let parts = fileContents.Split([|"***"|], StringSplitOptions.None)
         { Timestamp = DateTime.Parse parts.[0]
           Operation = parts.[1]
-          Amount = Decimal.Parse parts.[2]
-          Accepted = Boolean.Parse parts.[3] }
-
-module CommandOperation =
-    let tryGetBankOperation cmd =
-        match cmd with
-        | Exit -> None
-        | AccountCommand op -> Some op
-    
-    let tryParseCommand symbol =
-        match symbol with
-        | 'd' -> Some (AccountCommand Deposit)
-        | 'w' -> Some (AccountCommand Withdraw)
-        | 'x' -> Some Exit
-        | _ -> None
+          Amount = Decimal.Parse parts.[2] }

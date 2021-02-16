@@ -33,12 +33,11 @@ let tryFindTransactionsOnDisk owner =
     match folder with
     | Some _ -> Some(loadTransactions folder.Value)
     | None -> None
-    //owner, Guid.NewGuid(), Seq.empty
 
 /// Logs to the file system
 let writeTransaction accountId owner transaction =
     let path = buildPath(owner, accountId)    
     path |> Directory.CreateDirectory |> ignore
     let filePath = sprintf "%s/%d.txt" path (transaction.Timestamp.ToFileTimeUtc())
-    let line = sprintf "%O***%s***%M***%b" transaction.Timestamp transaction.Operation transaction.Amount transaction.Accepted
+    let line = sprintf "%O***%s***%M" transaction.Timestamp transaction.Operation transaction.Amount
     File.WriteAllText(filePath, line)

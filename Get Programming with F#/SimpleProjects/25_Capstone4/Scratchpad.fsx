@@ -32,7 +32,6 @@ type Account = {
     Balance : decimal
 }
 
-
 type BankOperation = Deposit | Withdraw
 type Command = AccountCommand of BankOperation | Exit
 let tryGetBankOperation cmd =
@@ -80,3 +79,33 @@ let processCommand account (command, amount) =
 |> Seq.choose tryGetBankOperation
 |> Seq.map getAmount
 |> Seq.fold processCommand openingAccount
+
+//type CreditAccount = CreditAccount of Account
+//type RatedAccount =
+//    | InCredit of CreditAccount
+//    | Overdrawn of Account
+
+//let account = { AccountId = Guid.NewGuid(); Owner = { Name = "User" }; Balance = 0M }
+
+//let classifyAccount account =
+//    if account.Balance >= 0M then (InCredit(CreditAccount account))
+//    else Overdrawn account
+
+//let withdraw amount (CreditAccount account) =
+//    { account with Balance = account.Balance - amount }
+//    |> classifyAccount
+
+
+//let deposit amount account =
+//    let account =
+//        match account with
+//        | InCredit(CreditAccount account) -> account
+//        | Overdrawn account -> account
+//    { account with Balance = account.Balance + amount }
+//    |> classifyAccount
+
+//account
+//|> classifyAccount
+//|> deposit 50M
+//|> deposit 100M
+//|> withdraw 50M
