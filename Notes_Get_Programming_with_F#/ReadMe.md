@@ -2022,3 +2022,143 @@ stick to **exceptions**.
 * If it's something that you *do* want to reason about (for example, depending
 on success or failure, you want to do some custom logic and then resume processing
 in the application), a `Result` type is a useful tool to have.
+
+## Lesson 25
+
+### Consuming C# code from F#
+
+```fsharp
+<EntryPoint>]
+let main argv =
+    let tony = CSharpProject.Person "Tony"      // Calling the Person constructor
+    tony.PrintName()                            // Calling the PrintName method
+    0
+```
+
+### F# script commands
+
+| Directive | Description                               | Example usage               |
+|-----------|-------------------------------------------|-----------------------------|
+| #r        | References a DLL for use within a script  | #r @"C:\source\app.dll"     |
+| #I        | Adds a path to the #r search path         | #I @"C:\source\"            |
+| #load     | Loads and executes an F# .fsx or .fs file | #load @"C:\source\code.fsx" |
+
+### Consuming C# assemblies from an F# script
+
+```fsharp
+// Referencing the CSharpProject from an F# script.
+// Relative referenceswork relative to the script location.
+#r @"CSharpProject\bin\debug\CSharpProject.dll"
+
+// Standard F# code to utilize the newly referenced types
+open CSharpProject
+let simon = Person "Simon"
+simon.PrintName()
+```
+
+### Treating constructors as functions
+
+```fsharp
+open CSharpProject
+
+let longhand =
+    [ "Tony"; "Fred"; "Samantha"; "Brad"; "Sophie "]
+    |> List.map(fun name -> Person(name))               // Calling a ctor explicitly
+
+let shorthand =
+    [ "Tony"; "Fred"; "Samantha"; "Brad"; "Sophie "]
+    |> List.map Person                                  // Treating a ctor like a standard function
+```
+
+### Working with interfaces. Creating implementation and instance of the interface. Operator `:>`
+
+```fsharp
+open System.Collections.Generic
+
+type PersonComparer() =                                         // Class definition with default ctor
+    interface IComparer<Person> with                            // Interface header
+        member this.Compare(x, y) = x.Name.CompareTo(y.Name)    // Implementation of interface
+
+// Creating an instance of the interface
+let pComparer = PersonComparer() :> IComparer<Person>
+pComparer.Compare(simon, Person "Fred")
+```
+
+Operator `:>` *explicitly upcast* from your `PersonComparer` type to `IComparer<Person>`
+
+### Using object expressions to create an instance of an interface
+
+Object expressions let you create an instance of an interface without creating an intermediary type.
+
+```fsharp
+let pComparer =                         // The type of pComparer here is `IComparer<Person>`
+    { new IComparer<Person> with                                    // Interface definition
+        member this.Compare(x, y) = x.Name.CompareTo(y.Name) }      // Interface implementation
+```
+
+### Nulls, nullables, and options
+
+There are few handy combinators in the `Option` module:
+
+```fsharp
+Option.ofObj        // C# (object) -> F# (option)
+Option.toObj        // F# (option) -> C# (object)
+Option.ofNullable   // C# (nullable) -> F# (option)
+Option.toNullable   // F# (option)   -> C# (nullable)
+```
+
+```fsharp
+open System
+
+// Creating a selection of null and non-null strings and value types
+let blank:string = null
+let name = "Vera"
+let number = Nullable 10
+
+
+let blankAsOption = blank |> Option.ofObj           // Null maps to None
+let nameAsOption = name |> Option.ofObj             // Non-null maps to Some
+
+let numberAsOption = number |> Option.ofNullable
+// Options can be mapped back to classes or Nullable types
+let unsafeName = Some "Fred" |> Option.toObj
+```
+
+## Lesson 26
+
+В проектах F# работа с NuGet такая же как и в проектах C#.
+
+### Working with NuGet with F# scripts
+
+1. Add the NuGet package to the project.
+
+2. In Solution Explorer get properties of the NuGet DLL, copy the entire path into the clipboard.
+
+3. Code in script:
+
+```fsharp
+#r @"<path to Humanizer.dll>"   // Referencing an assembly by using #r
+open Humanizer
+"ScriptsAreAGreatWayToExplorePackages".Humanize()
+```
+
+### Loading source files in scripts
+
+```fsharp
+// Referencing the Newtonsoft.Json assembly
+#r @"<path to Newtonsoft.Json.dll>"
+// Loading the Sample.fs source file into the REPL
+#load "Library1.fs"
+// Executing code from the Sample module
+Library1.getPerson()
+```
+
+### Loading a source file into a script with a NuGet dependency
+
+```fsharp
+// Add the “..\packages\” folder to the search list by using a relative path.
+#I @"..\packages\"
+// Simplified NuGet package reference
+#r @"Humanizer.Core.2.1.0\lib\netstandard1.0\Humanizer.dll"
+#r @"Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll"
+```
