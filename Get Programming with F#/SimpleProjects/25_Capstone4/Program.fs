@@ -6,7 +6,7 @@ open Capstone4.Operations
 
 let withdrawWithAudit = auditAs "withdraw" Auditing.composedLogger withdraw
 let depositWithAudit = auditAs "deposit" Auditing.composedLogger deposit
-let loadAccountFromDisk = FileRepository.findTransactionsOnDisk >> Operations.loadAccount
+let tryLoadAccountFromDisk = FileRepository.tryFindTransactionsOnDisk >> Operations.loadAccountOptional
 
 [<AutoOpen>]
 module UserInput =
@@ -16,16 +16,32 @@ module UserInput =
             yield Console.ReadKey().KeyChar
             Console.WriteLine() }
 
-    let getAmount command =
+    //let getAmount command =
+    //    Console.WriteLine()
+    //    Console.Write "Enter Amount: "
+    //    command, Console.ReadLine() |> Decimal.Parse
+
+    let tryGetAmount command =
         Console.WriteLine()
         Console.Write "Enter Amount: "
-        command, Console.ReadLine() |> Decimal.Parse
+        let amount = Console.ReadLine() |> Decimal.TryParse
+        match amount with
+        | true, amount -> Some(command, amount)
+        | false, _ -> None
 
 [<EntryPoint>]
 let main _ =
     let openingAccount =
         Console.Write "Please enter your name: "
-        Console.ReadLine() |> loadAccountFromDisk
+        let owner = Console.ReadLine()
+
+        match (tryLoadAccountFromDisk owner) with
+        | Some account -> account
+        | None -> {
+            Balance = 0M
+            AccountId = Guid.NewGuid()
+            Owner = { Name = owner }
+        }
 
     printfn "Current balance is $%M" openingAccount.Balance
 
@@ -44,7 +60,7 @@ let main _ =
         |> Seq.choose CommandOperation.tryParseCommand
         |> Seq.takeWhile((<>) Command.Exit)
         |> Seq.choose CommandOperation.tryGetBankOperation
-        |> Seq.map getAmount
+        |> Seq.choose tryGetAmount
         |> Seq.fold processCommand openingAccount
 
     printfn ""
