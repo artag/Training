@@ -1785,6 +1785,39 @@ calculateAnnualPremiumUsd None
 Instead, use pattern matching to force you to deal with both `Some` and `None` cases in your
 code up front
 
+### Unwrap `Option`
+
+In F# 4.1:
+
+```fsharp
+// input - option type
+// "" - value on None
+Option.defaultValue "" input
+// or
+input |> Option.defaultValue ""
+```
+
+Older F# version:
+
+```fsharp
+input |> fun s -> defaultArg s ""
+// or
+input |> defaultArg <| ""
+```
+
+Hand-made function:
+
+```fsharp
+module Option =
+    let defaultTo defValue opt = 
+        match opt with
+        | Some x -> x
+        | None -> defValue
+
+// Usage:
+input |> Option.defaultTo ""
+```
+
 ### `Option.map` (Mapping)
 
 `Option.map` - higher-order function that takes in an optional value and a mapping function
