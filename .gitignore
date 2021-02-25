@@ -7,3 +7,7 @@
 **/node_modules
 **/venv
 **/packages
+
+#Paket dependency manager
+**/.paket/
+**/paket-files
