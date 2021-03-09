@@ -2850,6 +2850,33 @@ endpoint, using Swagger metadata to create a strongly typed model
 
   Требуется постоянное соединение с ресурсом для генерации типов.
 
+### Redirecting type providers to new data. Использование `Load` в type provider'ах.
+
+Идея: используется локальный файл данных (обычно хранится в системе управления версиями)
+как часть исходного кода во время компиляции. Этот файл данных представляет схему
+и используется type provider'ом для генерации типов.
+
+Во время runtime можно переключиться на реальный источник данных.
+
+Пример. Подсчет количества скачиваний для трех nuget-пакетов:
+
+```fsharp
+// Using local file to create scheme for type provider
+type Package = HtmlProvider< @"..\data\sample-package.html">
+
+// Load in data from a live URI
+let nunit = Package.Load "https://www.nuget.org/packages/nunit"
+let entityFramework = Package.Load "https://www.nuget.org/packages/entityframework"
+let newtonsoftJson = Package.Load "https://www.nuget.org/packages/newtonsoft.json"
+
+// Creating a list of package statistics values
+[entityFramework; nunit; newtonsoftJson]
+// Merging all rows from each package into a single sequence
+|> Seq.collect(fun package -> package.Tables.``Version History``.Rows)
+|> Seq.sortByDescending(fun package -> package.Downloads)
+//...
+```
+
 ## Links
 
 * https://github.com/fsprojects/FSharp.TypeProviders.SDK
