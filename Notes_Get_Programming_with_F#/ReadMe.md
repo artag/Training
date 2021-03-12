@@ -2877,7 +2877,107 @@ let newtonsoftJson = Package.Load "https://www.nuget.org/packages/newtonsoft.jso
 //...
 ```
 
+## Lesson 32
+
+### SqlClient
+
+SqlClient - data access layer (Micro ORM) designed specifically for MSSQL.
+NuGet package `FSharp.Data.Sql`.
+
+#### Querying data with the `SqlCommandProvider`
+
+* `[<Literal>]` attribute mark connection string value as a *compile-time constant*,
+which is needed when passing values as arguments to type providers.
+
+* Название `Conn` с большой буквы, т.к. это compile-time constant.
+
+* В качестве SQL запросов можно использовать помимо SELECT запросов более сложные:
+  * Joins
+  * Common table expressions
+  * Stored procedures—even table valued functions.
+
+* Но SqlClient поддерживает не все команды SQL (подробности см. в официальной документации).
+
+```fsharp
+// A standard SQL connection string
+let [<Literal>] Conn =
+    "Server=(localdb)\MSSQLLocalDb;Database= AdventureWorksLT;Integrated Security=SSPI"
+// Creating a strongly typed SQL command
+type GetCustomers =
+    SqlCommandProvider<"SELECT * FROM SalesLT.Customer", Conn>
+// Executing the command to return a dataset
+let customers =
+    GetCustomers.Create(Conn).Execute() |> Seq.toArray
+// Get record from dataset
+let customer = customers.[0]
+```
+
+Запрос с параметром:
+
+```fsharp
+type GetProductCategory =
+    SqlCommandProvider<"SELECT * FROM SalesLT.ProductCategory WHERE Name = @Name", Conn>
+let findProductCatergory productName =
+    GetProductCategory.Create(Conn).Execute(productName) |> Seq.toArray
+```
+
+#### Inserting data. `SqlProgrammabilityProvider`
+
+* `Update()` - create a DataAdapter and the appropriate insert command.
+
+* `BulkInsert()` - insert data by using SQL Bulk Copy functionality.
+Extremely efficient and great for large one-off inserts of data.
+
+* You can also use the data table for updates and deletes, or via T-SQL commands.
+
+```fsharp
+type AdventureWorks = SqlProgrammabilityProvider<Conn>
+type ProductCategory = AdventureWorks.SalesLT.Tables
+// Get table from db
+let productCategory = new AdventureWorks.SalesLT.Tables.ProductCategory()
+// Inserting data into the table
+productCategory.AddRow("Mittens", Some 3, Some (Guid.NewGuid()), Some DateTime.Now)
+productCategory.AddRow("Long Short", Some 3, Some (Guid.NewGuid()), Some DateTime.Now)
+productCategory.AddRow("Wooly Hats", Some 4, Some (Guid.NewGuid()), Some DateTime.Now)
+// Create a DataAdapter and insert data
+productCategory.Update()
+```
+
+#### Working with reference data. `SqlEnumProvider`
+
+Reference data - static (or relatively stable) sets of lookup data: categories, country lists,
+regions that need to be referenced both in code and data.
+
+You’ll normally have a C# enum and/or class with constant values
+that matches a set of items scripted into a database.
+
+```fsharp
+// Generating a Categories type for all product categories
+type Categories =
+    SqlEnumProvider<"SELECT Name, ProductCategoryId FROM SalesLT.ProductCategory", Conn>
+// Accessing the Wooly Hats integer ID
+let woolyHats = Categories.``Wooly Hats``
+printfn "Wooly Hats has ID %d" woolyHats
+```
+
 ## Links
 
+* https://msdn.microsoft.com/en-gb/visualfsharpdocs/conceptual/fsharp-language-reference
+Справочник по языку F#.
+
+* http://fsharpforfunandprofit.com
+F# for Fun and Profit website by Scott Wlaschin.
+
+* https://github.com/fsprojects/FsXaml
+F# Tools for working with XAML Projects. Library that removes the need for the code-behind
+code generation through a type provider.
+
+* (https://github.com/fsprojects/FSharp.ViewModule
+FSharp.ViewModule. Library providing MVVM and INotifyPropertyChanged support for F# projects.
+
 * https://github.com/fsprojects/FSharp.TypeProviders.SDK
-How to write your own type providers
+How to write your own type providers.
+
+* http://fsprojects.github.io/FSharp.Data.SqlClient
+Official documentation for SqlClient.
+(There are a few SQL commands that the TypeProvider doesn't support).
