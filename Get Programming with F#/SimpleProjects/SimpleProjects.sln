@@ -59,7 +59,9 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "27_TypeProviderHtml", "27_T
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "28_TypeProviderRedirect", "28_TypeProviderRedirect\28_TypeProviderRedirect.fsproj", "{808179BC-7B66-4A5A-A62D-EC49CEDE05EA}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "29_SqlClient", "29_SqlClient\29_SqlClient.fsproj", "{B48DF8ED-DFEF-4F2D-B797-75DA10D9A9F1}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "29_SqlClient", "29_SqlClient\29_SqlClient.fsproj", "{B48DF8ED-DFEF-4F2D-B797-75DA10D9A9F1}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "30_SqlProvider", "30_SqlProvider\30_SqlProvider.fsproj", "{76612A50-0EB5-4A47-AA6B-0FB856469F76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -183,6 +185,10 @@ Global
 		{B48DF8ED-DFEF-4F2D-B797-75DA10D9A9F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B48DF8ED-DFEF-4F2D-B797-75DA10D9A9F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B48DF8ED-DFEF-4F2D-B797-75DA10D9A9F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76612A50-0EB5-4A47-AA6B-0FB856469F76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76612A50-0EB5-4A47-AA6B-0FB856469F76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76612A50-0EB5-4A47-AA6B-0FB856469F76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76612A50-0EB5-4A47-AA6B-0FB856469F76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
