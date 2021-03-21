@@ -3117,6 +3117,20 @@ let mittens =
 printfn "%s %O" mittens.Name mittens.ModifiedDate   // Mittens 11.03.2021 23:14:36
 ```
 
+## Lesson 33
+
+### Reasons for not exposing provided types over an API
+
+* Данные, предоставляемые type provider'ом не всегда совпадают с бизнес-моделью (доменной моделью).
+
+* Данные, создаваемые type provider'ом не являеются record или discriminated union,
+что ограничивает их использование в коде.
+
+* Данные, создаваемые type provider'ом не могут быть использованы "снаружи" F# (например, из
+других проектов на C#).
+
+* Данные, создаваемые type provider'ом чаще всего затираются во время runtime'а.
+
 ## Links
 
 * https://msdn.microsoft.com/en-gb/visualfsharpdocs/conceptual/fsharp-language-reference
