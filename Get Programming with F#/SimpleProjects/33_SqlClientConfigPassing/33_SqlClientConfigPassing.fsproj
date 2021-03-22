@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>_33_SqlClientConfigPassing</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="App.config" />
+    <Compile Include="CustomerRepository.fs" />
+    <Compile Include="Program.fs" />
+    <None Include="DataAccessThroughScript.fsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Data.SqlClient" Version="2.0.7" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+  </ItemGroup>
+
+</Project>
