@@ -3468,6 +3468,36 @@ In F# code recommended to use async workflows wherever possible.
 | `Async.Parallel`       | Converts `Async<T>` array to `Async<T array>`
 | `Async.Catch`          | Converts `Async<T>` into a two-case DU of `T` or `Exception`
 
+### Handle an exception raised in an async block by using the Async.Catch
+
+*(External resource)*:
+
+```fsharp
+// exception handling in async using Async.Catch
+let fetchAsync (name, url:string) =
+    async {
+        let uri = new System.Uri(url)
+        let webClient = new WebClient()
+        let! html = Async.Catch (webClient.AsyncDownloadString(uri))
+        match html with
+        | Choice1Of2 html -> printfn "Read %d characters for %s" html.Length name
+        | Choice2Of2 error -> printfn "Error! %s" error.Message
+    } |> Async.Start
+
+// exception handling in async using regular try/with
+let fetchAsync2 (name, url:string) =
+    async {
+        let uri = new System.Uri(url)
+        let webClient = new WebClient()
+        try
+            let! html = webClient.AsyncDownloadString(uri)
+            printfn "Read %d characters for %s" html.Length name
+        with error -> printfn "Error! %s" error.Message
+    } |> Async.Start
+
+fetchAsync2 ("blah", "http://asdlkajsdlj.com")
+```
+
 ## Links
 
 * https://msdn.microsoft.com/en-gb/visualfsharpdocs/conceptual/fsharp-language-reference
