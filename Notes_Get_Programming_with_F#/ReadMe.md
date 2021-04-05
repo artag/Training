@@ -3498,6 +3498,98 @@ let fetchAsync2 (name, url:string) =
 fetchAsync2 ("blah", "http://asdlkajsdlj.com")
 ```
 
+## Other F# Language Features
+
+### Object-oriented support. Basic classes
+
+```fsharp
+// new : age:int * firstname:string * surname:string -> Person
+// Type definition with public constructor
+type Person(age, firstname, surname) =
+    // Private field based on constructor args
+    let fullName = sprintf "%s %s" firstname surname
+
+    // Public method
+    member __.PrintFullName() =
+        printfn "%s is %d years old" fullName age
+
+    // Public getter-only property
+    member this.Age = age
+    // Public getter-only property
+    member that.Name = fullName
+    // Mutable, public property
+    member val FavouriteColour = "Green" with get, set
+
+// Usage
+let person = Person(12, "Ivan", "Ivanov")   // ctor
+let name = person.Name                      // "Ivan Ivanov"
+let age = person.Age                        // 12
+let colour = person.FavouriteColour         // "Green"
+person.FavouriteColour <- "Blue"            // Set FavouriteColour to "Blue"
+person.PrintFullName()                      // "Ivan Ivanov is 12 years old"
+```
+
+* Member methods and properties can access constructor arguments without the need to set them
+as private backing fields first.
+
+* If a member doesn’' need to access other members, you can omit the `this` and
+replace it with `_`.
+
+* (Not common practice) you can also place members on records and discriminated unions.
+
+### Object-oriented support. Interfaces
+
+```fsharp
+// Defining an interface in F#
+type IQuack =
+    abstract member Quack : unit -> unit
+
+// Creating a type that implements an interface
+type Duck (name:string) =
+    interface IQuack with
+        member this.Quack() = printfn "QUACK!"
+
+// Create object, cast it to the interface, use interface method
+let duck = Duck "Donald"
+let quackableDuck = duck :> IQuack
+quackableDuck.Quack()                   // "QUACK!"
+
+// 2. Creating an instance of an interface through an object expression
+let quacker =
+    { new IQuack with
+        member this.Quack() = printfn "What type of animal am I?" }
+
+// Use interface method
+quacker.Quack()                         // "What type of animal am I?"s
+```
+
+### Object-oriented support. Inheritance
+
+* Mark the abstract class (type) with the `[<AbstractClass>]` attribute.
+
+```fsharp
+// Creating an abstract class
+[<AbstractClass>]
+type Employee(name:string) =
+    // Public property, get-only
+    member __.Name = name
+    // Defining an abstract method
+    abstract member Work : unit -> string
+    // Calling an abstract method from a base class
+    member this.DoWork() =
+        printfn "%s is working hard: %s!" name (this.Work())
+
+type ProjectManager(name:string) =
+    // Defining an inheritance hierarchy
+    inherit Employee(name)
+    // Overriding a virtual or abstract method
+    override this.Work() = "Creating a project plan"
+
+let manager = ProjectManager "Peter"    // ctor
+manager.Work()                          // "Creating a project plan"
+manager.DoWork()                        // "Peter is working hard: Createing a project plan!"
+```
+
 ## Must-visit F# resources
 
 ### Websites
