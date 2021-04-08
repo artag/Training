@@ -3590,6 +3590,136 @@ manager.Work()                          // "Creating a project plan"
 manager.DoWork()                        // "Peter is working hard: Createing a project plan!"
 ```
 
+### Exception handling
+
+* Старайтесь избегать исключений как способа передачи сообщений и используйте их только в
+действительно исключительных случаях.
+
+* F# use pattern matching on the type of exception in order to create separate handlers.
+
+```fsharp
+// Throwing a specific exception by using the raise() function
+let riskyCode() =
+    raise(ApplicationException("From risky code!"))
+    ()
+
+let runSafely() =
+    try
+    riskyCode()     // Placing code within a try block
+    with
+    // Multiple catch handlers based on different Exception subtypes
+    | :? ApplicationException as ex -> printfn "App exception! %O" ex
+    | :? MissingFieldException as ex -> printfn "Missing field! %O" ex
+    | ex -> printfn "Got some other type of exception! %O" ex
+
+runSafely()
+// App exception! System.ApplicationException: From risky code!
+```
+
+### Resource management
+
+F# has two ways to work with automatic disposal of objects:
+
+* `use` keyword
+
+* `using` block
+
+```fsharp
+// A function that creates a disposable object
+let createDisposable() =
+    printfn "Created!"
+    { new IDisposable with member __.Dispose() = printfn "Disposed!"}
+
+// The use keyword with implicit disposal of resources
+let foo() =
+    use x = createDisposable()
+    printfn "inside!"
+
+// The using keyword with explicit disposal of resources
+let bar() =
+    using (createDisposable()) (fun disposableObject -> printfn "inside!")
+
+foo()
+bar()
+// Created!         <-- Оба метода выведут это
+// inside!
+// Disposed!
+```
+
+### Casting
+
+```text
+             Object              ^  upcast ( :> )
+               ^                 |
+               |
+   -------------------------     |  downcast ( :?> )
+   |                       |     V
+String  <------------  Exception
+           Illegal!        ^
+                           |
+                  ApplicationException
+```
+
+* Upcast `:>` - **safely** upcast to a parent type in the type hierarchy.
+
+* Downcast `:?>` - unsafely downcast from one type to another,
+but only if the compiler knows that this is possible
+
+* F# can safely pattern match on types (as seen with exception handling).
+You can safely try to cast and handle incompatibilities.
+
+```fsharp
+let anException = Exception()
+
+// Safely upcasting to Object
+let upcastToObject = anException :> obj                             // Success
+
+// Trying to safely upcast to an incompatible type (error)
+let upcastToAppException = anException :> ApplicationException      // Error
+// Display:
+// Type constraint mismatch. The type 'Exception' is not compatible with type 'ApplicationException'
+
+// Unsafely downcasting to an ApplicationException
+let downcastToAppException = anException :?> ApplicationException   // InvalidCastException
+// Display:
+// System.InvalidCastException: Unable to cast object of type 'System.Exception' to type 'System.ApplicationException'.
+
+let downcastToString = anException :?> string                       // Error
+// Display:
+// Type constraint mismatch. The type 'string' is not compatible with type 'Exception'
+```
+
+### Active patterns
+
+Active patterns - form of lightweight discriminated unions.
+A way to categorize the *same* value in *different* ways.
+
+Two more sophisticated forms of active patterns are (не рассматриваются здесь):
+
+* *partial* active patterns
+
+* *parameterized* active patterns
+
+```fsharp
+// Defining the active pattern
+let (|Long|Medium|Short|) (value:string) =      // string -> Choice<unit,unit,unit>
+    if (value.Length < 5) then Short
+    elif value.Length < 10 then Medium
+    else Long
+
+// Using the pattern within a pattern match
+let measure word =
+    match word with
+    | Short -> "This is a short string!"
+    | Medium -> "This is a medium string!"
+    | Long -> "This is a long string!"
+
+// Usage example
+measure "Hi"                // "This is a short string!"
+measure "Hello"             // "This is a medium string!"
+measure "Good afternoon"    // "This is a long string!"
+```
+
 ## Must-visit F# resources
 
 ### Websites
