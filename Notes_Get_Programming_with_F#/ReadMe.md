@@ -1578,7 +1578,7 @@ let myPc =
           { SizeGb = 500 } ] }
 ```
 
-### Units of measure in F#. Example
+### Units of measure (UoM) in F#. Example
 
 Specific type of integer: GB and MB, or meters and feet
 
@@ -1600,6 +1600,15 @@ let printBytes (Bytes(b)) =
 printBytes 7<kB>
 // "It's 7168 bytes"
 ```
+
+* Units of measure (UoM) not needed often (but useful).
+
+* UoMs can create a kind of "generic" numerics: so you can have `5<Kilogram>`
+as opposed to `5<Meter>`. You can also combine types: `15<Meter/Second>` and so on.
+
+* Compiler will prevent you from accidentally mixing and matching incompatible types.
+
+* UoMs are erased away at compile time, so there’s no runtime overhead.
 
 ### Discriminated unions (DU) in F#
 
@@ -3718,6 +3727,95 @@ let measure word =
 measure "Hi"                // "This is a short string!"
 measure "Hello"             // "This is a medium string!"
 measure "Good afternoon"    // "This is a long string!"
+```
+
+### Computation expressions
+
+Computation expressions allow you to create language support for a specific abstraction,
+directly in code - whether that's asynchronous work, optional objects, sequences, or cloud
+computations. F# also allows you to create your *own* computation expressions to capture a type of
+behavior that you want to abstract away, with your own "versions" of `let!`.
+
+Example of a computation expression for working with options:
+
+```fsharp
+type Maybe() =
+    // 'b option * ('b -> 'c option)
+    member this.Bind(opt, func) = opt |> Option.bind func
+    // 'a -> 'a option
+    member this.Return v = Some v
+
+let maybe = Maybe()
+
+// string -> int option
+let rateCustomer name =
+    match name with
+    | "isaac" -> Some 3
+    | "mike" -> Some 2
+    | _ -> None
+
+// int option
+let answer =
+    // Creating a maybe { } block
+    maybe {
+        // Safely "unwrapping" an option type
+        let! first = rateCustomer "isaac"    // int option -> int    (Return 3)
+        let! second = rateCustomer "mike"    // int option -> int    (Return 2)
+        return first + second }              // Some 5
+```
+
+F# automatically maps `let!` to `Bind()`, `return` to `Return()`.
+
+### Code quotations
+
+Essentially the equivalent of C#'s expression trees, code quotations allow you to wrap a
+block of code inside a `<@ quotation block @>` and then programmatically interrogate the
+abstract syntax tree (AST) within it. F# has two forms of quotations: *typed* and *untyped*.
+You won’t find yourself using these in everyday code, but if you ever need to do low-level
+meta programming or write your own type provider, you’ll come into contact with these.
+
+### Lazy computations
+
+F# create `System.Lazy` values by wrapping any expression in a `lazy` scope:
+
+```fsharp
+// Lazy<int>
+let lazyText =
+    // Creating a lazy scope
+    lazy
+        let x = 5 + 5
+        printfn "%O: Hello! Answer is %d" System.DateTime.UtcNow x
+        x
+
+// Explicitly evaluating the result of a lazy computation
+let text = lazyText.Value    // 09.04.2021 20:17:36: Hello! Answer is 10;   text = 10
+
+// Returning the result without re-executing the computation
+let text2 = lazyText.Value   // text2 = 10
+```
+
+### Recursion
+
+F# support *tail recursion* (the ability to call a recursive function without risking
+stack overflow).
+
+To create a recursive function, prefix it with the `rec` keyword:
+
+```fsharp
+// Specifying that a function can be called recursively
+let rec factorial number total =
+    if number = 1 then total
+    else
+        printfn "Number %d" number
+        factorial (number - 1) (total * number)   // Making a recursive function call
+
+// Calling a recursive function
+let total = factorial 5 1
+// Number 5
+// Number 4
+// Number 3
+// Number 2
+// val total : int = 120
 ```
 
 ## Must-visit F# resources
