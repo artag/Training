@@ -1,1 +1,1 @@
-[Functional Design Patterns](../Functional_Design_Patterns.md)
+[Functional Design Patterns](Functional_Design_Patterns.md)
