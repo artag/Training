@@ -261,3 +261,327 @@ available), метод может быть сделан статичным.
 * Avoid mutable static fields.
 
 * Avoid direct calls to static methods that perform I/O.
+
+## 2.3 Purity and testability
+
+### 2.3.1 In practice: a validation scenario
+
+Пример. Этому классу требуется Validation:
+
+```csharp
+public abstract class Command { }
+
+public sealed class MakeTransfer : Command
+{
+    public string Bic { get; set; }       // Should be valid (some format)
+    public DateTime Date { get; set; }    // Should not be past
+    ...
+}
+```
+
+Simple interface for all these validator classes:
+
+```csharp
+public interface IValidator<T>
+{
+    bool IsValid(T t);
+}
+```
+
+Basic implementation:
+
+```csharp
+using System.Text.RegularExpressions;
+
+// Pure - no side effects and the result of IsValid is deterministic.
+public sealed class BicFormatValidator : IValidator<MakeTransfer>
+{
+    static readonly Regex regex = new Regex("^[A-Z]{6}[A-Z1-9]{5}$");
+
+    public bool IsValid(MakeTransfer cmd) =>
+        regex.IsMatch(cmd.Bic);
+}
+
+// Impure - the result of IsValid will depend on the current date.
+// I/O side effect: DateTime.UtcNow queries the system clock.
+public class DateNotPastValidator : IValidator<MakeTransfer>
+{
+    public bool IsValid(MakeTransfer cmd) =>
+        (DateTime.UtcNow.Date <= cmd.Date.Date);
+}
+```
+
+Functions that perform I/O are difficult to test.
+
+### 2.3.2 Bringing impure functions under test
+
+*Interface-based approach* - abstract I/O operations in an interface, and to use a deterministic implementation in the tests.
+
+For our example: abstract access to the system clock:
+
+```csharp
+// Encapsulates the impure behavior in an interface
+public interface IDateTimeService
+{
+    DateTime UtcNow { get; }
+}
+
+// Provides a default implementation
+public class DefaultDateTimeService : IDateTimeService
+{
+    public DateTime UtcNow => DateTime.UtcNow;
+}
+```
+
+Refactor the date validator to consume this interface:
+
+```csharp
+public class DateNotPastValidator : IValidator<MakeTransfer>
+{
+    private readonly IDateTimeService clock;
+
+    // Interface is injected in the constructor.
+    public DateNotPastValidator(IDateTimeService clock)
+    {
+        this.clock = clock;
+    }
+
+    // Validation now depends on the interface.
+    public bool IsValid(MakeTransfer request) =>
+        clock.UtcNow.Date <= request.Date.Date;
+}
+```
+
+* When running normally, you'll compose your objects so that you get the "real"
+impure implementation that checks the system clock.
+
+* When running unit tests, you'll inject a "fake" pure implementation that does
+something predictable, such as always returning the same DateTime, enabling
+you to write tests that are repeatable.
+
+#### Типичные шаги при использовании dependency injection и mocks.
+
+1) Определение интерфейса (`IDateTimeService`), который будет абстрацией для impure операции,
+которая выполнется в тестируемом классе.
+
+2) Поместить impure логику (`DateTime.UtcNow`) в класс-имплементацию этого интерфейса
+(`DefaultDateTimeService`).
+
+3) В тестируемом классе, запросить интерфейс в конструкторе, сохранить его в поле и использовать
+когда это будет необходимо.
+
+4) Добавить bootstrapping логику для правильной инициализации класса.
+
+5) Создать и inject fake имплементацию интерфейса для unit-тестирования.
+
+Tests can be written in this form:
+
+```csharp
+public class DateNotPastValidatorTest
+{
+    static DateTime presentDate = new DateTime(2016, 12, 12);
+
+    // Provides a pure, fake implementation
+    private class FakeDateTimeService : IDateTimeService
+    {
+        public DateTime UtcNow => presentDate;
+    }
+
+    [Test]
+    public void WhenTransferDateIsPast_ThenValidationFails()
+    {
+        // Injects the fake
+        var sut = new DateNotPastValidator(new FakeDateTimeService());
+        var cmd = new MakeTransfer { Date = presentDate.AddDays(-1) };
+        Assert.AreEqual(false, sut.IsValid(cmd));
+    }
+}
+```
+
+Unit tests need to be:
+
+* *Isolated* (no I/O) 
+* *Repeatable* (always get the same result, given the same inputs).
+
+These properties are guaranteed when you use pure functions.
+
+### 2.3.3 Why testing impure functions is hard
+
+Testing a *pure* function is easy. Ее выходы зависят только от входов:
+
+```text
+Arrange:                   Act:                       Assert:
+set up input value(s)      evaluate the function      verify output is as expected
+INPUTS                ---> UNIT UNDER TEST       ---> OUTPUTS
+```
+
+С другой стороны, когда тестируется *impure* функция, ее поведение возможно дополнительно
+будет зависеть от:
+
+* от состояния программы
+* от состояния "снаружи" программы
+
+Плюс, side effects функции могут привести к новому состоянию программы.
+
+Примеры:
+
+* The date validator depends on the state of the world, specifically the current time.
+
+* A `void` - returning method that sends an email has no explicit output to assert
+against, but it results in a new state of the world.
+
+* A method that sets a non-local variable results in a new state of the program.
+
+Unit testing from a functional perspective for *impure* function:
+
+AAA pattern | Functional thinking                                                   |
+------------|-----------------------------------------------------------------------|
+Arrange     | Set up the (explicit and implicit) inputs to the function under test  |
+Act         | Evaluate the function under test                                      |
+Assert      | Verify the correctness of the (explicit and implicit) outputs         |
+
+Два подхода к тестированию функций с side effects:
+
+* The state of the world is managed by using mocks to create an artificial world in
+which the test runs. To test I/O operations.
+
+* Setting the state of the program and checking that it's updated correctly
+doesn't require mocks, but it makes for brittle (хрупкие) tests and breaks encapsulation.
+
+### 2.3.4 Parameterized unit tests
+
+Параметризированные тесты более функциональны, т.к. заставляют думать о них в терминах
+входных и выходных значений.
+
+Преимущества: тестирование нескольких сценариев, используя один тестовый метод.
+
+Пример:
+
+```csharp
+public class DateNotPastValidatorTest
+{
+    static DateTime presentDate = new DateTime(2016, 12, 12);
+
+    private class FakeDateTimeService : IDateTimeService
+    {
+        public DateTime UtcNow => presentDate;
+    }
+
+    [TestCase(+1, ExpectedResult = true)]       // NUnit
+    [TestCase( 0, ExpectedResult = true)]
+    [TestCase(-1, ExpectedResult = false)]
+    public bool WhenTransferDateIsPast_ThenValidatorFails(int offset)
+    {
+        var sut = new DateNotPastValidator(new FakeDateTimeService());
+        var cmd = new MakeTransfer { Date = presentDate.AddDays(offset) };
+        return sut.IsValid(cmd);
+    }
+}
+```
+
+### 2.3.5 Avoiding header interfaces
+
+Современные приложения используют множество интерфейсов для каждой операции
+(у которых по одной реализации), которые задействует I/O.
+
+Такие интерфейсы называются "header interfaces" - они отличаются от первоначальной идеи для
+чего задумывались интерфейсы (несколько реализаций для одного контракта).
+
+Результат - множество файлов, в которых сложно ориентироваться.
+
+### Решение 1. Pushing the pure boundary outwards
+
+Весь код сделать pure невозможно, но можно раздвинуть границы pure кода.
+
+Injecting a specific value, rather than an interface, makes IsValid pure.
+Переписанный date validator:
+
+```csharp
+public class DateNotPastValidator : IValidator<MakeTransfer>
+{
+    private readonly DateTime today;
+
+    public DateNotPastValidator(DateTime today)
+    {
+        this.today = today;
+    }
+
+    public bool IsValid(MakeTransfer cmd)       // Pure
+        => (today <= cmd.Date.Date);
+}
+```
+
+Теперь:
+
+* Code instantiates `DateNotPastValidator` must know how to get the current time.
+
+* `DateNotPastValidator` must be short-lived.
+
+### Решение 2. Injecting functions as dependencies
+
+Пример, когда предыдущий вариант не подходит:
+
+```csharp
+public sealed class BicExistsValidator : IValidator<MakeTransfer>
+{
+    readonly IEnumerable<string> validCodes;    // Конструктор с установкой поля пропущен.
+
+    public bool IsValid(MakeTransfer cmd) =>
+        validCodes.Contains(cmd.Bic);
+}
+```
+
+Здесь проверка идентификатора банка путем его сравнения с заранее известными идентификаторами
+банков.
+
+Но:
+
+1) Список банков надо обновлять, а это impure операция.
+
+2) Клиенский код зависит от валидатора, но не отвечает за его работу и актуальность
+идентификаторов.
+
+3) Инициализирующий код не знает, будет ли валидатор использоваться и когда.
+
+Решение. Вместо интерфейса использовать делегат:
+
+```csharp
+public sealed class BicExistsValidator : IValidator<MakeTransfer>
+{
+    readonly Func<IEnumerable<string>> getValidCodes;
+
+    public BicExistsValidator(Func<IEnumerable<string>> getValidCodes)
+    {
+        this.getValidCodes = getValidCodes;
+    }
+
+    public bool IsValid(MakeTransfer cmd) =>
+        getValidCodes().Contains(cmd.Bic);
+}
+```
+
+Unit тесты в таком случае будут выглядеть таким образом:
+
+```csharp
+public class BicExistsValidatorTest
+{
+    static string[] validCodes = { "ABCDEFGJ123" };
+
+    [TestCase("ABCDEFGJ123", ExpectedResult = true)]
+    [TestCase("XXXXXXXXXXX", ExpectedResult = false)]
+    public bool WhenBicNotFound_ThenValidationFails(string bic) =>
+        new BicExistsValidator(() => validCodes)
+            .IsValid(new MakeTransfer { Bic = bic });
+}
+```
+
+## 2.4 Purity and the evolution of computing
+
+Тенденции:
+
+* Увеличение значения и использования I/O (сетевые сервисы).
+
+* Increased requirements for asynchronous I/O.
+
+* Parallelization is becoming the main road to computing speed (развитие CPU идет в сторону
+параллелизации).
