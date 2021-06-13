@@ -4,6 +4,8 @@
 
 * [Chapter 02](Chapter_02.md)
 
+* [Chapter 03](Chapter_03.md)
+
 ## Links
 
 ## Libraries from Microsoft to programming in a functional style:
