@@ -171,7 +171,7 @@ Risk CalculateRiskProfile(Age age) =>
 Недостаток:
 
 * В конструкторе `Age` все еще выбрасывается исключение, если входное значение неправильное.
-(Далее этот недостаток будет решен).
+(Далее этот недостаток будет решен - см. главу 3.4.5).
 
 ### 3.2.3 Writing "honest" functions
 
@@ -244,4 +244,442 @@ class HealthData
 Точное/конечное число возможных входных комбинаций вносит ясность. Как только у вас есть контроль
 над этими простыми значениями, их легко объединить в более сложные объекты данных.
 
-## 3.3 Modeling the absence of data with Unit
+## 3.3 Modeling the absence of data with `Unit`
+
+### 3.3.1 Why `void` isn't ideal
+
+Write a HOF that starts a stopwatch, runs the given function, and stops the stopwatch,
+printing out some diagnostic information:
+
+```csharp
+public static class Instrumentation
+{
+    public static T Time<T>(string op, Func<T> f)
+    {
+        var sw = new Stopwatch();
+        sw.Start();
+
+        T t = f();
+
+        sw.Stop();
+        Console.WriteLine($"{op} took {sw.ElapsedMilliseconds}ms");
+        return t;
+    }
+}
+```
+
+Using:
+
+```csharp
+var contents = Instrumentation.Time(
+    "reading from file.txt",
+    () => File.ReadAllText("file.txt"));
+```
+
+If we want to use measure function like this (returning `void`):
+
+```csharp
+Instrumentation.Time(
+    "writing to file.txt",
+    () => File.AppendAllText("file.txt", "New content!", Encoding.UTF8));
+```
+
+We you'd need to add an overload of `Instrumentation.Time` that takes an `Action`, like this:
+
+```csharp
+public static void Time(string op, Action act)
+{
+    var sw = new Stopwatch();
+    sw.Start();
+
+    act();
+
+    sw.Stop();
+    Console.WriteLine($"{op} took {sw.ElapsedMilliseconds}ms");
+}
+```
+
+This is terrible! You have to duplicate the entire implementation between the `Func` and `Action`
+delegates (тоже самое будет для `Task` и `Task<T>`).
+
+How can you avoid this?
+
+### 3.3.2 Bridging the gap between `Action` and `Func` with `Unit`
+
+Instead of using `void`, which is a special language construct, we'll use a special `value`:
+the empty tuple. FP convention of calling it `Unit`:
+
+```csharp
+// Aliases the empty tuple as Unit
+using Unit = System.ValueTuple;
+
+namespace LaYumba.Functional
+{
+    using static F;
+
+    public static partial class F
+    {
+        // Convenience (удобный) method that allows you to simply write return
+        // Unit() in functions that return Unit.
+        public static Unit Unit() => default(Unit);
+    }
+
+    // Adapter functions that convert an Action into a Unit-returning Func
+    public static class ActionExt
+    {
+        public static Func<Unit> ToFunc(this Action action) =>
+            () => { action(); return Unit(); };
+
+        public static Func<T, Unit> ToFunc<T>(this Action<T> action) =>
+            (t) => { action(t); return Unit(); };
+
+        // more overloads to cater (удовлетворить) for Action's with more arguments...
+    }
+}
+```
+
+Writing HOFs that take a `Func` or an `Action`, without duplication:
+
+```csharp
+using LaYumba.Functional;
+using Unit = System.ValueTuple;
+
+public static class Instrumentation
+{
+    // Includes an overload that takes an Action.
+    // Converts the Action to a Func<Unit> and passes it to the overload taking a Func<T>.
+    public static void Time(string op, Action act) =>
+        Time<Unit>(op, act.ToFunc());
+
+    public static T Time<T>(string op, Func<T> f)
+        // same as before...
+}
+```
+
+**Резюме**:
+
+* Use `void` to indicate the absence (отсутствие) of data, meaning that your function is only
+called for side effects and returns no information.
+
+* Use `Unit` as an alternative, more flexible representation when there's a need for
+consistency in the handling of `Func` and `Action`.
+
+## 3.4 Modeling the possible absence of data with `Option`
+
+`Option` gives a more robust and expressive representation of the possible absence of data
+(`null` or exception).
+
+### 3.4.1 The bad APIs you use every day
+
+### 3.4.2 An introduction to the Option type
+
+`Option` is essentially a container that wraps a value... or no value.
+
+The symbolic definition for `Option`:
+
+```text
+Option<T> = None | Some(T)
+```
+
+`Option<T>` can be in one of two "states":
+
+* `None` - A special value indicating the absence of a value.
+If the `Option` has no inner value, we say that "the Option is None."
+
+* `Some(T)` - A container that wraps a value of type `T`. If the `Option` has an inner
+value, we say that "the Option is Some."
+
+`Option` is also called `Maybe`, with `Just` (like Some) and `Nothing` (like None) states.
+
+#### Using library with REPL
+
+1) Reference the `LaYumba.Functional` library in your REPL:
+
+```text
+#r "functional-csharp-code\LaYumba.Functional\bin\Debug\netstandard1.6\LaYumba.Functional.dll"
+```
+
+2) Type imports:
+
+```csharp
+using LaYumba.Functional;
+using static LaYumba.Functional.F;
+```
+
+#### Usage Option
+
+```csharp
+string greet(Option<string> greetee) =>
+    greetee.Match(
+        None: () => "Sorry, who?",    // If greetee is None, Match will evaluate this function.
+        Some: (name) => $"Hello, {name}");
+
+greet(None)     // => "Sorry, who?"
+greet("John")   // => "Hello, John"
+```
+
+**Резюме**:
+
+* Use `Some(value)` to wrap a value into an `Option`.
+
+* Use `None` to create an empty `Option`.
+
+* Use `Match` to run some code depending on the state of the `Option`.
+
+### 3.4.3 Implementing `Option` and `Option<T>`
+
+#### Implementing `Option`
+
+```csharp
+namespace LaYumba.Functional
+{
+    public static partial class F
+    {
+        // The None value
+        public static Option.None None =>
+            Option.None.Default;
+
+        // The Some function wraps the given value into a Some
+        public static Option.Some<T> Some<T>(T value) =>
+            new Option.Some<T>(value);
+    }
+
+    namespace Option
+    {
+        // None has no members because it contains no data.
+        public struct None
+        {
+            internal static readonly None Default = new None();
+        }
+
+        // Some simply wraps a value.
+        public struct Some<T>
+        {
+            // Some represents the presence of data, so don't allow the null value.
+            internal Some(T value)
+            {
+                if (value == null)
+                    throw new ArgumentNullException();
+                Value = value;
+            }
+
+            internal T Value { get; }       // can't be null .
+        }
+    }
+}
+```
+
+Usage:
+
+```csharp
+using static LaYumba.Functional.F;
+var firstName = Some("Enrico");
+var middleName = None;
+```
+
+#### Implementing `Option<T>`
+
+In terms of sets, `Option<T>` is the union of the set `Some<T>` with the singleton set `None`.
+
+```csharp
+public struct Option<T>
+{
+    // Captures the state of the Option: true if the Option is Some.
+    readonly bool isSome;
+
+    // The inner value of the Option.
+    readonly T value;
+
+    private Option(T value)
+    {
+        this.isSome = true;
+        this.value = value;
+    }
+
+    // Converts None into an Option
+    public static implicit operator Option<T>(Option.None _) =>
+        new Option<T>();
+
+    // Converts Some into an Option
+    public static implicit operator Option<T>(Option.Some<T> some) =>
+        new Option<T>(some.Value);
+
+    // "Lifts" a regular value into an Option
+    public static implicit operator Option<T>(T value) =>
+        value == null ? None : Some(value);
+
+    // Match takes two functions and evaluates one or the other
+    // depending on the state of the Option.
+    public R Match<R>(Func<R> onNone, Func<T, R> onSome) =>
+        isSome ? onSome(value) : onNone();
+}
+```
+
+### 3.4.4 Gaining robustness by using `Option` instead of `null`
+
+Example. Some class in DB with some function:
+
+```csharp
+public class Subscriber
+{
+    public string Name { get; set; }
+    public string Email { get; set; }
+}
+
+public string GreetingFor(Subscriber subscriber) =>
+    $"Dear {subscriber.Name.ToUpper()},";
+```
+
+Но потом бизнес решает убрать имя из БД (`Subscriber.Name = null`) и теперь
+`subscriber.Name.ToUpper()` будет выбрасывать исключение.
+
+Решение - сделать `Name` опциональным:
+
+```csharp
+public class Subscriber
+{
+    // Name is now explicitly marked as optional.
+    public Option<string> Name { get; set; }
+    public string Email { get; set; }
+}
+```
+
+Это не только более четко описывает `Subscriber`, но и заставляет внести изменения в метод:
+
+```csharp
+public string GreetingFor(Subscriber subscriber) =>
+    subscriber.Name.Match(
+        () => "Dear Subscriber,",
+        (name) => $"Dear {name.ToUpper()},");
+```
+
+### 3.4.5 `Option` as the natural result type of partial functions
+
+*Total functions* (общие) - are mappings that are defined for *every* element of the domain.
+
+*Partial functions* (частичные) - are mappings that are defined for *some*, but not all,
+elements of the domain.
+
+The `Option` type offers a perfect solution to model partial functions:
+if the function is defined for the given input, it returns a `Some` wrapping the result;
+otherwise, it returns `None`.
+
+#### Example. Parsing strings
+
+Parsing function with this signature is partial:
+
+```text
+string -> int 
+```
+
+Parsing function with this signature is total:
+
+```text
+string -> Option<int>
+```
+
+```csharp
+public static class Int
+{
+    public static Option<int> Parse(string s)
+    {
+        int result;
+        return int.TryParse(s, out result)
+            ? Some(result)
+            : None;
+    }
+}
+```
+
+Usage:
+
+```csharp
+Int.Parse("10")         // => Some(10)
+Int.Parse("hello")      // => None
+```
+
+#### Example. Looking up data in a collection
+
+Initial version:
+
+```csharp
+new NameValueCollection()["green"]          // "green" отсутствует в словаре
+// => null
+
+new Dictionary<string, string>()["blue"]
+// => runtime error: KeyNotFoundException   // "blue" отсутствует в словаре
+```
+
+Решение для `NameValueCollection`:
+
+```csharp
+// возвратит Option<string> из-за implicit operator Option<T>(T value)
+public static Option<string> Lookup(this NameValueCollection @this, string key) =>
+    @this[key];
+```
+
+Решение для `IDictionary`:
+
+```csharp
+public static Option<T> Lookup<K, T>(this IDictionary<K, T> dict, K key)
+{
+    T value;
+    return dict.TryGetValue(key, out value)
+        ? Some(value)
+        : None;
+}
+```
+
+Теперь отсутствующий ключ в словарях не будет приводит к негативным эффектам:
+
+```csharp
+new NameValueCollection().Lookup("green")          // => None
+new Dictionary<string, string>().Lookup("blue")    // => None
+```
+
+#### Example. The smart constructor pattern
+
+*Smart constructor*: it's aware of (знает о) some rules and can prevent the construction of an
+invalid object.
+
+Пример smart constructor для `Age` (класс был описан в главе 3.2.2):
+
+```csharp
+public struct Age
+{
+    // The constructor can be marked as private.
+    private Age(int value)
+    {
+        if (!IsValid(value))
+            throw new ArgumentException($"{value} is not a valid age");
+        Value = value;
+    }
+
+    private int Value { get; }
+
+    // A smart constructor returning an Option
+    public static Option<Age> Of(int age) =>
+        IsValid(age) ? Some(new Age(age)) : None;
+
+    private static bool IsValid(int age) =>
+        0 <= age && age < 120;
+}
+```
+
+#### Guarding against (защита от) `NullReferenceException`
+
+* *Никогда* не писать функции возвращающие `null`.
+
+* Всегда проверять входные аргументы в public методах API на `null` значение.
+(Кроме опциональных аргументов, которые должны иметь значение compile-time constant по умолчанию,
+отличное от `null`).
+
+**Резюме**:
+
+* Use `Option` in your data objects to model the fact that a property may
+not be set, and in your functions to indicate the possibility that a suitable value may
+not be returned.
+
+* `Option` will enrich your model and make your code more self-documenting.
+
+* Use `Match` with the functions you'd like to evaluate in the `None` and `Some` cases.

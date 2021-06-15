@@ -26,3 +26,8 @@
 * Examples and library `LaYumba` from book https://github.com/la-yumba/functional-csharp-code
 
 * Dapper library: https://github.com/StackExchange/dapper-dot-net
+
+* NullGuard: https://github.com/haacked/NullGuard.
+
+  Automated checking inputs to public methods aren't `null`.
+  Allows you to disallow null arguments on a per-assembly basis.
