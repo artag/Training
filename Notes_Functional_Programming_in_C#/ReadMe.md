@@ -6,6 +6,12 @@
 
 * [Chapter 03](Chapter_03.md)
 
+## Exercises
+
+* [Exercises 01](Exercises_01.md)
+
+* [Exercises 02](Exercises_02.md)
+
 ## Links
 
 ## Libraries from Microsoft to programming in a functional style:
