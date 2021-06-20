@@ -6,6 +6,8 @@
 
 * [Chapter 03](Chapter_03.md)
 
+* [Chapter 04](Chapter_04.md)
+
 ## Exercises
 
 * [Exercises 01](Exercises_01.md)
