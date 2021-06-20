@@ -391,20 +391,16 @@ value, we say that "the Option is Some."
 
 `Option` is also called `Maybe`, with `Just` (like Some) and `Nothing` (like None) states.
 
-#### Using library with REPL
-
-1) Reference the `LaYumba.Functional` library in your REPL:
-
-```text
-#r "functional-csharp-code\LaYumba.Functional\bin\Debug\netstandard1.6\LaYumba.Functional.dll"
-```
-
-2) Type imports:
-
-```csharp
-using LaYumba.Functional;
-using static LaYumba.Functional.F;
-```
+> ### Using library with REPL
+> 1) Reference the `LaYumba.Functional` library in your REPL:
+> ```text
+> #r "functional-csharp-code\LaYumba.Functional\bin\Debug\netstandard1.6\LaYumba.Functional.dll"
+> ```
+> 2) Type imports:
+> ```csharp
+> using LaYumba.Functional;
+> using static LaYumba.Functional.F;
+> ```
 
 #### Usage Option
 
@@ -666,13 +662,11 @@ public struct Age
 }
 ```
 
-#### Guarding against (защита от) `NullReferenceException`
-
-* *Никогда* не писать функции возвращающие `null`.
-
-* Всегда проверять входные аргументы в public методах API на `null` значение.
-(Кроме опциональных аргументов, которые должны иметь значение compile-time constant по умолчанию,
-отличное от `null`).
+> ### Guarding against (защита от) `NullReferenceException`
+> * *Никогда* не писать функции возвращающие `null`.
+> * Всегда проверять входные аргументы в public методах API на `null` значение.
+> (Кроме опциональных аргументов, которые должны иметь значение compile-time constant по умолчанию,
+> отличное от `null`).
 
 **Резюме**:
 
