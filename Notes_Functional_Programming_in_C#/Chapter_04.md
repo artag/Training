@@ -417,3 +417,252 @@ Return : T -> C<T>
 
 * **Not** every functor is a monad (не для каждого типа, для которого определен
 `Map`, можно определить `Bind`).
+
+## 4.4 Filtering values with `Where`
+
+In chapter 1 были приведены примеры использования `Where` для `IEnumerable`/
+
+`Where` can also be defined for Option:
+
+```csharp
+public static Option<T> Where<T>(
+    this Option<T> optT, Func<T, bool> pred) =>
+        optT.Match(
+            () => None,
+            (t) => pred(t) ? optT : None);
+```
+
+Usage:
+
+```csharp
+bool IsNatural(int i) => i >= 0;
+Option<int> ToNatural(string s) => Int.Parse(s).Where(IsNatural);
+
+ToNatural("2")          // => Some(2)
+ToNatural("-2")         // => None
+ToNatural("hello")      // => None
+```
+
+>### The many names of the core functions
+> Возможные названия одних и тех же функций в разных языках программирования:
+>| LaYumba.Functional | LINQ       |  Common synonyms              |
+>|--------------------|------------|-------------------------------|
+>| Map                | Select     | fMap, Project, Lift           |
+>| Bind               | SelectMany | FlatMap, Chain, Collect, Then |
+>| Where              | Where      | Filter, Ensure                |
+>| ForEach            | n/a        | Iter                          |
+
+## 4.5 Combining `Option` and `IEnumerable` with `Bind`
+
+Convert an `Option` into an `IEnumerable`:
+
+```csharp
+public struct Option<T>
+{
+    public IEnumerable<T> AsEnumerable()
+    {
+        if (IsSome) yield return Value;
+    }
+}
+```
+
+Example of usage:
+
+```csharp
+Some("thing").AsEnumerable().Count()    // => 1
+```
+
+#### Flatten `IEnumerable<Option<T>>` and `Option<IEnumerable<T>>` into an `IEnumerable<T>`
+
+Дано:
+
+```csharp
+class Subject
+{
+    public Option<Age> Age { get; set; }
+}
+
+IEnumerable<Subject> Population => new[]
+{
+    new Subject { Age = Age.Of(33) },
+    new Subject { },                    // Данная персона скрыла свой возраст.
+    new Subject { Age = Age.Of(37) },
+};
+```
+
+Выборка по возрасту:
+
+```csharp
+var optionalAges = Population.Map(p => p.Age);
+// => [Some(Age(33)), None, Some(Age(37))]
+```
+
+Определим `Bind` для `IEnumerable` и `Option`:
+
+```csharp
+// This overload can be used to get an IEnumerable<T> where Map would give
+// you an IEnumerable<Option<T>>.
+public static IEnumerable<R> Bind<T, R>(
+    this IEnumerable<T> list, Func<T, Option<R>> func) =>
+        list.Bind(t => func(t).AsEnumerable());
+
+// This overload can be used to get an IEnumerable<T> where Map would give you an
+// Option<IEnumerable<T>>.
+public static IEnumerable<R> Bind<T, R>(
+    this Option<T> opt, Func<T, IEnumerable<R>> func) =>
+        opt.AsEnumerable().Bind(func);
+```
+
+Using `Bind` to filter out all `None`'s and get a list of all the ages that were
+actually given:
+
+```csharp
+var optionalAges = Population.Map(p => p.Age);
+// => [Some(Age(33)), None, Some(Age(37))]
+
+var statedAges = Population.Bind(p => p.Age);
+// => [Age(33), Age(37)]
+
+var averageAge = statedAges.Map(age => age.Value).Average();
+// => 35
+```
+
+## 4.6 Coding at different levels of abstraction
+
+### 4.6.1 Regular vs. elevated values
+
+The world of values можно поделить на две категории:
+
+* *Regular* (обычные) values, such as `T`.
+
+* *Elevated* (поднятые) values, such as `A<T>`.
+
+Здесь "elevated" значения подразумевают абстракцию соответствующих обычных типов.
+
+Эти абстракции являются конструкциями, которые позволяют лучше работать с базовыми
+типами и представлять операции над ними.
+
+Абстракция - это способ добавить "эффект" (не side-effect) к базовому типу.
+
+Примеры таких абстракций:
+
+* `Option` adds the effect of *optionality effect* - not a `T`, but the
+*possibility* of a `T`.
+
+* `IEnumerable` adds the effect of *aggregation effect* (эффект агрегации ) - not
+a `T` or two, but a *sequence* of `T`'s.
+
+* `Func` adds the effect of `laziness effect` - not a `T`, but a *computation* that
+can be evaluated to obtain a `T`.
+
+* `Task` adds the effect of *asynchrony* - not a `T`, but a *promise* that at some point you'll get a `T`.
+
+### 4.6.2 Crossing levels of abstraction
+
+We have functions that:
+
+1) remain within the same level of abstraction.
+
+    1.1) Functions mapping regular values (`T -> R`)
+
+    1.2) Functions mapping elevated values (`A<T> -> A<R>`)
+
+2) cross between levels of abstraction
+(также могут называться *world-crossing functions*).
+
+    2.1) Upward-crossing (восходящее пересечение) function.
+
+    mapping regular values to elevated values (`T -> A<R>`)
+
+    2.2) Downward-crossing (низходящее пересечение) function.
+
+    mapping elevated to regular values (`A<T> -> R`)
+
+Примеры signature:
+
+```text
+int -> string                  // maps one regular type to another (type 1.1)
+Option<int> -> Option<string>  // type 1.2
+int -> Option<string>          // type 2.1
+Option<string> -> int          // type 2.2
+```
+
+Особый случай upward-crossing function (тип 2.1):
+
+* `Return` function (`T -> A<T>`) that does nothing other than upward-crossing
+(vertical crossing function).
+
+Примеры функций типа 1.2 (`A<T> -> A<R>`):
+
+* `Map`, `Bind`, `Where`, `OrderBy`, and others.
+
+Примеры функций типа 2.2 (`A<T> -> R`):
+
+* Для `IEnumerable`: `Average`, `Sum`, `Count`;
+
+* Для `Option`: `Match`.
+
+Функцию наподобие `Return` для vertical downward-crossing (`A<T> -> T`)
+*не всегда* можно определить.
+
+Пример:
+
+1) Всегда можно `int -> Option<int>`, но нельзя `Option<int> -> int` (есть `None`).
+
+2) Всегда можно `Employee -> IEnumerable<Employee>`, но нельзя `IEnumerable<Employee> -> Employee`.
+
+### 4.6.3 `Map` vs. `Bind`, revisited (пересмотр с новой точки зрения)
+
+`Map` takes an elevated value a of type `A<T>` and a *regular* function `f` of type `T -> R` and
+returns an elevated value of type `A<R>` (computed by applying f to the content of `a`
+and lifting the result into an `A`).
+
+`Bind` also takes an elevated value a of type `A<T>` but an *upward-crossing* function `f` of
+type `T -> A<R>` and returns an elevated value of type `A<R>` (computed by applying `f` to
+the content of `a`). 
+
+### 4.6.4 Working at the right level of abstraction
+
+Working with low-level operations such as: for loops, null checks is inefficient (неэффективно)
+and error-prone (подвержено ошибкам).
+
+Working on abstraction level example:
+
+```csharp
+Enumerable.Range(1, 100).
+    Where(i => i % 20 == 0).
+    OrderBy(i => -i).
+    Select(i => $"{i}%")
+// => ["100%", "80%", "60%", "40%", "20%"]
+```
+
+Нахождение на уровне абстракций позволяет легко составлять вместе и выполнять несколько операций.
+
+## Summary
+
+* Structures like `Option<T>` and `IEnumerable<T>` can be seen as containers or
+abstractions, allowing you to work more effectively with the underlying values of
+type `T`.
+
+* You can distinguish (различать) between *regular* values, say, `T`, and *elevated* values, like
+`Option<T>` or `IEnumerable<T>`.
+
+* Some of the core functions of FP allow you to work effectively with elevated values:
+
+  * `Return` is a function that takes a regular value and lifts it into an elevated
+  value.
+
+  * `Map` applies a function to the inner value(s) of a structure, and returns a new
+  structure wrapping the result.
+
+  * `ForEach` is a side-effecting variant of `Map` that takes an action,
+  which it performs for each of the container’s inner values.
+
+  * `Bind` maps an `Option`-returning function onto an `Option` and flattens the
+  result to avoid producing a nested `Option`-and similarly for `IEnumerable`
+  and other structures.
+
+  * `Where` filters the inner value(s) of a structure according to a given predicate.
+
+* Types for which `Map` is defined are called *functors*. Types for which `Return` and
+`Bind` are defined are called *monads*.

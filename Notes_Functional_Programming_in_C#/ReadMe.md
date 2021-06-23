@@ -39,3 +39,5 @@
 
   Automated checking inputs to public methods aren't `null`.
   Allows you to disallow null arguments on a per-assembly basis.
+
+* Article "Understanding map and apply": http://fsharpforfunandprofit.com/posts/elevated-world/
