@@ -585,3 +585,20 @@ public class BicExistsValidatorTest
 
 * Parallelization is becoming the main road to computing speed (развитие CPU идет в сторону
 параллелизации).
+
+## Summary
+
+* Compared to mathematical functions, programming functions are more difficult to reason
+about because their output may depend on variables other than their input arguments.
+
+* Side effects include state mutation, throwing exceptions, and I/O.
+
+* Functions without side effects are called *pure*. These functions do nothing other
+than returning a value that depends solely on their input arguments.
+
+* Pure functions can be more readily optimized and tested than impure ones,
+and they can be used more reliably in concurrent scenarios, so you should prefer pure functions
+whenever possible.
+
+* Unlike other side effects, I/O can't be avoided, but you can still isolate the parts of
+your application that perform I/O in order to reduce the footprint of impure code.

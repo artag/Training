@@ -677,3 +677,24 @@ not be returned.
 * `Option` will enrich your model and make your code more self-documenting.
 
 * Use `Match` with the functions you'd like to evaluate in the `None` and `Some` cases.
+
+## Summary
+
+* Make your function signatures as specific as possible. This will make them easier to consume
+and less error-prone.
+
+* Make your functions honest. An honest function always does what its signature
+says, and given an input of the expected type, it yields an output of the expected
+type - no `Exception`'s, no `null`'s.
+
+* Use custom types rather than ad hoc validation code to constrain the input values of a
+function, and use smart constructors to instantiate these types.
+
+* Use the `Option` type to express the possible absence of a value. An `Option` can
+be in one of two states:
+
+  * `None`, indicating the absence of a value
+  * `Some`, a simple container wrapping a a non-`null` value
+
+* To execute code conditionally, depending on the state of an `Option`, use `Match`
+with the functions you'd like to evaluate in the `None` and `Some` cases.

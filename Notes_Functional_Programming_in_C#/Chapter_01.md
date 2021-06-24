@@ -642,3 +642,24 @@ public void Log(LogMessage msg) =>
 * *Better support for concurrency*
 
 * *A multi-paradigm approach*
+
+## Summary
+
+* FP is a powerful paradigm that can help you make your code more concise,
+maintainable, expressive, robust, testable, and concurrency-friendly.
+
+* FP differs from OOP by focusing on functions, rather than objects, and on data
+transformations rather than state mutation.
+
+* FP can be seen as a collection of techniques that are based on two fundamental
+tenets (принципы):
+
+  * Functions are first-class values
+
+  * In-place updates should be avoided
+
+* Functions in C# can be represented with methods, delegates, and lambdas.
+
+* FP leverages (использует) higher-order functions (functions that take other functions
+as input or output); hence the necessity (отсюда необходимость) for the language to have
+functions as first-class values.
