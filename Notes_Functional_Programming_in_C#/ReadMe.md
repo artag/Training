@@ -43,3 +43,5 @@
   Allows you to disallow null arguments on a per-assembly basis.
 
 * Article "Understanding map and apply": http://fsharpforfunandprofit.com/posts/elevated-world/
+
+* *"Enterprise Integration Patterns"* by Gregor Hohpe and Bobby Woolf (Addison-Wesley, 2004).
