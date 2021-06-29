@@ -10,6 +10,8 @@
 
 * [Chapter 05](Chapter_05.md)
 
+* [Chapter 06](Chapter_06.md)
+
 ## Exercises
 
 * [Exercises 01](Exercises_01.md)
@@ -49,3 +51,5 @@
 * Article "Understanding map and apply": http://fsharpforfunandprofit.com/posts/elevated-world/
 
 * *"Enterprise Integration Patterns"* by Gregor Hohpe and Bobby Woolf (Addison-Wesley, 2004).
+
+* Article "Railway Oriented Programming": http://fsharpforfunandprofit.com/rop/
