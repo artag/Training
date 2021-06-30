@@ -326,3 +326,275 @@ of the parallel tracks takes place.
 2. Load the model from the DB.
 3. Make changes to the model.
 4. Persist changes.
+
+## 6.3 Validation: a perfect use case for `Either`
+
+### 6.3.1 Choosing a suitable representation for errors
+
+A base class for representing failure:
+
+```csharp
+namespace LaYumba.Functional
+{
+    public class Error
+    {
+        public virtual string Message { get; }
+    }
+}
+```
+
+**Recommended approach** is to *create one subclass for each error type*.
+
+Example. Distinct types capture details about specific errors:
+
+```csharp
+namespace Boc.Domain
+{
+    public sealed class InvalidBic : Error
+    {
+        public override string Message { get; } =
+            "The beneficiary's BIC/SWIFT code is invalid";
+    }
+
+    public sealed class TransferDateIsPast : Error
+    {
+        public override string Message { get; } =
+            "Transfer date cannot be in the past";
+    }
+}
+```
+
+Add a static class, `Errors`, that contains factory functions for creating specific
+subclasses of `Error`:
+
+```csharp
+public static class Errors
+{
+    public static InvalidBic InvalidBic =>
+        new InvalidBic();
+
+    public static TransferDateIsPast TransferDateIsPast =>
+        new TransferDateIsPast();
+}
+```
+
+Преимущества такого описания ошибок:
+* Более чистый код в бизнес-части кода.
+* Хорошая документация - дает обзор всех конкретных ошибок, определенных для домена.
+
+### 6.3.2 Defining an `Either`-based API
+
+`BookTransfer` - data-transfer object. Receive from the client, and it's the input
+data for our workflow.
+
+Workflow should return an `Either<Error, Unit>`.
+
+We need to implement function with signature:
+
+```text
+BookTransfer -> Either<Error, Unit>
+```
+
+```csharp
+public class BookTransferController : Controller
+{
+    // Defines the high-level workflow: first validate, then persist.
+    // (1) Uses Bind to chain two operations that may fail
+    Either<Error, Unit> Handle(BookTransfer cmd) =>
+        Validate(cmd)
+            .Bind(Save);    // (1)
+
+    // Uses Either to acknowledge that validation may fail
+    Either<Error, BookTransfer> Validate(BookTransfer cmd) =>
+        // TODO: add validation...
+
+    // Uses Either to acknowledge that persisting the request may fail
+    Either<Error, Unit> Save(BookTransfer cmd) =>
+        // TODO: save the request...
+}
+```
+
+### 6.3.3 Adding validation logic
+
+Let's validate simple conditions about the request:
+* That the date for the transfer is indeed (действительно) in the future
+* That the provided BIC code is in the right format 
+
+```csharp
+Regex bicRegex = new Regex("[A-Z]{11}");
+
+Either<Error, BookTransfer> ValidateBic(BookTransfer cmd)
+{
+    // Failure: the error will be wrapped in an Either in the Left state.
+    if (!bicRegex.IsMatch(cmd.Bic))
+        return Errors.InvalidBic;
+    
+    // Success: the original request will be wrapped in an Either in the Right state.
+    return cmd;
+}
+```
+
+Chaining several validation functions with `Bind`:
+
+```csharp
+public class BookTransferController : Controller
+{
+    DateTime now;
+    Regex bicRegex = new Regex("[A-Z]{11}");
+    Either<Error, Unit> Handle(BookTransfer cmd) =>
+        Right(cmd)
+            .Bind(ValidateBic)
+            .Bind(ValidateDate)
+            .Bind(Save);
+
+    Either<Error, BookTransfer> ValidateBic(BookTransfer cmd)
+    {
+        if (!bicRegex.IsMatch(cmd.Bic))
+            return Errors.InvalidBic;
+        return cmd;
+    }
+
+    Either<Error, BookTransfer> ValidateDate(BookTransfer cmd)
+    {
+        if (cmd.Date.Date <= now.Date)
+            return Errors.TransferDateIsPast;
+        return cmd;
+    }
+
+    Either<Error, Unit> Save(BookTransfer cmd) => //...
+}
+```
+
+**Summary**: use `Either` to acknowledge that an operation may fail and `Bind` to chain
+several operations that may fail.
+
+But if the application internally uses `Either` (or `Option`) to represent outcomes (результаты),
+how should it represent outcomes to client applications that communicate with it over
+some protocol such as HTTP?
+
+We'll need to define a translation when communicating with other applications.
+
+## 6.4 Representing outcomes to client applications
+
+For `Option` and `Either` uses `Map`, `Bind`, and `Where`. Эти три метода работают в
+*within the abstraction* (область Elevated values).
+
+`Match` позволяет перейти из области Elevated values в область Regular values - 
+*leave the abstraction*.
+
+As a **general rule**, once you've introduced an abstraction like `Option`, it's best to stick
+with it as long as possible. What does "as long as possible" mean? Ideally, it means that
+**you'll leave the abstract world when you cross application boundaries**.
+
+Abstractions such as `Option` and `Eithe`r are useful within the application core, but
+they may not translate well to the message contract expected by the interacting applications.
+Thus, the outer layer is where you need to leave the abstraction and translate
+to the representation expected by your client applications.
+
+### 6.4.1 Exposing an `Option`-like interface
+
+Example. Interface for "ticker" (financial instrument, such as MSFT),
+returns details about the requested financial instrument:
+
+```csharp
+public interface IInstrumentService
+{
+    Option<InstrumentDetails> GetInstrumentDetails(string ticker);
+}
+```
+
+Next, let’s expose this data to the outer world - use `Controller`.
+
+The controller effectively acts as an adapter between the application core
+and the clients consuming the API.
+
+The API returns, let's say, JSON over HTTP - a format and protocol that doesn't
+deal in `Option`s.
+
+Controller is the last point where we can "translate" our `Option` into something that's
+supported by that protocol.
+
+Example of Controller. Translating None to status code 404:
+
+```csharp
+using Microsoft.AspNet.Mvc;
+
+public class InstrumentsController : Controller
+{
+    Func<string, Option<InstrumentDetails>> getInstrumentDetails;
+
+    [HttpGet, Route("api/instruments/{ticker}/details")]
+    public IActionResult GetInstrumentDetails(string ticker) =>
+        getInstrumentDetails(ticker)
+            .Match<IActionResult>(
+                () => NotFound(),           // None is mapped to a 404.
+                (result) => Ok(result));    // Some is mapped to a 200.
+}
+```
+
+### 6.4.2 Exposing an `Either`-like interface
+
+Example of Controller (using `Either`). Translating Left to status code 400:
+
+```csharp
+public class BookTransferController : Controller
+{
+    private IHandler<BookTransfer> transfers;
+
+    [HttpPost, Route("api/transfers/future")]
+    public IActionResult BookTransfer([FromBody] BookTransfer request) =>
+        transfers.Handle(request)
+            .Match<IActionResult>(
+                Left: BadRequest,       // None is mapped to a 400.
+                Right: _ => Ok());
+
+    Either<Error, Unit> Handle(BookTransfer cmd) //...
+}
+```
+
+### 6.4.3 Returning a result DTO
+
+This approach involves:
+* always returning a successful status code (the response was correctly received and processed).
+* with an arbitrarily rich representation of the outcome in the response body.
+
+Example. A DTO representing the outcome, to be serialized in the response:
+
+```csharp
+public class ResultDto<T>
+{
+    public bool Succeeded { get; }
+    public bool Failed => !Succeeded;
+
+    public T Data { get; }
+    public Error Error { get; }
+
+    public ResultDto(T data) { Succeeded = true; Data = data; }
+    public ResultDto(Error error) { Error = error; }
+}
+```
+
+We can then define a utility function that translates an Either to a ResultDto:
+
+```csharp
+public static ResultDto<T> ToResult<T>(this Either<Error, T> either) =>
+    either.Match(
+        Left: error => new ResultDto<T>(error),
+        Right: data => new ResultDto<T>(data))
+```
+
+Now we can just expose (отобразить) the `Result` in our API method, as follows:
+
+```csharp
+public class BookTransferController : Controller
+{
+    [HttpPost, Route("api/transfers/book")]
+    public ResultDto<Unit> BookTransfer([FromBody] BookTransfer cmd) =>
+        Handle(cmd).ToResult();
+
+    Either<Error, Unit> Handle(BookTransfer cmd) //...
+}
+```
+
+**Summary**: use `Match` if you're in the skin of the orange;
+stay with the juicy abstractions within the core of the orange.
