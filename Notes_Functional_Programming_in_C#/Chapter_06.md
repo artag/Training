@@ -59,82 +59,10 @@ Notice that `Either` has two generic parameters and can be in one of two states:
 * `Left(L)` wraps a value of type `L`, capturing details about the error.
 * `Right(R)` wraps a value of type `R`, representing a successful result.
 
-`Either`, `Left` and `Right` implementation:
+`Either`, `Left` and `Right` implementation watch [here](Either.md).
 
 ```csharp
-public static partial class F
-{
-    public static Either.Left<L> Left<L>(L l) => new Either.Left<L>(l);
-    public static Either.Right<R> Right<R>(R r) => new Either.Right<R>(r);
-}
 
-public struct Either<L, R>
-{
-    internal L Left { get; }
-    internal R Right { get; }
-
-    private bool IsRight { get; }
-    private bool IsLeft => !IsRight;
-
-    internal Either(L left)
-    {
-       IsRight = false;
-       Left = left;
-       Right = default(R);
-    }
-
-    internal Either(R right)
-    {
-       IsRight = true;
-       Right = right;
-       Left = default(L);
-    }
-
-    public static implicit operator Either<L, R>(L left) =>
-        new Either<L, R>(left);
-    public static implicit operator Either<L, R>(R right) =>
-        new Either<L, R>(right);
-
-    public static implicit operator Either<L, R>(Either.Left<L> left) =>
-        new Either<L, R>(left.Value);
-    public static implicit operator Either<L, R>(Either.Right<R> right) =>
-        new Either<L, R>(right.Value);
-
-    public TR Match<TR>(Func<L, TR> Left, Func<R, TR> Right) =>
-        IsLeft ? Left(this.Left) : Right(this.Right);
-
-    public Unit Match(Action<L> Left, Action<R> Right) =>
-        Match(Left.ToFunc(), Right.ToFunc());
-
-    public IEnumerator<R> AsEnumerable()
-    {
-       if (IsRight) yield return Right;
-    }
-
-    public override string ToString() => Match(l => $"Left({l})", r => $"Right({r})");
-}
-
-public static class Either
-{
-    public struct Left<L>
-    {
-        internal L Value { get; }
-        internal Left(L value) { Value = value; }
-
-        public override string ToString() => $"Left({Value})";
-    }
-
-    public struct Right<R>
-    {
-        internal R Value { get; }
-        internal Right(R value) { Value = value; }
-
-        public override string ToString() => $"Right({Value})";
-
-        public Right<RR> Map<L, RR>(Func<R, RR> f) => Right(f(Value));
-        public Either<L, RR> Bind<L, RR>(Func<R, Either<L, RR>> f) => f(Value);
-    }
-}
 ```
 
 Примеры использования `Either`:
@@ -598,3 +526,244 @@ public class BookTransferController : Controller
 
 **Summary**: use `Match` if you're in the skin of the orange;
 stay with the juicy abstractions within the core of the orange.
+
+## 6.5 Variations on the `Either` theme
+
+Использование `Either` конечно полезно, но:
+* The `Left` type always stays the same, so how can you compose functions that
+return an `Either` with a different `Left` type?
+* Always having to specify two generic arguments makes the code too verbose (слишком многословным).
+* The names `Either`, `Left`, and `Right` are too cryptic. Can't we have something
+more user-friendly?
+
+Ответ - использование вариаций типа `Either` (см. далее).
+
+### 6.5.1 Changing between different error representations
+
+Можно определить тип `Map`, который будет для `Either` выполнять преобразование как
+для `Right`, так и для `Left`.
+
+В ФП functors такого типа называются *bifunctors*, а методы обычно называются `BiMap`.
+
+```csharp
+public static Either<LL, RR> Map<L, LL, R, RR>(
+    this Either<L, R> either, Func<L, LL> left, Func<R, RR> right) =>
+        either.Match<Either<LL, RR>>(
+            l => Left(left(l)),
+            r => Right(right(r)));
+```
+
+Пример использования bifunctor'а для `Left` значения:
+
+```csharp
+Either<Error, int> Run(double x, double y) =>
+    Calc(x, y)
+        .Map(
+            left: msg => Error(msg),    // Преобразование string в Error
+            right: d => d)              // Без изменений
+        .Bind(ToIntIfWhole);
+
+Either<string, double> Calc(double x, double y) => //...
+Either<Error, int> ToIntIfWhole(double d) => //...
+```
+
+### 6.5.2 Specialized versions of `Either`
+
+Two shortcomings (недостатка) of using `Either` in C#:
+
+1. Having two generic arguments adds noise to the code
+(пример - `Either<IEnumerable<Error>, Rates>`).
+
+2. Names `Either`, `Left`, and `Right` are too abstract.
+
+Решение - использование специализированных версий `Either` (плюс, можно сделать свои версии):
+
+* `Validation<T>` - тип подобный `Either`, с ошибками `IEnumerable<Error>`.
+
+  ```text
+  Validation<T> = Invalid(IEnumerable<Error>) | Valid(T)
+  ```
+
+  Can capture multiple validation errors.
+
+  `Validation` implementation watch [here](Validation.md).
+
+* `Exceptional<T>` - тип подобный `Either`, с ошибками `System.Exception`.
+
+  ```text
+  Exceptional<T> = Exception | Success(T)
+  ```
+
+  Can be used as a bridge between an exception-based API and functional error handling.
+
+  `Exceptional` implementation watch [here](Exceptional.md).
+
+Table. Some particularized versions of Either and their state names
+
+| Type             | Success case | Failure case | Failure type
+|------------------|--------------|--------------|-------------------
+| `Either<L, R>`   | `Right`      | `Left`       | `L`
+| `Validation<T>`  | `Valid`      | `Invalid`    | `IEnumerable<Error>`
+| `Exceptional<T>` | `Success`    | `Exception`  | `Exception`
+
+### 6.5.3 Refactoring to Validation and Exceptional
+
+Refactor previous example with `Exceptional` to `Validation`:
+
+```csharp
+DateTime now;
+
+// (1) Wraps an Error in a Validation in the Invalid state.
+// (2) Wraps the command in a Validation in the Valid state.
+Validation<BookTransfer> ValidateDate(BookTransfer cmd)
+{
+    if (cmd.Date.Date <= now.Date)
+        return Invalid(Errors.TransferDateIsPast);    // (1)
+
+    return Valid(cmd);    // (2)
+}
+```
+
+### Bridging between an exception-based API and functional error handling
+
+Failure here would indicate a fault in the infrastructure or configuration,
+or another technical error.
+
+Translating an Exception -based API to an Exceptional value:
+
+```csharp
+string connString;
+
+// (1) The return type acknowledges the possibility of an exception.
+// (2) The call to a third-party API that throws an exception is wrapped in a try.
+// (3) The exception is wrapped in an Exceptional in the Exception state.
+// (4) The resulting Unit is wrapped in an Exceptional in the Success state.
+Exceptional<Unit> Save(BookTransfer transfer)    // (1)
+{
+    try
+    {
+        ConnectionHelper.Connect(connString, c => c.Execute("INSERT ...", transfer));    // (2)
+    }
+    catch (Exception ex) { return ex; }     // (3)
+    return Unit();                          // (4)
+}
+```
+
+Примечание: scope of the `try/catch` is as *small as possible*.
+
+### Failed validation and technical errors should be handled differently
+
+Плюсы использования `Validation` и `Exceptional` типов - они имеют четкую семантику (смысл):
+* `Validation` indicates that some business rule has been violated.
+* `Exception` denotes (обозначает) an unexpected technical error.
+
+Разные типы можно объединять. Пример:
+
+```csharp
+public class BookTransferController : Controller
+{
+    // Combines validation and persistence
+    Validation<Exceptional<Unit>> Handle(BookTransfer cmd) =>
+        Validate(cmd)
+            .Map(Save);
+
+    // Top-level validation function combining various validations
+    Validation<BookTransfer> Validate(BookTransfer cmd) =>
+        ValidateBic(cmd)
+            .Bind(ValidateDate);
+
+    Validation<BookTransfer> ValidateBic(BookTransfer cmd) => // ...
+    Validation<BookTransfer> ValidateDate(BookTransfer cmd) => // ...
+
+    Exceptional<Unit> Save(BookTransfer cmd) => // ...
+}
+```
+
+Результирующий тип у функции `Handle` - `Validation<Exceptional<Unit>>`.
+
+`Handle` подтверждает, что операция может закончится неудачей как по причине бизнес логики,
+так и по технической причине путем "stacking" the two *monadic effects*.
+
+Теперь контроллер, который используется как точка входа/выхода из внешнего мира:
+
+```csharp
+public class BookTransferController : Controller
+{
+    ILogger<BookTransferController> logger;
+
+    // (1) Unwraps the value inside the Validation
+    // (2) If validation failed, sends a 400 (400 - Bad Request)
+    // (3) Unwraps the value inside the Exceptional
+    // (4) If persistence failed, sends a 500 (500 - Internal Server Error)
+    [HttpPost, Route("api/transfers/book")]
+    public IActionResult BookTransfer([FromBody] BookTransfer cmd) =>
+        Handle(cmd).Match(                      // (1)
+            Invalid: BadRequest,                // (2)
+            Valid: result => result.Match(      // (3)
+                Exception: OnFaulted,           // (4)
+                Success: _ => Ok()));
+
+    IActionResult OnFaulted(Exception ex)
+    {
+        logger.LogError(ex.Message);
+        return StatusCode(500, Errors.UnexpectedError);
+    }
+
+    Validation<Exceptional<Unit>> Handle(BookTransfer cmd) => //...
+}
+```
+
+Here we use two nested calls to `Match` to first unwrap the value inside the `Validation`,
+and then the value inside the `Exceptional`:
+
+* If validation failed, we send a 400, which will include the full details of the validation
+errors, so that the user can address them.
+
+* If persistence failed, on the other hand, we don't want to send the details to the
+user. Instead we return a 500 with a more generic error type; this is also a good
+place to log the exception.
+
+**Summary**:
+
+1. `Either` gives you an explicit, functional way to handle errors without introducing side effects.
+2. Using specialized versions of `Either`, such as `Validation` and `Exceptional`,
+leads to an even more expressive and readable implementation.
+
+### 6.5.4 Leaving exceptions behind?
+
+Использование exceptions приводит к:
+1. Disrupts (нарушение) normal program flow, introducing side effects.
+2. It makes your code more difficult to maintain.
+
+Исключения все еще могут применяться в следующих случаях:
+* *Developer errors* - попытка удаления элемента из пустого списка, передача null-значения в функцию.
+Такие исключения не перехватываются, они означают ошибку логики приложения.
+
+* *Configuration errors* - например, работа приложения полностью зависит от message bus или от
+соединения с БД. Исключения при ошибках/отсутствиях такого рода настроек должны 
+выбрасываться при инициализации приложения и не должны перехватываться. Они должны аварийно
+завершать работу программы.
+
+## Summary
+
+* Use `Either` to represent the result of an operation with two different possible
+outcomes (результаты), typically success or failure. An `Either` can be in one of two states:
+  * `Left` indicates failure and contains error information for an unsuccessful operation.
+  * `Right` indicates success and contains the result of a successful operation.
+* Interact with `Either` using the equivalents of the core functions already seen
+with `Option` :
+  * `Map` and `Bind` apply the mapped/bound function *if* the `Either` is in the
+  `Right` state; otherwise they just pass along the `Left` value.
+  * `Match` works similarly to how it does with `Option`, allowing you to handle the
+  `Right` and `Left` cases differently.
+  * `Where` is not readily applicable, so `Bind` should be used in its stead (вместо него)
+  for filtering, while providing (обеспечивая) a suitable (подходящее) `Left` value.
+* `Either` is particularly useful (особено полезен) for combining several validation
+functions with `Bind`, or, more generally, for combining several operations, each of which can
+fail.
+* Because `Either` is rather abstract, and because of the syntactic overhead of its
+two generic arguments, in practice it’s better to use a particularized version of
+`Either`, such as `Validation` and `Exceptional`.
+* When working with functors and monads, prefer using functions that stay
+within the abstraction, like `Map` and `Bind`. Use the downward-crossing `Match`
+function as little or as late as possible.

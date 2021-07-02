@@ -12,6 +12,12 @@
 
 * [Chapter 06](Chapter_06.md)
 
+  * [Either](Either.md)
+
+  * [Validation](Validation.md)
+
+  * [Exceptional](Exceptional.md)
+
 ## Exercises
 
 * [Exercises 01](Exercises_01.md)
