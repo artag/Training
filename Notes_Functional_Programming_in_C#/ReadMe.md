@@ -28,6 +28,10 @@
 
 * [Exercises 04](Exercises_04.md)
 
+* [Exercises 05](Exercises_05.md)
+
+* [Exercises 06](Exercises_06.md)
+
 ## Links
 
 ## Libraries from Microsoft to programming in a functional style:
