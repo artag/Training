@@ -1,3 +1,5 @@
+# Exercises 02
+
 1. Write a console app that calculates a user’s Body Mass Index (BMI):
 
   * Prompt the user for their height in meters and weight in kilograms.

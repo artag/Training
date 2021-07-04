@@ -1,3 +1,5 @@
+# Exercises 01
+
 2. Write a function that negates a given predicate: whenever the given predicate
 evaluates to `true`, the resulting function evaluates to `false`, and vice versa.
 

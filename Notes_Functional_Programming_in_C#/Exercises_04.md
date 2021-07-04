@@ -1,3 +1,5 @@
+# Exercises 04
+
 1. Implement `Map` for `ISet<T>` and `IDictionary<K, T>`.
 (Tip: start by writing down the signature in arrow notation.)
 

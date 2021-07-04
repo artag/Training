@@ -1,3 +1,5 @@
+# Exercises 03
+
 1. Write a generic function that takes a `string` and parses it as a value of an `enum`.
 It should be usable as follows:
 
