@@ -108,52 +108,52 @@ public static class Validation
                     Invalid: (errT) => Invalid(errF.Concat(errT))));
 
     public static Validation<Func<T2, R>> Apply<T1, T2, R>(
-        this Validation<Func<T1, T2, R>> @this, Validation<T1> arg) =>
-            Apply(@this.Map(F.Curry), arg);
+        this Validation<Func<T1, T2, R>> valF, Validation<T1> arg) =>
+            Apply(valF.Map(F.Curry), arg);
 
     public static Validation<Func<T2, T3, R>> Apply<T1, T2, T3, R>(
-        this Validation<Func<T1, T2, T3, R>> @this, Validation<T1> arg) =>
-            Apply(@this.Map(F.CurryFirst), arg);
+        this Validation<Func<T1, T2, T3, R>> valF, Validation<T1> arg) =>
+            Apply(valF.Map(F.CurryFirst), arg);
 
     public static Validation<Func<T2, T3, T4, R>> Apply<T1, T2, T3, T4, R>(
-        this Validation<Func<T1, T2, T3, T4, R>> @this, Validation<T1> arg) =>
-            Apply(@this.Map(F.CurryFirst), arg);
+        this Validation<Func<T1, T2, T3, T4, R>> valF, Validation<T1> arg) =>
+            Apply(valF.Map(F.CurryFirst), arg);
 
     public static Validation<Func<T2, T3, T4, T5, R>> Apply<T1, T2, T3, T4, T5, R>(
-        this Validation<Func<T1, T2, T3, T4, T5, R>> @this, Validation<T1> arg) =>
-            Apply(@this.Map(F.CurryFirst), arg);
+        this Validation<Func<T1, T2, T3, T4, T5, R>> valF, Validation<T1> arg) =>
+            Apply(valF.Map(F.CurryFirst), arg);
 
     public static Validation<Func<T2, T3, T4, T5, T6, R>> Apply<T1, T2, T3, T4, T5, T6, R>(
-        this Validation<Func<T1, T2, T3, T4, T5, T6, R>> @this, Validation<T1> arg) =>
-            Apply(@this.Map(F.CurryFirst), arg);
+        this Validation<Func<T1, T2, T3, T4, T5, T6, R>> valF, Validation<T1> arg) =>
+            Apply(valF.Map(F.CurryFirst), arg);
 
     public static Validation<Func<T2, T3, T4, T5, T6, T7, R>> Apply<T1, T2, T3, T4, T5, T6, T7, R>(
-        this Validation<Func<T1, T2, T3, T4, T5, T6, T7, R>> @this, Validation<T1> arg) =>
-            Apply(@this.Map(F.CurryFirst), arg);
+        this Validation<Func<T1, T2, T3, T4, T5, T6, T7, R>> valF, Validation<T1> arg) =>
+            Apply(valF.Map(F.CurryFirst), arg);
 
     public static Validation<Func<T2, T3, T4, T5, T6, T7, T8, R>> Apply<T1, T2, T3, T4, T5, T6, T7, T8, R>(
-        this Validation<Func<T1, T2, T3, T4, T5, T6, T7, T8, R>> @this, Validation<T1> arg) =>
-            Apply(@this.Map(F.CurryFirst), arg);
+        this Validation<Func<T1, T2, T3, T4, T5, T6, T7, T8, R>> valF, Validation<T1> arg) =>
+            Apply(valF.Map(F.CurryFirst), arg);
 
     public static Validation<Func<T2, T3, T4, T5, T6, T7, T8, T9, R>> Apply<T1, T2, T3, T4, T5, T6, T7, T8, T9, R>(
-        this Validation<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, R>> @this, Validation<T1> arg) =>
-            Apply(@this.Map(F.CurryFirst), arg);
+        this Validation<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, R>> valF, Validation<T1> arg) =>
+            Apply(valF.Map(F.CurryFirst), arg);
 
-    public static Validation<RR> Map<R, RR>(this Validation<R> @this, Func<R, RR> f) =>
-        @this.IsValid
-            ? Valid(f(@this.Value))
-            : Invalid(@this.Errors);
+    public static Validation<RR> Map<R, RR>(this Validation<R> valF, Func<R, RR> f) =>
+        valF.IsValid
+            ? Valid(f(valF.Value))
+            : Invalid(valF.Errors);
 
-    public static Validation<Func<T2, R>> Map<T1, T2, R>(this Validation<T1> @this, Func<T1, T2, R> func) =>
-        @this.Map(func.Curry());
+    public static Validation<Func<T2, R>> Map<T1, T2, R>(this Validation<T1> valF, Func<T1, T2, R> func) =>
+        valF.Map(func.Curry());
 
-    public static Validation<Unit> ForEach<R>(this Validation<R> @this, Action<R> act) =>
-        Map(@this, act.ToFunc());
+    public static Validation<Unit> ForEach<R>(this Validation<R> valF, Action<R> act) =>
+        Map(valF, act.ToFunc());
 
-    public static Validation<T> Do<T>(this Validation<T> @this, Action<T> action)
+    public static Validation<T> Do<T>(this Validation<T> valF, Action<T> action)
     {
-        @this.ForEach(action);
-        return @this;
+        valF.ForEach(action);
+        return valF;
     }
 
     public static Validation<R> Bind<T, R>(this Validation<T> val, Func<T, Validation<R>> f) =>
@@ -163,12 +163,12 @@ public static class Validation
 
     // LINQ
 
-    public static Validation<R> Select<T, R>(this Validation<T> @this, Func<T, R> map) =>
-        @this.Map(map);
+    public static Validation<R> Select<T, R>(this Validation<T> valF, Func<T, R> map) =>
+        valF.Map(map);
 
     public static Validation<RR> SelectMany<T, R, RR>(
-        this Validation<T> @this, Func<T, Validation<R>> bind, Func<T, R, RR> project) =>
-            @this.Match(
+        this Validation<T> valF, Func<T, Validation<R>> bind, Func<T, R, RR> project) =>
+            valF.Match(
                 Invalid: (err) => Invalid(err),
                 Valid: (t) => bind(t).Match(
                     Invalid: (err) => Invalid(err),

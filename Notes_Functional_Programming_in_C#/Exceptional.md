@@ -65,8 +65,8 @@ public static class Exceptional
     // applicative
 
     public static Exceptional<R> Apply<T, R>(
-        this Exceptional<Func<T, R>> @this, Exceptional<T> arg) =>
-            @this.Match(
+        this Exceptional<Func<T, R>> exF, Exceptional<T> arg) =>
+            exF.Match(
                 Exception: ex => ex,
                 Success: func => arg.Match(
                     Exception: ex => ex,
@@ -75,34 +75,34 @@ public static class Exceptional
     // functor
 
     public static Exceptional<RR> Map<R, RR>(
-        this Exceptional<R> @this, Func<R, RR> func) =>
-            @this.Success ? func(@this.Value) : new Exceptional<RR>(@this.Ex);
+        this Exceptional<R> exF, Func<R, RR> func) =>
+            exF.Success ? func(exF.Value) : new Exceptional<RR>(exF.Ex);
 
     public static Exceptional<Unit> ForEach<R>(
-        this Exceptional<R> @this, Action<R> act) =>
-            Map(@this, act.ToFunc());
+        this Exceptional<R> exF, Action<R> act) =>
+            Map(exF, act.ToFunc());
 
     public static Exceptional<RR> Bind<R, RR>(
-        this Exceptional<R> @this, Func<R, Exceptional<RR>> func) =>
-            @this.Success ? func(@this.Value) : new Exceptional<RR>(@this.Ex);
+        this Exceptional<R> exF, Func<R, Exceptional<RR>> func) =>
+            exF.Success ? func(exF.Value) : new Exceptional<RR>(exF.Ex);
 
     // LINQ
 
     public static Exceptional<R> Select<T, R>(
-        this Exceptional<T> @this, Func<T, R> map) =>
-            @this.Map(map);
+        this Exceptional<T> exF, Func<T, R> map) =>
+            exF.Map(map);
 
     public static Exceptional<RR> SelectMany<T, R, RR>(
-        this Exceptional<T> @this, Func<T, Exceptional<R>> bind, Func<T, R, RR> project)
+        this Exceptional<T> exF, Func<T, Exceptional<R>> bind, Func<T, R, RR> project)
     {
-        if (@this.Exception)
-            return new Exceptional<RR>(@this.Ex);
+        if (exF.Exception)
+            return new Exceptional<RR>(exF.Ex);
 
-        var bound = bind(@this.Value);
+        var bound = bind(exF.Value);
 
         return bound.Exception
            ? new Exceptional<RR>(bound.Ex)
-           : project(@this.Value, bound.Value);
+           : project(exF.Value, bound.Value);
     }
 }
 ```

@@ -80,38 +80,38 @@ public static class Either
     public static class EitherExt
     {
         public static Either<L, RR> Map<L, R, RR>(
-            this Either<L, R> @this, Func<R, RR> f) =>
-                @this.Match<Either<L, RR>>(
+            this Either<L, R> either, Func<R, RR> f) =>
+                either.Match<Either<L, RR>>(
                     l => Left(l),
                     r => Right(f(r)));
 
         public static Either<LL, RR> Map<L, LL, R, RR>(
-            this Either<L, R> @this, Func<L, LL> left, Func<R, RR> right) =>
-                @this.Match<Either<LL, RR>>(
+            this Either<L, R> either, Func<L, LL> left, Func<R, RR> right) =>
+                either.Match<Either<LL, RR>>(
                     l => Left(left(l)),
                     r => Right(right(r)));
 
         public static Either<L, Unit> ForEach<L, R>(
-            this Either<L, R> @this, Action<R> act) =>
-                Map(@this, act.ToFunc());
+            this Either<L, R> either, Action<R> act) =>
+                Map(either, act.ToFunc());
 
         public static Either<L, RR> Bind<L, R, RR>(
-            this Either<L, R> @this, Func<R, Either<L, RR>> f) =>
-                @this.Match(
+            this Either<L, R> either, Func<R, Either<L, RR>> f) =>
+                either.Match(
                     l => Left(l),
                     r => f(r));
 
         // LINQ
 
         public static Either<L, R> Select<L, T, R>(
-            this Either<L, T> @this, Func<T, R> map) =>
-                @this.Map(map);
+            this Either<L, T> either, Func<T, R> map) =>
+                either.Map(map);
 
         public static Either<L, RR> SelectMany<L, T, R, RR>(
-            this Either<L, T> @this, Func<T, Either<L, R>> bind, Func<T, R, RR> project) =>
-                @this.Match(
+            this Either<L, T> either, Func<T, Either<L, R>> bind, Func<T, R, RR> project) =>
+                either.Match(
                     Left: l => Left(l),
-                    Right: t => bind(@this.Right)
+                    Right: t => bind(either.Right)
                         .Match<Either<L, RR>>(
                             Left: l => Left(l),
                             Right: r => project(t, r)));
