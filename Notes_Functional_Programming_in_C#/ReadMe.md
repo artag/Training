@@ -18,6 +18,8 @@
 
   * [Exceptional](Exceptional.md)
 
+* [Chapter 07](Chapter_07.md)
+
 ## Exercises
 
 * [Exercises 01](Exercises_01.md)
