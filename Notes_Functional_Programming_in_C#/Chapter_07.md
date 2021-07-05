@@ -199,3 +199,223 @@ it's sometimes best to move away from using methods and write
 `Func`s instead - or methods that return `Func`s.
 
 ## 7.3 Curried functions: optimized for partial application
+
+*Currying* is the process of transforming an `n`-ary function `f` that takes arguments
+`t1`, `t2`, ..., tn into a unary function that takes `t1` and yields a new function that takes `t2`,
+and so on. 
+
+In other words, `n`-ary function with signature
+
+```text
+(T1, T2, ..., Tn) -> R
+```
+
+when curried, has signature:
+
+```text
+T1 -> T2 -> ... -> Tn -> R
+```
+
+This functions
+
+```csharp
+Func<Greeting, Name, PersonalizedGreeting> greet
+= (gr, name) => $"{gr}, {name}";
+
+Func<Greeting, Func<Name, PersonalizedGreeting>> greetWith
+= gr => name => $"{gr}, {name}";
+```
+
+has signatures:
+
+```text
+greet : (Greeting, Name) -> PersonalizedGreeting
+greetWith : Greeting -> Name -> PersonalizedGreeting
+```
+
+And we can use this curried function like this:
+
+```csharp
+// Could call the curried function like so:
+greetWith("hello")("world")     // => "hello, world"
+
+// Partial application
+var greetFormally = greetWith("Good evening");      // greetWith called manual currying
+names.Map(greetFormally).ForEach(WriteLine);
+// prints: Good evening, Tristan
+//         Good evening, Ivan
+```
+
+For binary and ternary functions, generic `Curry` looks like this:
+
+```csharp
+static Func<T1, Func<T2, R>> Curry<T1, T2, R>(this Func<T1, T2, R> func) =>
+        t1 => t2 => func(t1, t2);
+
+static Func<T1, Func<T2, Func<T3, R>>> Curry<T1, T2, T3, R>(this Func<T1, T2, T3, R> func) =>
+    t1 => t2 => t3 => func(t1, t2, t3);
+```
+
+Use generic `Curry`:
+
+```csharp
+var greetWith = greet.Curry();
+var greetNostalgically = greetWith("Arrivederci");
+names.Map(greetNostalgically).ForEach(WriteLine);
+// prints: Arrivederci, Tristan
+//         Arrivederci, Ivan
+```
+
+Differences between partial application and currying:
+
+* *Partial application* - You give a function fewer (меньше) arguments than the function
+expects, obtaining a function that's particularized (уточняется/задается) with the values
+of the arguments given so far.
+
+* *Currying* - You don't give any arguments; you just transform an `n`-ary function
+into a unary function, to which arguments can be successively given to eventually get
+the same result as the original function.
+
+**Summary** - ways of using partial application:
+
+1. By writing functions in curried form.
+2. By currying functions with `Curry`, and then invoking the curried function with
+subsequent arguments.
+3. By supplying arguments one by one with `Apply`.
+
+## 7.4 Creating a partial-application-friendly API
+
+Example - accessing a SQL database (using Dapper (см. главу 1)).
+
+We'd need to implement functions of these types:
+
+```text
+lookupEmployee : Guid -> Option<Employee>
+findEmployeesByLastName : string -> IEnumerable<Employee>
+```
+
+For retrieving data, Dapper exposes the Query method with the signature:
+
+```csharp
+public static IEnumerable<T> Query<T>(
+    this IDbConnection conn, string sqlQuery, object param = null,
+    SqlTransaction tran = null, bool buffered = true)
+```
+
+* `T` - returned data by the query. In our case `Employee`.
+
+* `conn` - the connection to the database. 
+
+* `sqlQuery` - SQL query template. (example: `"SELECT * FROM EMPLOYEES WHERE ID = @Id"`)
+
+* `param` - object whose properties will be used to populate the placeholders in the `sqlQuery`.
+
+### 7.4.1 Types as documentation
+
+A custom type for connection strings:
+
+```csharp
+public class ConnectionString
+{
+    string Value { get; }
+    public ConnectionString(string value) { Value = value; }
+
+    // Implicit conversion to and from string
+    public static implicit operator string(ConnectionString c) => c.Value;
+    public static implicit operator ConnectionString(string s) => new ConnectionString(s);
+
+    public override string ToString() => Value;
+}
+```
+
+Точно такой же тип можно задать и для SQL template - класс `SqlTemplate`.
+
+При старте приложения `ConnectionString` можно сконфигурировать подобным образом:
+
+```csharp
+ConnectionString connString = configuration.GetSection("ConnectionString").Value;
+```
+
+Function signatures are more explicit when using custom types:
+
+```csharp
+public Option<Employee> lookupEmployee(ConnectionString conn, Guid id) => //...
+```
+
+Плюсы:
+
+1. `ConnectionString` гораздо нагляднее чем просто строка `string`.
+
+2. We can now define extension methods on `ConnectionString`, что не имело особого смысла для строки.
+
+### 7.4.2 Particularizing the data access function
+
+An adapter function that's better suited for partial application:
+
+```csharp
+using static ConnectionHelper;
+public static class ConnectionStringExt
+{
+    public static Func<SqlTemplate, object, IEnumerable<T>> Query<T>(
+        this ConnectionString connString) =>
+            (sql, param) => Connect(connString, conn => conn.Query<T>(sql, param));
+}
+
+// Where ConnectionHelper.Connect, which we implemented in chapter 1:
+public static class ConnectionHelper
+{
+    public static R Connect<R>(string connString, Func<IDbConnection, R> f)
+    {
+        using (var conn = new SqlConnection(connString))    // Setup
+        {                                                   // Setup
+            conn.Open();                                    // Setup
+            return f(conn);
+        }                                                   // Teardown
+    }
+}
+```
+
+Signature of the preceding method: `ConnectionString -> (SqlTemplate, object) -> IEnumerable<T>`
+
+This definition of Query is a thin shim (тонкая прокладка) on top of Dapper's Query function.
+It provides a partial-application friendly API, for two reasons:
+
+* Arguments this time truly go from general to specific.
+
+* Supplying the first argument yields a `Func`, which resolves the issues of type
+inference when applying subsequent arguments.
+
+Supplying arguments to get a function of the desired signature:
+
+```csharp
+// Comments
+// (1) - The connection string and retrieved type are fixed.
+// (2) - The SQL query to be used is fixed.
+// (3) - The functions we set out to implement.
+
+ConnectionString connString = configuration
+    .GetSection("ConnectionString").Value;
+
+SqlTemplate sel = "SELECT * FROM EMPLOYEES";
+SqlTemplate sqlById = $"{sel} WHERE ID = @Id";
+SqlTemplate sqlByName = $"{sel} WHERE LASTNAME = @LastName";
+
+// (SqlTemplate, object) -> IEnumerable<Employee>
+var queryEmployees = conn.Query<Employee>();                        // (1)
+
+// object -> IEnumerable<Employee>
+var queryById = queryEmployees.Apply(sqlById);                      // (2)
+
+// object -> IEnumerable<Employee>
+var queryByLastName = queryEmployees.Apply(sqlByName);              // (2)
+
+// Guid -> Option<Employee>
+Option<Employee> lookupEmployee(Guid id) =>                         // (3)
+    queryById(new { Id = id }).FirstOrDefault();
+
+// string -> IEnumerable<Employee>
+IEnumerable<Employee> findEmployeesByLastName(string lastName) =>   // (3)
+    queryByLastName(new { LastName = lastName });
+```
+
+## 7.5 Modularizing and composing an application
