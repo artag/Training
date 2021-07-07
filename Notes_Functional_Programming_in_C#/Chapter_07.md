@@ -419,3 +419,290 @@ IEnumerable<Employee> findEmployeesByLastName(string lastName) =>   // (3)
 ```
 
 ## 7.5 Modularizing and composing an application
+
+Разбивание больших классов на более мелкие компоненты с определенными зонами ответственности
+приводит к:
+* код становится более модульным и управляемым
+* код становится легче повторно использовать
+
+Но, перед "употреблением", разделенные компоненты необходимо собирать/компоновать.
+
+### 7.5.1 Modularity in OOP
+
+Modularity in OOP is usually obtained by assigning responsibilities to different objects,
+and capturing these responsibilities with interfaces.
+
+Example. Interfaces in OOP capture the components responsibilities:
+
+```csharp
+public interface IValidator<T>
+{
+    Validation<T> Validate(T request);
+}
+
+public interface IRepository<T>
+{
+    Option<T> Lookup(Guid id);
+    Exceptional<Unit> Save(T entity);
+}
+```
+
+A higher-level component (controller) consumes lower-level components via interfaces.
+This pattern called *dependency inversion*.
+
+Преимущества такого подхода:
+
+* *Decoupling* (разделение/развяка) - You could swap out the repository implementation
+(changing it from writing to a database to writing to a queue) and this wouldn't impact the
+controller. You'd only need to change how the two are wired up. (This is usually
+defined in some bootstrapping logic.)
+* *Testability* - You can unit-test the handler without hitting the database, by injecting a fake
+*IRepository*.
+
+И недостатки:
+
+* There's an explosion in the number of interfaces, adding boilerplate and making the code
+difficult to navigate.
+
+* The bootstrapping logic to compose the application is often not trivial.
+
+* Building fake implementations for testability can be complex.
+
+Для управления всем этим могут применяться IoC containers and mocking frameworks.
+
+Итак, пример с прошлой главы. An implementation that's functional in the small and OO in the large:
+
+```csharp
+public class BookTransferController : Controller
+{
+    IValidator<BookTransfer> validator;
+    IRepository<BookTransfer> repository;
+
+    public BookTransferController(
+        IValidator<BookTransfer> validator, IRepository<BookTransfer> repository)
+    {
+        this.validator = validator;
+        this.repository = repository;
+    }
+
+    [HttpPost, Route("api/transfers/book")]
+    public IActionResult TransferOn([FromBody] BookTransfer cmd) =>
+        validator.Validate(cmd)
+            .Map(repository.Save)
+            .Match(
+                Invalid: BadRequest,
+                Valid: result => result.Match<IActionResult>(
+                    Exception: _ => StatusCode(500, Errors.UnexpectedError),
+                    Success: _ => Ok()));
+}
+```
+
+The main components (controller, validator, repository) are indeed objects.
+
+Many functional concepts are then used in the implementation of the methods and in defining
+their signatures.
+
+### 7.5.2 Modularity in FP
+
+In OOP fundamental units are objects, in FP they're functions. В ФП в качестве зависимостей
+используются другие функции.
+
+Example. Injecting functions as dependencies (было в главе 2):
+
+```csharp
+public class DateNotPast : IValidator<BookTransfer>
+{
+    Func<DateTime> clock;
+
+    public DateNotPastValidator(Func<DateTime> clock) { this.clock = clock; }
+
+    public Validation<BookTransfer> Validate(BookTransfer cmd) =>
+        cmd.Date.Date < clock().Date
+            ? Errors.TransferDateIsPast
+            : Valid(cmd);
+}
+```
+
+Зачем нам интерфейс `IValidator`? Let's instead use a delegate to represent validation:
+
+```csharp
+// T -> Validation<T>
+public delegate Validation<T> Validator<T>(T t);
+```
+
+Теперь класс будет зависеть не от объекта `IValidator`, а от функции `Validator`.
+
+Dependencies can be passed as arguments to a function:
+
+```csharp
+public static Validator<BookTransfer> DateNotPast(Func<DateTime> clock) =>
+    cmd => cmd.Date.Date < clock().Date
+        ? Errors.TransferDateIsPast
+        : Valid(cmd);
+```
+
+`DateNotPast` is a HOF that takes a function `clock` and returns a function of type Validator.
+
+Let's see how you would create a `Validator`. When bootstrapping the application,
+you'd give `DateNotPast` a function that reads from the system clock:
+
+```csharp
+Validator<BookTransfer> val = DateNotPast(() => DateTime.UtcNow())
+```
+
+For testing purposes, however, you can provide a clock that returns a constant date:
+
+```csharp
+var uut = DateNotPast(() => new DateTime(2020, 20, 10));
+```
+
+This is in fact partial application:
+
+1. `DateNotPast` is a binary function (in curried form) that needs a clock and a command
+to compute its result. 
+
+2. You supply the first argument when composing the application (or in the *arrange* phase of a unit
+test), and the second argument when actually processing the received request (or in
+the *act* phase of a unit test).
+
+`BookTransferController` also needs a dependency to persist the `BookTransfer` request data.
+If we use functions, we can represent this with the following signature:
+
+```text
+BookTransfer -> Exceptional<Unit>
+```
+
+Again, on start we create a very general function that writes to the DB, with this signature:
+
+```text
+TryExecute : ConnectionString -> SqlTemplate -> object -> Exceptional<Unit>
+```
+
+Then parameterize it with a connection string from configuration and a SQL template with
+the command we want to execute.
+
+Our controller implementation will now look like this:
+
+```csharp
+public class BookTransferController : Controller
+{
+    Validator<BookTransfer> validate;
+    Func<BookTransfer, Exceptional<Unit>> save;
+
+    [HttpPut, Route("api/transfers/book")]
+    public IActionResult BookTransfer([FromBody] BookTransfer cmd) =>
+        validate(cmd)
+            .Map(save)
+            .Match( //...
+}
+```
+
+Why we need a controller class at all, when all the logic we're using could be captured in a
+function of this type:
+
+```text
+BookTransfer -> IActionResult
+```
+
+Indeed (действительно), we could define such a function outside the scope of a controller
+and configure the ASP.NET request pipeline to run it (см. линки).
+
+Но пока это делать не рекомендуется, т.к. ASP.NET не очень хорошо поддерживает такой стиль обработки
+HTTP запросов. Поэтому пока рекомендуется использовать стандартные `Controller`'s.
+
+### 7.5.3 Comparing the two approaches
+
+В примере выше все зависимости контроллера функции.
+
+Преимущества такого подхода (первые два из dependency inversion, из ООП):
+
+1. *Decoupling* - The controller knows nothing about the implementation details of
+the functions it consumes.
+
+2. *Testability* - When testing a controller method, you can just pass it functions that
+return a predictable result.
+
+3. You don't need to define any interfaces.
+
+4. This makes testing easier, because you don't need to set up fakes.
+
+5. Легче следовать подходу *interface segregation principle* (ISP).
+
+Example 1. Unit test. When dependencies are functions, unit tests can be written without fakes:
+
+```csharp
+[Test]
+public void WhenCmdIsValid_AndSaveSucceeds_ThenResponseIsOk()
+{
+    // (1),(2) - Injects functions that return a predictable result
+    var controller = new BookTransferController(
+        validate: cmd => Valid(cmd),                //(1)
+        save: _ => Exceptional(Unit()));            //(2)
+
+    var result = controller.BookTransfer(new BookTransfer());
+    Assert.AreEqual(typeof(OkResult), result.GetType());
+}
+```
+
+Example 2. Подход *interface segregation principle* (ISP).
+
+Контроллер использует только метод `Save` из интерфейса `IRepository<T>`:
+
+```csharp
+public interface IRepository<T>
+{
+    Option<T> Lookup(Guid id);
+    Exceptional<Unit> Save(T entity);
+}
+```
+
+Для контроллера лучше всего выделить более специализированный интерфейс:
+
+```csharp
+public interface ISaveToRepository<T>
+{
+    Exceptional<Unit> Save(T entity);
+}
+```
+
+Но это приведет к разрастанию числа интерфейсов в приложении. Проще всего использовать
+функциональный подход к инверсии зависимостей.
+
+### 7.5.4 Composing the application
+
+Composing the services required to fulfill (выполнения) the `BookTransfer` request:
+
+```csharp
+// IControllerActivator in ASP.NET define bootstrapping logic.
+public class ControllerActivator : IControllerActivator
+{
+    IConfigurationRoot configuration;
+    public object Create(ControllerContext context)
+    {
+        var type = context.ActionDescriptor.ControllerTypeInfo;
+        if (type.AsType().Equals(typeof(BookTransferController)))
+            return ConfigureBookTransferController();
+        //...
+    }
+
+    BookTransferController ConfigureBookTransferController()
+    {
+        ConnectionString connString = configuration.GetSection("ConnectionString").Value;
+
+        // Sets up persistence
+        var save = Sql.TryExecute
+            .Apply(connString)
+            .Apply(Sql.Queries.InsertTransferOn);
+
+        // Sets up validation
+        var validate = Validation.DateNotPast(() => DateTime.UtcNow);
+
+        return new BookTransferController(validate, save);
+    }
+}
+```
+
+Осталось решить только одну проблему: как сделать *composite validator*
+(несколько правил валидаций) в подходе ФП?
+
+## 7.6 Reducing a list to a single value

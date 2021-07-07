@@ -65,3 +65,6 @@
 * *"Enterprise Integration Patterns"* by Gregor Hohpe and Bobby Woolf (Addison-Wesley, 2004).
 
 * Article "Railway Oriented Programming": http://fsharpforfunandprofit.com/rop/
+
+* ASP.NET Core, the application pipeline, and how this can be configured, see:
+https://docs.asp.net/en/latest/fundamentals/startup.html
