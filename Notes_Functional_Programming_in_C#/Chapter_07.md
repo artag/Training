@@ -706,3 +706,114 @@ public class ControllerActivator : IControllerActivator
 (несколько правил валидаций) в подходе ФП?
 
 ## 7.6 Reducing a list to a single value
+
+In FP operation *fold* or *reduce* - reducing a list of values into a single value.
+
+LINQ uses a different name: *Aggregate*.
+
+### 7.6.1 LINQ’s Aggregate method
+
+`Aggregate` takes a list of `n` things and returns exactly one thing (just like the SQL aggregate
+functions `COUNT`, `SUM`, and `AVERAGE`).
+
+`Aggregate` uses:
+
+* *accumulator* - initial value
+* *reducer function* - a binary function accepting the accumulator and an element in
+the list, and returning the new value for the accumulator.
+
+The signature for Aggregate is:
+
+```text
+(IEnumerable<T>, Acc, ((Acc, T) -> Acc)) -> Acc
+```
+
+The `Sum` function (in LINQ) is a special case of `Aggregate`:
+* `0` - initial accumulator value.
+* The binary function is addition (сложение).
+ 
+Можно выразить `Sum` через `Aggregate` таким образом:
+
+```csharp
+Range(1, 5).Aggregate(0, (acc, i) => acc + i)    // => 15
+```
+
+Более наглядно:
+
+```text
+((((0 + 1) + 2) + 3) + 4) + 5   или    f(f(f(f(acc, t0), t1), t2), ... tn)
+```
+
+`Count` can also be seen as a special case of `Aggregate`:
+
+```csharp
+Range(1, 5).Aggregate(0, (count, _) => count + 1)    // => 5
+```
+
+Тип accumulator не обязательно должен быть типом list item. Пример использования
+`Aggregate` с accumulator в виде объекта `Tree<T>` (item'ы добавляются в `Tree<T>`):
+
+```csharp
+Range(1, 5).Aggregate(Tree<int>.Empty, (tree, i) => tree.Insert(i))
+```
+
+`Aggregate` can implement `Map`, `Where` and `Bind` methods.
+
+Также есть вариант использования `Aggregate` без аргумента accumulator. Вместо accumulator
+используется первый элемент list'а.
+
+Его signature:
+
+```text
+(IEnumerable<T>, ((T, T) -> T)) -> T)
+```
+
+### 7.6.2 Aggregating validation results
+
+При помощи `Aggregate` можно "reduce" список validators до одного validator:
+
+```text
+IEnumerable<Validator<T>> -> Validator<T>               // (1)
+
+// T -> Validation<T>
+public delegate Validation<T> Validator<T>(T t);        // (2)
+
+// Из (1) и (2) следует сигнатура функции, которую надо реализовать для "reduce":
+IEnumerable<T -> Validation<T>> -> T -> Validation<T>
+```
+
+Есть два способа "reduce":
+
+* *Fail fast* - the combined validation should fail as soon as one validator fails.
+
+* *Harvest errors* - identify all the rules that have been violated.
+
+### Fail fast
+
+Using Aggregate and Bind to apply all validation in a sequence:
+
+```csharp
+public static Validator<T> FailFast<T>(IEnumerable<Validator<T>> validators) =>
+    t => validators.Aggregate(Valid(t), (acc, validator) => acc.Bind(_ => validator(t)));
+```
+
+Здесь:
+
+* `Valid(t)` - accumulator
+* Applies each validator in the list to the accumulator with `Bind`.
+
+Мысленно `Aggregate` можно представить так:
+
+```csharp
+Valid(t)
+    .Bind(validators[0]))
+    .Bind(validators[1]))
+    ...
+    .Bind(validators[n - 1]));
+```
+
+**Рекомендация** - сначала использовать наиболее быстрые проверки (валидаторы) и только потом
+более медленные.
+
+### 7.6.3 Harvesting validation errors
+
