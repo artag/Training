@@ -731,7 +731,7 @@ The signature for Aggregate is:
 The `Sum` function (in LINQ) is a special case of `Aggregate`:
 * `0` - initial accumulator value.
 * The binary function is addition (сложение).
- 
+
 Можно выразить `Sum` через `Aggregate` таким образом:
 
 ```csharp
@@ -817,3 +817,44 @@ Valid(t)
 
 ### 7.6.3 Harvesting validation errors
 
+Include the details of all failing validations.
+
+Collecting errors from all validators that fail:
+
+```csharp
+// (1) - Runs all validators independently
+// (2) - Collects validation errors
+// (3) - Disregards passed validation
+// (4) - If there were no errors, the overall validation passes.
+static Validator<T> HarvestErrors<T>(IEnumerable<Validator<T>> validators) =>
+    t =>
+    {
+        var errors = validators
+            .Map(validate => validate(t))       // (1)
+            .Bind(v => v.Match(
+                Invalid: errs => Some(errs),    // (2) use Option
+                Valid: _ => None))              // (3) use Option
+            .ToList();
+
+        return errors.Count == 0                // (4)
+            ? Valid(t)
+            : Invalid(errors.Flatten());
+    };
+```
+
+## Summary
+
+* *Partial application* means giving a function its arguments piecemeal (по частям), effectively
+creating a more specialized function with each argument given.
+* *Currying* means changing the signature of a function so that it will take its arguments
+one at a time.
+* Partial application enables you to write highly general functions by parameterizing
+their behavior, and then supplying arguments to obtain increasingly specialized functions.
+* The order of arguments matters: you give the leftmost (крайний левый) argument first, so that a
+function should declare its arguments from general to specific.
+* When working with multi-argument functions in C#, method resolution can be
+problematic and lead to syntactic overhead. This can be overcome (решено) by relying (полагаясь)
+on `Func`s rather than (вместо) on methods.
+* You can inject the dependencies required by your functions by declaring them as
+arguments. This allows you to compose your application entirely of functions,
+without compromising (компромиссов) on the separation of concerns, decoupling, and testability.
