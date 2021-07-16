@@ -1,0 +1,44 @@
+# Commands
+
+Portainer Server Deployment:
+
+```text
+docker volume create portainer_data
+docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+```
+
+Docker-compose build containers:
+
+```text
+docker-compose up -d
+```
+
+Docker-compose build containers. Rebuild только одну из секций:
+
+```text
+docker-compose up -d --no-deps --build helloworld
+```
+
+Создание консольного приложения в новой директории:
+
+```text
+dotnet new console --name SecondConsoleApp
+```
+
+Создание worker service (по сути Background Service) в новой директории:
+
+```text
+dotnet new worker --name HelloWorldWorkerService
+```
+
+Удаление image:
+
+```text
+docker rmi <image_name>
+```
+
+Просмотр доступных images в системе:
+
+```text
+docker images
+```
