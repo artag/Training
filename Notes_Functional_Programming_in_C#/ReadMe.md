@@ -70,3 +70,6 @@
 
 * ASP.NET Core, the application pipeline, and how this can be configured, see:
 https://docs.asp.net/en/latest/fundamentals/startup.html
+
+* Documentation for the applicative module in Haskell:
+https://hackage.haskell.org/package/base-4.9.0.0/docs/Control-Applicative.html

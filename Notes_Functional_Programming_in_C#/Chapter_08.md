@@ -146,3 +146,63 @@ Func<int, int, int> multiply = (x, y) => x * y;
 Some(3).Map(multiply).Apply(Some(4));    // => Some(12)
 Some(3).Map(multiply).Apply(None);       // => None
 ```
+
+### 8.1.2 Lifting functions
+
+Functions "lifted" into a container by mapping a multi-argument function:
+
+```csharp
+Some(3).Map(multiply)
+```
+
+**1 способ** function application in the elevated world.
+
+(Из предыдущего раздела 8.1.1) `Map` the function, then `Apply`:
+
+```csharp
+Some(3)
+    .Map(multiply)
+    .Apply(Some(4))
+```
+
+**2 способ** function application in the elevated world.
+
+После введения `Apply` можно теперь делать так:
+
+```csharp
+Some(multiply)          // Lifts the function into an Option
+    .Apply(Some(3))     // Supplies arguments with Apply
+    .Apply(Some(4))     // Supplies arguments with Apply
+// => Some(12)
+```
+
+Функциональность `Option` при таком вызове сохраняется:
+
+```csharp
+Some(multiply)
+    .Apply(None)
+    .Apply(Some(4))
+// => None
+```
+
+Сравнение partial application in the worlds of regular and elevated values:
+
+* Partial application with regular values
+
+```csharp
+multiply                // => 12
+    .Apply(3)
+    .Apply(4)
+```
+
+* Partial application with elevated values
+
+```csharp
+Some(multiply)          // => Some(12)
+    .Apply(Some(3))
+    .Apply(Some(4))
+```
+
+Whether you obtain the function by using Map or lifting it with Return doesn't matter
+in terms of the resulting functor. This is a requirement, and it will hold if the applicative
+is correctly implemented, so that it's sometimes called the *applicative law*.
