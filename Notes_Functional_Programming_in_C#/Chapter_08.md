@@ -206,3 +206,66 @@ Some(multiply)          // => Some(12)
 Whether you obtain the function by using Map or lifting it with Return doesn't matter
 in terms of the resulting functor. This is a requirement, and it will hold if the applicative
 is correctly implemented, so that it's sometimes called the *applicative law*.
+
+### 8.1.3 An introduction to property-based testing
+
+Property-based tests are parameterized unit tests whose assertions should hold for
+*any* possible value of the parameters. For this tests using framework FsCheck (см. Links).
+
+FsCheck repeatedly run the test with a large set of randomly generated parameter values.
+By default, FsCheck generates 100 values, but the number and range of input values can be
+customized. For the real work being able to fine-tune the parameters with which the values are
+generated becomes quite important.
+
+*Примечание*: FsCheck для `FsCheck.NUnit` был (и может быть до сих пор) реализован хуже, чем
+модуль для `FsCheck.Xunit`.
+
+Example. A property-based test illustrating the applicative law:
+
+```csharp
+Func<int, int, int> multiply = (i, j) => i * j;
+
+// (1) - Marks a property-based test
+// (2) - FsCheck will randomly generate a large set of input values to run the test with.
+[Property]                                  // (1)
+void ApplicativeLawHolds(int a, int b)      // (2)
+{
+    var first = Some(multiply)
+        .Apply(Some(a))
+        .Apply(Some(b));
+
+    var second = Some(a)
+        .Map(multiply)
+        .Apply(Some(b));
+
+    Assert.Equal(first, second);
+}
+```
+
+Аналогично, можно сделать подобные тесты для входных параметров `Option<T>`.
+
+Teaching FsCheck to create an arbitrary `Option`:
+
+```csharp
+static class ArbitraryOption
+{
+    public static Arbitrary<Option<T>> Option<T>()
+    {
+        var gen = from isSome in Arb.Generate<bool>()
+                  from val in Arb.Generate<T>()
+                  select isSome && val != null ? Some(val) : None;
+        return gen.ToArbitrary();
+    }
+}
+```
+
+Сам тест. The property-based test, parameterized with arbitrary `Options`:
+
+```csharp
+[Property(Arbitrary = new[] { typeof(ArbitraryOption) })]
+void ApplicativeLawHolds(Option<int> a, Option<int> b) =>
+    Assert.Equal(
+        Some(multiply).Apply(a).Apply(b),
+        a.Map(multiply).Apply(b)
+    );
+```

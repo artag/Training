@@ -73,3 +73,8 @@ https://docs.asp.net/en/latest/fundamentals/startup.html
 
 * Documentation for the applicative module in Haskell:
 https://hackage.haskell.org/package/base-4.9.0.0/docs/Control-Applicative.html
+
+* FsCheck: https://github.com/fscheck/FsCheck
+
+* Article "Choosing properties for property-based testing":
+https://fsharpforfunandprofit.com/posts/property-based-testing-2/
