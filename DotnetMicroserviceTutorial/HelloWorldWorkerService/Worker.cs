@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -22,7 +20,8 @@ namespace HelloWorldWorkerService
             while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Hello World! at: {time}", DateTimeOffset.Now);
-                await Task.Delay(1000, stoppingToken);
+                _logger.LogWarning("This is a warning.");
+                await Task.Delay(2000, stoppingToken);
             }
         }
     }

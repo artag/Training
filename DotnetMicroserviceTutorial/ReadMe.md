@@ -1,3 +1,17 @@
+# Serivces
+
+1. portainer.io
+
+```text
+localhost:9000
+```
+
+2. seq
+
+```text
+localhost:5341
+```
+
 # Commands
 
 Portainer Server Deployment:
@@ -41,4 +55,17 @@ docker rmi <image_name>
 
 ```text
 docker images
+```
+
+Добавление nuget package (Serilog) в проект:
+
+```text
+dotnet add package Serilog
+dotnet add package Serilog.Sinks.Console        // Вывод в консоль
+dotnet add package Serilog.Extensions.Hosting   // Для добавления в HostBuilder (ASP.NET)
+dotnet add package Serilog.Sinks.Seq            // Вывод в сервис Seq
+```
+
+```text
+docker-compose down --rmi all
 ```
