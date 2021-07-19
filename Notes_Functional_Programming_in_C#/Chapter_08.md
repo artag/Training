@@ -269,3 +269,48 @@ void ApplicativeLawHolds(Option<int> a, Option<int> b) =>
         a.Map(multiply).Apply(b)
     );
 ```
+
+## 8.2 Functors, applicatives, monads
+
+Summary of the core functions and how they define patterns
+
+* **Functor** defined by an implementation of:
+  1. `Map`       `F<T> -> (T -> R) -> F<R>`
+
+* **Applicative** defined by an implementation of:
+  1. `Return`    `T -> A<T>`
+  2. `Apply`     `A<(T -> R)> -> A<T> -> A<R>`
+
+* **Monad** defined by an implementation of:
+  1. `Return`    `T -> M<T>`
+  2. `Bind`      `M<T> -> (T -> M<R>) -> M<R>`
+
+Relation of functor, applicative, and monad:
+
+```text
+Functor <------- Applicative <------- Monad
+(Map)            (Apply)              (Bind)
+<------------------------------------------>
+More general                   More powerful
+```
+
+You can read this as a class diagram: if functor were an interface, applicative would
+extend it. And monad extends applicative.
+
+1. Applicative is more powerful than Functor.
+For example, we can define `Map` in terms of `Return` and `Apply`:
+
+```csharp
+static Option<R> Map<T, R>(this Option<T> opt, Func<T, R> f) =>
+    Some(f).Apply(opt);
+```
+
+2. Monads are more powerful than applicatives.
+For example we can define `Apply` in terms of `Bind`:
+
+```csharp
+static Option<R> Apply<T, R>(this Option<Func<T, R>> optF, Option<T> optT) =>
+    optT.Bind(t => optF.Bind<Func<T, R>, R>(f => f(t)));
+```
+
+3. The `fold` function (`Aggregate` in LINQ) is the most powerful of them all because you can define `Bind` in terms of it.
