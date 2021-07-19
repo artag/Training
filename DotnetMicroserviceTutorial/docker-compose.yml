@@ -1,11 +1,11 @@
 version: '3.4'
 
 services:
-    helloworld.workerservice:
-        image: helloworldworkerservice
+    bandwidthtester.workerservice:
+        image: bandwidthtesterworkerservice
         build:
             context: .
-            dockerfile: HelloWorldWorkerService/Dockerfile
+            dockerfile: BandwidthTester/Dockerfile
 
     seq:
         image: datalust/seq:latest

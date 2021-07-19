@@ -69,3 +69,39 @@ dotnet add package Serilog.Sinks.Seq            // Вывод в сервис Se
 ```text
 docker-compose down --rmi all
 ```
+
+Добавление nuget package (SpeedTest) в проект:
+
+```text
+dotnet add package SpeedTest.NetCore --version 2.1.0
+```
+
+В Seq можно выбирать с помощью выражений SQL:
+
+1. Вывод сообщений, которые содержат "BandwidthTest".
+
+```text
+select *
+from stream
+where LogMessage = 'BandwidthTest'
+```
+
+2. Построение точек скорости download/upload через определенные промежутки времени (5 минут):
+
+```text
+select mean(download)
+from stream
+where LogMessage = 'BandwidthTest'
+group by time(5m)
+limit 1000
+```
+
+```text
+select mean(upload)
+from stream 
+where LogMessage = 'BandwidthTest '
+group by time(5m)
+limit 10000
+```
+
+Далее в Seq можно выбрать "NEW DASHBOARD" и эти результаты этих запросов отобразятся на графике.
