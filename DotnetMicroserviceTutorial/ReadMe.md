@@ -76,6 +76,8 @@ docker-compose down --rmi all
 dotnet add package SpeedTest.NetCore --version 2.1.0
 ```
 
+## SEQ
+
 В Seq можно выбирать с помощью выражений SQL:
 
 1. Вывод сообщений, которые содержат "BandwidthTest".
@@ -105,3 +107,37 @@ limit 10000
 ```
 
 Далее в Seq можно выбрать "NEW DASHBOARD" и эти результаты этих запросов отобразятся на графике.
+
+## PostgreSQL
+
+Add new server:
+
+* General
+  * Name - какое хочется
+
+* Connection:
+  * Host name/address: `postgresql-database` (из docker-compose.yml)
+  * Username: `pgadmin4@pgadmin.org` (из docker-compose.yml, `PGADMIN_DEFAULT_EMAIL`)
+  * Password: `admin` (из docker-compose.yml, `PGADMIN_DEFAULT_PASSWORD`)
+
+Создание таблицы в pgAdmin:
+
+```sql
+CREATE TABLE TestData (
+    Id INT PRIMARY KEY,
+    Test VARCHAR (50)
+);
+```
+
+Создание нового консольного проекта для работы с PostreSQL:
+
+```text
+dotnet add console --name PostgreSqlSample
+```
+
+Добавление в проект nuget:
+
+```text
+dotnet add package Npgsql --version 5.0.7       // PostreSQL provider
+dotnet add package Dapper --version 2.0.90      // MicroORM
+```
