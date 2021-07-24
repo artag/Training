@@ -142,7 +142,7 @@ dotnet add package Npgsql --version 5.0.7       // PostreSQL provider
 dotnet add package Dapper --version 2.0.90      // MicroORM
 ```
 
-## Coronavirus Tracker API
+## Coronavirus Tracker API (Not finished)
 
 github: https://github.com/ExpDev07/coronavirus-tracker-api
 
@@ -150,3 +150,8 @@ API: https://coronavirus-tracker-api.herokuapp.com/v2/locations (plain text in J
 
 Online JSON Viewer: http://jsonviewer.stack.hu/ (можно посмотреть JSON в удобном виде online)
 
+Add `Newtonsoft.Json` nuget package:
+
+```text
+dotnet add package Newtonsoft.Json --version 13.0.1
+```
