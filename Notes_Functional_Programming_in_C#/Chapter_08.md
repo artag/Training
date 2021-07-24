@@ -314,3 +314,139 @@ static Option<R> Apply<T, R>(this Option<Func<T, R>> optF, Option<T> optT) =>
 ```
 
 3. The `fold` function (`Aggregate` in LINQ) is the most powerful of them all because you can define `Bind` in terms of it.
+
+## 8.3 The monad laws
+
+Remember, a *monad* is a type, `M`, for which the following functions are defined:
+
+* `Return` - takes a regular value of type `T` and *lifts* it into a monadic value of
+type `M<T>`.
+
+* `Bind` - takes a monadic value, `m`, and a world-crossing function, `f`, and
+"extracts" from `m` its inner value `t` and applies `f` to it.
+
+`Return` and `Bind` should have the following three properties:
+1. Right identity
+2. Left identity
+3. Associativity
+
+### 8.3.1 Right identity
+
+Следующее должно соблюдаться:
+
+```csharp
+m == m.Bind(Return)
+```
+
+A property-based test proving that right identity holds for the `Option` type:
+
+```csharp
+[Property(Arbitrary = new[] { typeof(ArbitraryOption) })]
+void RightIdentityHolds(Option<object> m) =>
+    Assert.Equal(m, m.Bind(Some));
+```
+
+### 8.3.2 Left identity
+
+Следующее должно соблюдаться:
+
+```csharp
+Return(t).Bind(f) == f(t)
+```
+
+A property-based test illustrating left identity for `IEnumerable`:
+
+```csharp
+Func<int, IEnumerable<int>> f = i => Range(0, i);
+
+[Property] void LeftIdentityHolds(int t) =>
+    Assert.Equal(f(t), List(t).Bind(f));
+```
+
+**Выводы**, которые являются следстивем выполения left identity и right identity:
+
+1. Lifting operation in `Return` and unwrapping operation in `Bind` are neutral operations,
+that have no side effects and don't distort the value of `t` or the behavior of `f`.
+
+2. `Return` should be as dumb as possible: no side effects, no conditional logic, no acting
+upon the given `t`. Only the minimal work required to satisfy the signature `T -> C<T>`.
+
+### 8.3.3 Associativity (ассоциативность - наиболее значимое правило из трех)
+
+Associativity на примере операции сложения:
+
+```text
+(a + b) + c == a + (b + c)
+```
+
+Обозначим `Bind` как `>>=`: вместо `m.Bind(f)` можно написать `m >>= f`, где `m` - a monadic value
+и `f` - a world-crossing function.
+
+ `Bind` также associative:
+
+```text
+(m >>= f) >>= g == m >>= (f >>= g)
+```
+
+Левая часть `(m >>= f) >>= g` это `m.Bind(f).Bind(g)`
+
+В правой части `(f >>= g)` синтактически неверен: `f` - a function, not a monadic value.
+`f` можно записать как `x => f(x)`, поэтому правую часть можно переписать так:
+
+```text
+m >>= (x => f(x) >>= g)
+```
+
+И все вместе, правая и левая части:
+
+```text
+(m >>= f) >>= g == m >>= (x => f(x) >>= g)
+```
+
+Или (**конечная версия**):
+
+```csharp
+m.Bind(f).Bind(g) == m.Bind(x => f(x).Bind(g))
+```
+
+Если еще расширить правую часть:
+
+```csharp
+m.Bind(f).Bind(g) == m.Bind(x => f(x).Bind(y => g(y)))
+```
+
+Here - `g` has visibility not only of `y`, but also of `x`. This is
+what enables you to integrate multi-argument functions in a monadic flow.
+
+A property-based test illustrating `Bind` associativity for `Option`:
+
+```csharp
+//Exposes an Option returning Parse function
+using Double = LaYumba.Functional.Double;
+
+Func<double, Option<double>> safeSqrt =
+    d => d < 0
+        ? None
+        : Some(Math.Sqrt(d));
+
+[Property(Arbitrary = new[] { typeof(ArbitraryOption) })]
+void AssociativityHolds(Option<string> m) =>
+    Assert.Equal(
+        m.Bind(Double.Parse).Bind(safeSqrt),
+        m.Bind(x => Double.Parse(x).Bind(safeSqrt))
+    );
+```
+
+### 8.3.4 Using Bind with multi-argument functions
+
+Следствие из 8.3.3: можно записать операцию умножения, которая парсит два входных строчных
+параметра и выполняет их перемножение так:
+
+```csharp
+static Option<int> MultiplicationWithBind(string strX, string strY) =>
+    Int.Parse(strX)
+        .Bind(x => Int.Parse(strY)
+            .Bind<int, int>(y => multiply(x, y)));
+```
+
+Но, такой код плохо читается - можно воспользоваться синтаксисом LINQ (см. далее).
