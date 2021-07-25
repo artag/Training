@@ -450,3 +450,384 @@ static Option<int> MultiplicationWithBind(string strX, string strY) =>
 ```
 
 Но, такой код плохо читается - можно воспользоваться синтаксисом LINQ (см. далее).
+
+## 8.4 Improving readability by using LINQ with any monad
+
+LINQ is a dedicated syntax for expressing queries:
+
+```csharp
+// Normal method invocation
+Enumerable.Range(1, 100)
+    .Where(i => i % 20 == 0)
+    .OrderBy(i => -i)
+    .Select(i => $"{i}%")
+
+// LINQ expression
+from i in Enumerable.Range(1, 100)
+where i % 20 == 0 orderby -i
+select $"{i}%"
+```
+
+### 8.4.1 Using LINQ with arbitrary functors
+
+A LINQ expression with a single `from` clause and its interpretation
+
+```csharp
+from x in Range(1, 4)
+select x * 2
+
+Range(1, 4)
+    .Select(x => x * 2)
+```
+
+LINQ's pattern-based approach means that you can define `Select` for any type you please.
+
+`Select` for `Option`:
+
+```csharp
+public static Option<R> Select<T, R>(this Option<T> opt, Func<T, R> f) =>
+    opt.Map(f);
+```
+
+Usage:
+
+```csharp
+from x in Some(12)
+select x * 2                    // => Some(24)
+
+from x in (Option<int>)None
+select x * 2                    // => None
+
+(from x in Some(1) select x * 2) == Some(1).Map(x => x * 2)    // => true
+```
+
+### 8.4.2 Using LINQ with arbitrary (произвольный) monads
+
+Two data sources:
+
+```csharp
+var chars = new[] { 'a', 'b', 'c' };
+var ints = new [] { 2, 3 };
+```
+
+LINQ query that combine data from multiple data sources:
+
+```csharp
+from c in chars
+from i in ints
+select (c, i)
+// => [(a, 2), (a, 3), (b, 2), (b, 3), (c, 2), (c, 3)]
+```
+
+Equivalent expression using `Map` and `Bind`:
+
+```csharp
+chars
+    .Bind(c => ints
+        .Map(i => (c, i)));
+```
+
+Using the standard LINQ methods (`Select` instead of `Map` and `SelectMany` instead of `Bind`):
+
+```csharp
+chars
+    .SelectMany(c => ints
+        .Select(i => (c, i)));
+```
+
+Two overloads of `SelectMany` are required to implement the query pattern:
+
+```csharp
+// Plain vanilla (простой/обычный) SelectMany, equivalent to Bind
+public static IEnumerable<R> SelectMany<T, R>(
+    this IEnumerable<T> source, Func<T, IEnumerable<R>> func)
+{
+    foreach (T t in source)
+        foreach (R r in func(t))
+            yield return r;
+}
+
+// SelectMany that actually gets called
+// Extended overload of SelectMany, which is used
+// when translating a query with multiple from clauses
+public static IEnumerable<RR> SelectMany<T, R, RR>(
+    this IEnumerable<T> source, Func<T, IEnumerable<R>> bind, Func<T, R, RR> project)
+{
+    foreach (T t in source)
+        foreach (R r in bind(t))
+            yield return project(t, r);
+}
+```
+
+Последнее выражение используется в LINQ такого вида:
+
+```csharp
+from c in chars
+from i in ints
+select (c, i)
+```
+
+Такой LINQ преобразуется в следующее выражение:
+
+```csharp
+chars.SelectMany(c => ints, (c, i) => (c, i))
+```
+
+We can define a reasonable implementation of the LINQ-flavored `SelectMany` for **any** monad.
+
+`SelectMany` for Option:
+
+```csharp
+public static Option<RR> SelectMany<T, R, RR>(
+    this Option<T> opt, Func<T, Option<R>> bind, Func<T, R, RR> project) =>
+        opt.Match(
+            () => None,
+            (t) => bind(t).Match(
+                () => None,
+                (r) => Some(project(t, r))));
+```
+
+Usage example:
+
+```csharp
+WriteLine("Enter first addend:");
+var s1 = ReadLine();
+WriteLine("Enter second addend:");
+var s2 = ReadLine();
+
+var result = Calculate(s1, s2);
+
+WriteLine(result.Match(
+Some: r => $"{s1} + {s2} = {r}",
+None: () => "Please enter 2 valid integers"));
+```
+
+Different ways to add two optional integers (function `Calculate`).
+
+```csharp
+// 1. using LINQ query
+from a in Int.Parse(s1)
+from b in Int.Parse(s2)
+select a + b
+
+// 2. normal method invocation
+Int.Parse(s1)
+    .Bind(a => Int.Parse(s2)
+        .Map(b => a + b))
+
+// 3. the method invocation that the LINQ query will be converted to
+Int.Parse(s1)
+    .SelectMany(
+        a => Int.Parse(s2),
+        (a, b) => a + b)
+
+// 4. using Apply
+Some(new Func<int, int, int>((a, b) => a + b))
+    .Apply(Int.Parse(s1)
+    .Apply(Int.Parse(s2))
+```
+
+### 8.4.3 `let`, `where`, and other LINQ clauses
+
+The `let` clause is useful for storing the results of intermediate computations.
+`let` relies on `Select`, so no extra work is needed to enable the use of `let`.
+
+Using the `let` clause with `Option`:
+
+```csharp
+// Exposes an Option-returning Parse function
+using Double = LaYumba.Functional.Double;
+
+// Prompt is a convenience function that reads user input from the console
+string s1 = Prompt("First leg:");
+string s2 = Prompt("Second leg:");
+
+// A let clause allows you to store intermediate results.
+var result = from a in Double.Parse(s1)
+             let aa = a * a
+             from b in Double.Parse(s2)
+             let bb = b * b
+             select Math.Sqrt(aa + bb);
+
+WriteLine(result.Match(
+    () => "Please enter two valid numbers",
+    (h) => $"The hypotenuse is {h}"));
+```
+
+`where` clause. This resolves to the `Where` method we've already defined, so no extra work is
+necessary in this case.
+
+Using the `where` clause with `Option`:
+
+```csharp
+string s1 = Prompt("First leg:")
+string s2 = Prompt("Second leg:");
+
+var result = from a in Double.Parse(s1)
+             where a >= 0
+             let aa = a * a
+             from b in Double.Parse(s2)
+             where b >= 0
+             let bb = b * b
+             select Math.Sqrt(aa + bb);
+
+WriteLine(result.Match(
+    () => "Please enter two valid, positive numbers",
+    (h) => $"The hypotenuse is {h}"));
+```
+
+LINQ also contains various other clauses, such as `orderby`. These clauses make sense for
+collections but have no counterpart in structures like `Option` and `Either`.
+
+**Summary**.
+* For any monad you can implement the LINQ query pattern by providing implementations for:
+  1. `Select` (`Map`)
+  2. `SelectMany` (`Bind`)
+  3. The ternary overload to `SelectMany`.
+* Some structures may have other operations that can be included in the query pattern, such as
+`Where` in the case of `Option`.
+
+## 8.5 When to use `Bind` vs. `Apply`
+
+### 8.5.1 Validation with smart constructors
+
+Example of using smart constructor (см. главу 3 для более подробной информации):
+
+```csharp
+public class PhoneNumber
+{
+    public static Func<NumberType, CountryCode, Number, PhoneNumber> Create =
+        (type, country, number) =>
+            new PhoneNumber(type, country, number);
+
+    PhoneNumber(NumberType type, CountryCode country, Number number)
+    {
+        Type = type;
+        Country = country;
+        Nr = number;
+    }
+}
+```
+
+Parameters `NumberType`, `CountryCode` and `Number` can be validated independently
+(has functions with the next signatures):
+
+```text
+validCountryCode : string -> Validation<CountryCode>
+validNnumberType : string -> Validation<PhoneNumber.NumberType>
+validNumber: string -> Validation<PhoneNumber.Number>
+```
+
+### 8.5.2 Harvesting errors with the applicative flow
+
+```csharp
+// (1) Lifts the factory function into a Validation
+// (2) Supplies arguments, each of which is also wrapped in a Validation
+Validation<PhoneNumber> CreatePhoneNumber(string type, string countryCode, string number) =>
+    Valid(PhoneNumber.Create)                   // (1)
+        .Apply(validNumberType(type))           // (2)
+        .Apply(validCountryCode(countryCode))   // (2)
+        .Apply(validNumber(number));            // (2)
+```
+
+Let's see its behavior, given a variety of different inputs:
+
+```csharp
+CreatePhoneNumber("Mobile", "ch", "123456")
+// => Valid(Mobile: (ch) 123456)
+
+CreatePhoneNumber("Mobile", "xx", "123456")
+// => Invalid([xx is not a valid country code])
+
+CreatePhoneNumber("Mobile", "xx", "1")
+// => Invalid([xx is not a valid country code, 1 is not a valid number])
+```
+
+Implementation of `Apply` for `Validation`:
+
+```csharp
+// (1) If both inputs are valid, the wrapped function is applied to the
+//     wrapped argument, and the result is lifted into a Validation in the Valid state.
+// (2) If both inputs have errors, a Validation in the Invalid state
+//     is returned that collects the errors from both valF and valT.
+public static Validation<R> Apply<T, R>(
+    this Validation<Func<T, R>> valF, Validation<T> valT) =>
+        valF.Match(
+            Valid: (f) => valT.Match(
+                Valid: (t) => Valid(f(t)),                          // (1)
+                Invalid: (err) => Invalid(err)),
+            Invalid: (errF) => valT.Match(
+                Valid: (_) => Invalid(errF),
+                Invalid: (errT) => Invalid(errF.Concat(errT))));    // (2)
+```
+
+### 8.5.3 Failing fast with the monadic flow
+
+Validation using a monadic flow (using LINQ):
+
+```csharp
+Validation<PhoneNumber> CreatePhoneNumberM(
+    string typeStr, string countryStr, string numberStr) =>
+        from type in validNumberType(typeStr)
+        from country in validCountryCode(countryStr)
+        from number in validNumber(numberStr)
+        select PhoneNumber.Create(type, country, number);
+```
+
+Run this new version with the same test values as before:
+
+```csharp
+CreatePhoneNumberM("Mobile", "ch", "123456")
+// => Valid(Mobile: (ch) 123456)
+
+CreatePhoneNumberM("Mobile", "xx", "123456")
+// => Invalid([xx is not a valid country code])
+
+CreatePhoneNumberM("Mobile", "xx", "1")
+// => Invalid([xx is not a valid country code])     // <-- Different result!
+```
+
+Implementation of `Bind` for `Validation`:
+
+```csharp
+public static Validation<R> Bind<T, R>(
+    this Validation<T> val, Func<T, Validation<R>> f) =>
+        val.Match(
+            Invalid: (err) => Invalid(err),
+            Valid: (r) => f(r));
+```
+
+Compare the signatures of `Apply` and `Bind`:
+
+```text
+Apply : Validation<(T -> R)> -> Validation<T>        -> Validation<R>
+Bind  : Validation<T>        -> (T -> Validation<R>) -> Validation<R>
+```
+
+**Summary** three ways to use multi-argument functions in the elevated world:
+1. The ugly way - Nested calls to `Bind` (лучше всего избегать).
+2. `Apply` method
+3. Monadic flow with LINQ.
+
+## Summary
+
+* The `Apply` function can be used to perform function application in an elevated
+world, such as the world of `Option`.
+* Multi-argument functions can be lifted into an elevated world with `Return`, and
+then arguments can be supplied with `Apply`.
+* Types for which `Apply` can be defined are called *applicatives*. Applicatives are
+more powerful than functors, but less powerful than monads.
+* Because monads are more powerful, you can also use nested (вложенные) calls to `Bind` to
+perform function application in an elevated world.
+* LINQ provides a lightweight syntax for working with monads that reads better
+than nesting calls to `Bind`.
+* To use LINQ with a custom type, you must implement the LINQ query pattern,
+particularly providing implementations of `Select` and `SelectMany` with appropriate
+signatures.
+* For several monads, `Bind` has short-circuiting behavior (the given function won't
+be applied in some cases), but `Apply` doesn't (it's not given a function, but rather
+an elevated value). For this reason, you can sometimes embed desirable behavior
+into applicatives, such as collecting validation errors in the case of `Validation`.
+* FsCheck is a framework for property-based testing. It allows you to run a test
+with a large number of randomly generated inputs, giving high confidence that
+the test's assertions hold for any input.
