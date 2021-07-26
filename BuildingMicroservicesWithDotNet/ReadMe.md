@@ -59,3 +59,19 @@ https://aka.ms/dev-certs-trust"
 ### Entry address for web api project
 
 `https://localhost:5001/swagger/index.html`
+
+## Lesson 9. Introduction to the REST API and DTOs
+
+The REST API defines the operations exposed by the microservice.
+
+| Operation               | Description                  |
+|-------------------------|------------------------------|
+| `GET /items`            | Retrieves all items          |
+| `GET /items/{id}`       | Retrieves the specified item |
+| `POST /items`           | Creates an item              |
+| `PUT /items/{id}`       | Updates the specified item   |
+| `DELETE /items/{id}`    | Deletes the specified item   |
+
+A *Data Transfer Object* (*DTO*) is an object that carries data between processes.
+
+The DTO represents the **contract** between the microservice API and the client.
