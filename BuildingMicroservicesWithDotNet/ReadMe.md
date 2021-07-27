@@ -144,3 +144,18 @@ The REST API defines the operations exposed by the microservice.
 A *Data Transfer Object* (*DTO*) is an object that carries data between processes.
 
 The DTO represents the **contract** between the microservice API and the client.
+
+## Lesson 10. Adding the DTOs
+
+В качестве DTO удобно использовать *Record Type*:
+
+* Simpler to declare
+* Value-based equality
+* Immutable by default
+* Built-in `ToString()` override
+
+Пример record:
+
+```csharp
+public record CreateItemDto(string Name, string Description, decimal Price);
+```
