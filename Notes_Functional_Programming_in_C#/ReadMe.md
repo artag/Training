@@ -22,6 +22,8 @@
 
 * [Chapter 08](Chapter_08.md)
 
+* [Chapter 09](Chapter_09.md)
+
 ## Exercises
 
 * [Exercises 01](Exercises_01.md)
