@@ -205,3 +205,42 @@ var updatedItem = existingItem with
     Price = updateItemDto.Price
 };
 ```
+
+## Lesson 12. Handling invalid inputs
+
+`NotFound` - возвращает код 404.
+
+### Model validation
+
+В DTO можно задавать ограничения на входные параметры при помощи атрибутов:
+
+`[Required]` - параметр всегда должен быть определен (не `null`)
+
+`[Range(0, 1000)]` - задает допустимый числовой диапазон (0 - минимальное число,
+1000 - максимальное).
+
+Пример задания:
+
+```csharp
+public record UpdateItemDto([Required] string Name, string Description, [Range(0, 1000)] decimal Price);
+```
+
+При ошибке валидации возвращается код ошибки 400, в Response body, в "errors"
+содержатся описания ошибок. Например:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,                          // Код ошибки
+  "traceId": "00-1ce407fcaf592a47afb5afc6511f4e79-8a27425e4e987b46-00",
+  "errors": {
+    "Name": [
+      "The Name field is required."                   // Атрибут [Required]
+    ],
+    "Price": [
+      "The field Price must be between 0 and 1000."   // Атрибут [Range(0, 1000)]
+    ]
+  }
+}
+```
