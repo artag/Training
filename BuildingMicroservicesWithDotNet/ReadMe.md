@@ -159,3 +159,49 @@ The DTO represents the **contract** between the microservice API and the client.
 ```csharp
 public record CreateItemDto(string Name, string Description, decimal Price);
 ```
+
+## Lesson 11. Adding the REST API operations
+
+The *controller* groups the set of actions that can handle API requests.
+
+### Для контроллера
+
+Базовый класс `ControllerBase` определяет свойства и методы, используемые для HttpRequests.
+
+`[ApiController]` включает некоторые полезные фичи, такие как: Model Validation Errors или
+bindings для параметров в методах.
+
+`[Route("items")]` определяет url pattern, к которому будет mapped контроллер.
+Для `items` контроллер будет доступен по адресу `https://localhost:5001/items`.
+
+### Методы
+
+`[HttpGet]` - атрибут для метода, выполняющего роль GET в REST API.
+
+`[HttpGet("{id}")]` - Часть из route адреса будет передаваться в качестве параметра `id` в метод.
+Например из адреса `/items/12345` в качестве `id` будет передано `12345`.
+
+`ActionResult` позволяет вернуть определенный http status code, типа: 200 (OK), 400 (Bad request).
+Также может вернуть more specific type, типа: Detail Type.
+
+`[HttpPost]` - атрибут для метода, выполняющего роль POST в REST API.
+
+`[HttpPut]` - атрибут для метода, выполняющего роль PUT в REST API.
+
+`IActionResult` - определяет контракт, представляющий результат метода действия.
+
+`[HttpPut("{id}")]` - Часть из route адреса будет передаваться в качестве параметра `id` в метод
+(также как и в аттрибуте для операции GET).
+
+`[HttpDelete]` - атрибут для метода, выполняющего роль DELETE в REST API.
+
+### Record. Создание clone на основе старого
+
+```csharp
+var updatedItem = existingItem with
+{
+    Name = updateItemDto.Name,
+    Description = updateItemDto.Description,
+    Price = updateItemDto.Price
+};
+```
