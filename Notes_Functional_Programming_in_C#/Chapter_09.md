@@ -197,3 +197,157 @@ public sealed class AccountState
 ```
 
 ### 9.3.2 Copy methods without boilerplate?
+
+Здесь приводятся 2 попытки количественно минимизировать написание методов копирования `With`.
+
+Попытка 1. A single With method that can set any property:
+
+```csharp
+// (1) null indicates that the field wasn't specified.
+// (2) If no value was specified, use the current instance's value.
+// (3) You can prevent arbitrary changes.
+public AccountState With(
+    AccountStatus? Status = null, decimal? AllowedOverdraft = null) =>      // (1)
+        new AccountState(
+            Status: Status ?? this.Status,                                  // (2)
+            AllowedOverdraft: AllowedOverdraft ?? this.AllowedOverdraft,    // (2)
+            Currency: this.Currency,                                        // (3)
+            Transactions: this.TransactionHistory);                         // (3)
+```
+
+PROS:
+
+* Fine-grained control over what operations we want to allow to change.
+* Better performance compared to using the classic `With[Property]` methods: if we need to
+update multiple fields, a single new instance is created.
+
+CONS:
+
+* Using `null` probably is not good idea.
+
+Пример использования:
+
+```csharp
+public static AccountState Freeze(this AccountState account) =>
+    account.With(Status: AccountStatus.Frozen);
+public static AccountState RedFlag(this AccountState account) =>
+    account.With
+    (
+        Status: AccountStatus.Frozen,
+        AllowedOverdraft: 0m
+    );
+```
+
+Попытка 2. A general-purpose copy method (see library `LaYumba.Functional`, class `Immutable`):
+
+```csharp
+public static T With<T>(this T source, string propertyName, object newValue)
+    where T : class
+{
+    T newObj = source.ShallowCopy();
+
+    typeof(T).GetBackingField(propertyName).SetValue(newObj, newValue);
+
+    return newObj;
+}
+
+public static T With<T, P>(this T source, Expression<Func<T, P>> exp, object newValue)
+    where T : class =>
+        source.With(exp.MemberName(), newValue);
+
+static T ShallowCopy<T>(this T source) =>
+    (T)source.GetType()
+             .GetTypeInfo()
+             .GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)
+             .Invoke(source, null);
+
+static string MemberName<T, P>(this Expression<Func<T, P>> e) =>
+    ((MemberExpression)e.Body).Member.Name;
+
+static FieldInfo GetBackingField(this Type t, string propertyName) =>
+    t.GetTypeInfo()
+     .GetField(BackingFieldName(propertyName), BindingFlags.Instance | BindingFlags.NonPublic);
+
+static string BackingFieldName(string propertyName) =>
+    string.Format("<{0}>k__BackingField", propertyName);
+```
+
+Using a general-purpose copy method:
+
+```csharp
+var oldState = new AccountState("EUR", AccountStatus.Active);
+var newState = oldState.With(a => a.Status, AccountStatus.Frozen);
+
+oldState.Status         // => AccountStatus.Active
+newState.Status         // => AccountStatus.Frozen
+newState.Currency       // => "EUR"
+```
+
+PROS:
+
+* Bitwise copy of the original object. For any field and any type.
+
+CONS:
+
+* Reflection is relatively slow.
+* Lose the fine-grained control (can't choose what fields can be updated in `With`).
+
+### 9.3.3 Leveraging (использование) F# for data types
+
+Idea: write your program behavior in C# and define your data objects in F#.
+
+Writing the domain model in F#:
+
+```fsharp
+namespace Boc.Domain
+open System             // Equivalent to a using statement in C#
+
+// Use a "discriminated union" instead of enum.
+type AccountStatus =
+    Requested | Active | Frozen | Dormant | Closed
+
+// A "type alias"
+type CurrencyCode = string
+
+// Use "record types" instead of classes.
+type Transaction = {
+    Amount: decimal
+    Description: string
+    Date: DateTime
+}
+
+type AccountState = {
+    Status: AccountStatus
+    Currency: CurrencyCode
+    AllowedOverdraft: decimal
+    TransactionHistory: Transaction list
+}
+```
+
+PROS:
+
+* All types are immutable by default (for mutable we must using `CLIMutable` attribute).
+* Copy methods built in.
+
+CONS:
+
+* F# objects need to go into their own assembly.
+
+Using F# copy and update expressions:
+
+```fsharp
+// with introduces a list of members (you can think of these as extension methods).
+type AccountState with
+
+// Creates a shallow copy with the updated value for Status.
+// Copy and update expressions (using the with keyword).
+member this.WithStatus(status) =
+    { this with Status = Active }
+
+// Prepends the given transaction to the list
+member this.Add(transaction) =
+    { this with TransactionHistory =
+        transaction :: this.TransactionHistory }
+```
+
+### 9.3.4 Comparing strategies for immutability: an ugly contest
