@@ -244,3 +244,65 @@ public record UpdateItemDto([Required] string Name, string Description, [Range(0
   }
 }
 ```
+
+## Lesson 14. Introduction to the repository pattern and MongoDB
+
+A *repository* is an abstraction between the data layer and the business layer of an application.
+
+Repository:
+
+* Decouples the application logic from the data layer
+* Minimizes duplicate data access logic
+
+### MongoDB
+
+*MongoDB* is a document-oriented NoSQL database which stores data in JSON-like documents with
+dynamic schema.
+
+NoSQL solution preferred for our microservices because:
+
+* Won't need relationships across the data
+* Don't need ACID guarantees. *ACID*: atomicity, consistency, isolation, durability
+* Won't need to write complex queries
+* Need low latency, high availability and high scalability
+
+## Lesson 15. Implementing a MongoDB repository
+
+*Enities* used by repositories to store and retrieve data.
+
+`MongoDB.Driver` - nuget package для установки.
+
+```text
+dotnet add package MongoDB.Driver
+```
+
+Для репозитория используется asynchronous programming - enchances the overall responsiveness of
+our service.
+
+## Lesson 16. Using the repository in the controller
+
+*Замечание*. ASP.NET Core после версии 3 убирает суффикс `Async`:
+
+```csharp
+// ItemsController.cs
+
+[HttpPost]
+public async Task<ActionResult<ItemDto>> PostAsync(CreateItemDto createItemDto)
+{
+    // ...
+    // GetByIdAsync превратится в GetById
+
+    return CreatedAtAction(nameof(GetByIdAsync), new {id = item.Id}, item);
+}
+```
+
+Для выключения этого режима надо в `Startup.cs` добавить опцию
+`SuppressAsyncSuffixInActionNames = false`:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddControllers(options => options.SuppressAsyncSuffixInActionNames = false);
+    // ...
+}
+```
