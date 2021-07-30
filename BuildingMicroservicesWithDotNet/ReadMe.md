@@ -306,3 +306,47 @@ public void ConfigureServices(IServiceCollection services)
     // ...
 }
 ```
+
+## Lesson 17. Introduction to Docker
+
+*Docker* provides the ability to package and run an application in a loosely isolated environment
+called a container.
+
+## Lesson 18. Trying out the REST API with a MongoDB container
+
+Для запуска контейнера:
+
+```text
+docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db mongo
+```
+
+У меня последняя версия MongoDB не запустилась (стартовала и тут же останавливалась), поэтому
+я взял одну из предпоследних версий:
+
+```text
+docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db mongo:4.4.7
+```
+
+* `-d` - don't attach to the process in container.
+* `--rm` - удалить контейнер когда он будет остановлен.
+* `--name` - наименование контейнера.
+* `-p` - port,
+  * `27017:27017` - `external_port:internal_port`. External_port можно делать любым (как удобно).
+* `-v` - volume. Определяется как хранятся данные контейнера.
+  * `mongodbdata:/data/db`:
+    * `mongodbdata` - location *outside* of the container.
+    * `/data/db` - default location where MongoDB stores the database files (*inside* the container).
+* `mongo` - the name of the Docker image that we want to run.
+
+Посмотреть список запущенных контейнеров:
+
+```text
+docker ps
+```
+
+### Управление MongoDB из VS Code
+
+To connect to MongoDB and Atlas directly from your VS Code environment, navigate your databases
+and collections, inspect your schema:
+
+В Visual Studio Code можно установить extension `MongoDB for VS Code` (by MongoDB).
