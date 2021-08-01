@@ -198,9 +198,9 @@ public sealed class AccountState
 
 ### 9.3.2 Copy methods without boilerplate?
 
-Здесь приводятся 2 попытки количественно минимизировать написание методов копирования `With`.
+Здесь приводятся 2 способа количественно минимизировать написание методов копирования `With`.
 
-Попытка 1. A single With method that can set any property:
+Способ 1. A single With method that can set any property:
 
 ```csharp
 // (1) null indicates that the field wasn't specified.
@@ -238,7 +238,7 @@ public static AccountState RedFlag(this AccountState account) =>
     );
 ```
 
-Попытка 2. A general-purpose copy method (see library `LaYumba.Functional`, class `Immutable`):
+Способ 2. A general-purpose copy method (see library `LaYumba.Functional`, class `Immutable`):
 
 ```csharp
 public static T With<T>(this T source, string propertyName, object newValue)
@@ -351,3 +351,36 @@ member this.Add(transaction) =
 ```
 
 ### 9.3.4 Comparing strategies for immutability: an ugly contest
+
+Итого, возможно три подхода для реализации immutability:
+
+* *Immutability by convention*
+  * PROS:
+    * You don't do any extra work to prevent mutation; you just avoid it.
+  * CONS:
+    * Небходима дисциплина по применению.
+    * Mutation can creep in (проникать).
+* *Define immutable objects in C#*
+  * PROS:
+    * Может применяться в больших командах разработки.
+  * CONS:
+    * Requires at least some extra work in defining constructors.
+* *Write data objects in F#*
+  * PROS:
+    * Very attractive option, and perhaps the best option as of today.
+  * CONS:
+    * F# objects need to go into their own assembly.
+
+*Общее замечание*:
+
+Third-party libraries may have limitations that dictate your choices. For example,
+deserializers and ORMs for .NET have used the empty constructor and settable properties to
+create and populate objects. Immutability by convention may be your only *option*.
+
+## 9.4 A short introduction to functional data structures
+
+Здесь рассматривается упрощенные реализации неизменяемых структур:
+functional linked list, binary trees. Я решил это не конспектировать.
+
+Автор рекомендует брать и использовать functional data structures из проверенных библиотек.
+Например из **System.Collections.Immutable**.
