@@ -350,3 +350,57 @@ To connect to MongoDB and Atlas directly from your VS Code environment, navigate
 and collections, inspect your schema:
 
 В Visual Studio Code можно установить extension `MongoDB for VS Code` (by MongoDB).
+
+Под NixOS был геморрой с подключением, под Linux Mint все завелось сразу же.
+
+Если посмотреть внутрь БД, то можно увидеть, что запись сохранилась в следующем виде:
+
+```json
+{
+  "_id": {
+    "$binary": {
+      "base64": "Bthc+8THu0Ws4Wx5OAb4IQ==",
+      "subType": "03"
+    }
+  },
+  "Name": "Potion",
+  "Description": "Restore a small amount of HP",
+  "Price": "5",
+  "CreatedDate": [
+    637634189696446200,
+    0
+  ]
+}
+```
+
+#### Настройка сериализации в MongoDB (Startup.cs)
+
+`Id` и `CreatedDate` сохранены в нечитаемом формате. Чтобы это исправить надо добавить в класс
+`Startup`, в метод `ConfigureServices` следущие строки:
+
+```csharp
+BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
+BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String));
+```
+
+Первая строка означает, что при сохранении типа `Guid` в БД он будет записан в виде `string`.
+Аналогично для `DateTimeOffset` во второй строке.
+
+#### Удаление БД
+
+ПКМ на Catalog в Connections -> Ввести "Catalog" для подтверждения удаления БД.
+
+#### Настроенная сериализация в MongoDB
+
+После повторного запуска приложения и сохранения в БД новой записи, можно увидеть, что
+она была сохранена в таком виде:
+
+```json
+{
+  "_id": "3dd28edc-a898-4e9f-a725-46f9efd66028",
+  "Name": "Potion",
+  "Description": "Restore a small amount of HP",
+  "Price": "5",
+  "CreatedDate": "2021-08-01T13:07:54.0738536+00:00"
+}
+```
