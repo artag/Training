@@ -404,3 +404,34 @@ BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String))
   "CreatedDate": "2021-08-01T13:07:54.0738536+00:00"
 }
 ```
+
+## Lesson 19. Introduction to Dependency Injection and Configuration
+
+Benefits of Dependency Injection and Dependency Inversion:
+
+* By having our code depend upon abstractions we are decoupling implementations from each other.
+* Code is cleaner, easier to modify and easier to reuse.
+
+`Service Container`, реализующий `IServiceProvider` занимается конструированием зависимостей.
+Все зависимости регистрируются в `Startup.cs`.
+
+1. Dependency register into the `Service Container`.
+2. `IServiceProvider` add dependency to registered dependencies.
+3. Когда требуется создать класс с какими-либо зависимостями, `Service Container`
+   1. Ищет среди registered dependencies нужную dependency.
+   2. Создает или использует уже созданные зависимости.
+   3. Конструирует нужный класс с требуемыми зависимостями.
+
+ASP.NET Core содержит *Configuration Sources* - хранит и предоставляет детали конфигурации
+для сервисов.
+
+Источники для Configuration Sources:
+
+* `appsettings.json`
+* Command line args
+* Environment variables
+* Local secrets
+* Cloud
+
+Все эти источники автоматически загружаются в configuration system когда запускается host.
+Это настраивается в Host Startup (`Program.cs`).
