@@ -38,6 +38,8 @@
 
 * [Exercises 06](Exercises_06.md)
 
+* [Exercises 07](Exercises_07.md)
+
 ## Links
 
 ## Libraries from Microsoft to programming in a functional style:
