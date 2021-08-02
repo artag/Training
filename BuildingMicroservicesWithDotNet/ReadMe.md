@@ -435,3 +435,66 @@ ASP.NET Core содержит *Configuration Sources* - хранит и пред
 
 Все эти источники автоматически загружаются в configuration system когда запускается host.
 Это настраивается в Host Startup (`Program.cs`).
+
+## Lesson 20. Implementing dependency injection and configuration
+
+Добавляется DI в `ItemsController`, `ItemsRepository`.
+
+### Настройки
+
+В `appsetting.json` добавляется секции `MongoDbSettings` и `ServiceSettings` для определения
+настроек БД (эти настройки удаляются из `ItemsRepository`):
+
+```json
+"ServiceSettings": {
+  "ServiceName": "Catalog"
+},
+"MongoDbSettings": {
+  "Host": "localhost",
+  "Port": "27017"
+},
+```
+
+Для использования настроек в коде добавляются соответствующие классы в директорию `Settings`:
+`MongoDbSettings.cs` и `ServiceSettings.cs`.
+
+### Новая фича языка CSharp
+
+```csharp
+public class MongoDbSettings
+{
+    public string Host { get; init; }
+    public int Port { get; init; }
+    // ..
+}
+```
+
+Вместо `set` ставится `init` - свойство больше не будет изменяться после его инициализации.
+
+### Регистрация сервисов
+
+Значения настроек добавляются в класс `ServiceSettings` в `Startup.cs`, метод `ConfigureServices`:
+
+```csharp
+// ..
+_serviceSettings = Configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
+// ..
+```
+
+Здесь происходит десериализация значения из файла конфигурации в требуемый класс,
+представляющий настройку.
+
+Для создания и регистрации `IMongoDatabase`, используется `IServiceCollection`:
+
+```csharp
+// ..
+services.AddSingleton(serviceProvider =>{
+    var mongoDbSettings = Configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
+    var mongoClient = new MongoClient(mongoDbSettings.ConnectionString);
+    return mongoClient.GetDatabase(_serviceSettings.ServiceName);
+});
+// ..
+```
+
+*AddSingleton* - регистрирует тип или объект как единственный, который будет использоваться
+во всем микросервисе.
