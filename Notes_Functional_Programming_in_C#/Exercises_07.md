@@ -81,3 +81,104 @@ public void Eight_divide_by_five_Return_some_three()
     Assert.AreEqual(expected, actual4);
 }
 ```
+
+2. Ternary functions:
+
+2.1. Define a `PhoneNumber` class with three fields: number type (home, mobile, ...),
+country code ('it', 'uk', ...), and number. `CountryCode` should be a custom type
+with implicit conversion to and from `string`.
+
+```csharp
+class PhoneNumber
+{
+    public PhoneNumber(NumberType numberType, CountryCode countryCode, string number)
+    {
+        NumberType = numberType;
+        CountryCode = countryCode;
+        Number = number;
+    }
+
+    public NumberType NumberType { get; }
+    public CountryCode CountryCode { get; }
+    public string Number { get; }
+}
+
+enum NumberType
+{
+    Home,
+    Mobile,
+}
+
+class CountryCode
+{
+    private string _value;
+
+    private CountryCode(string code)
+    {
+        _value = code;
+    }
+
+    public static implicit operator CountryCode(string code) =>
+        new CountryCode(code);
+
+    public static implicit operator string(CountryCode code) =>
+        code._value;
+
+    public override string ToString() =>
+        _value;
+}
+```
+
+2.2. Define a ternary function that creates a new number, given values for these
+fields. What's the signature of your factory function?
+
+```csharp
+// CreatePhoneNumber: CountryCode -> NumberType -> string -> PhoneNumber
+static Func<CountryCode, NumberType, string, PhoneNumber> CreatePhoneNumber =
+    (countryCode, numberType, number) => new PhoneNumber(numberType, countryCode, number);
+```
+
+2.3. Use partial application to create a binary function that creates a UK number,
+and then again to create a unary function that creates a UK mobile.
+
+```csharp
+static Func<NumberType, string, PhoneNumber> СreateUKPhoneNumber =
+    CreatePhoneNumber.Apply((CountryCode)"uk");
+
+static Func<string, PhoneNumber> CreateUKMobilePhoneNumber =
+    СreateUKPhoneNumber.Apply(NumberType.Mobile);
+```
+
+3. Functions everywhere. You may still have a feeling that objects are ultimately
+more powerful than functions. Surely a logger object should expose methods
+for related operations such as `Debug`, `Info`, and `Error`? To see that this is not
+necessarily so, challenge yourself to write a very simple logging mechanism
+(logging to the console is fine) that doesn't require any classes or structs. You
+should still be able to inject a Log value into a consumer class or function,
+exposing the operations Debug , Info , and Error , like so:
+`void ConsumeLog(Log log) => log.Info("look! no classes!");`
+
+Реализация:
+
+```csharp
+enum Level { Debug, Info, Error }
+
+delegate void Log(Level level, string message);
+
+static Log consoleLogger = (level, message) =>
+    Console.WriteLine($"[{level}]: message");
+
+static void Debug(this Log log, string message) =>
+    consoleLogger(Level.Debug, message);
+
+static void Info(this Log log, string message) =>
+    consoleLogger(Level.Info, message);
+
+static void Error(this Log log, string message) =>
+    consoleLogger(Level.Debug, message);
+
+static void _main() =>
+    ConsumeLog(consoleLogger);
+
+static void ConsumeLog(Log log) => log.Info("look! no objects!");
+```
