@@ -8,6 +8,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using Play.Catalog.Service.Repositories;
 using Play.Catalog.Service.Settings;
 
 namespace Play.Catalog.Service
@@ -36,6 +37,8 @@ namespace Play.Catalog.Service
                 var mongoClient = new MongoClient(mongoDbSettings.ConnectionString);
                 return mongoClient.GetDatabase(_serviceSettings.ServiceName);
             });
+
+            services.AddSingleton<IItemsRepository, ItemsRepository>();
 
             services.AddControllers(options => options.SuppressAsyncSuffixInActionNames = false);
             services.AddSwaggerGen(c =>

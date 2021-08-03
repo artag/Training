@@ -498,3 +498,13 @@ services.AddSingleton(serviceProvider =>{
 
 *AddSingleton* - регистрирует тип или объект как единственный, который будет использоваться
 во всем микросервисе.
+
+Здесь довольно сложная регистрация `IMongoDatabase`, т.к. описывается процесс создания объекта.
+
+Регистрация `IItemsRepository` проще:
+
+```csharp
+// ..
+services.AddSingleton<IItemsRepository, ItemsRepository>();
+// ..
+```
