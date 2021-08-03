@@ -508,3 +508,80 @@ services.AddSingleton(serviceProvider =>{
 services.AddSingleton<IItemsRepository, ItemsRepository>();
 // ..
 ```
+
+## Lesson 22. Using Postman
+
+Скачивается клиент Postman. Отсюда: <https://www.postman.com/downloads>
+
+### GET запрос
+
+1. Ставится `GET` запрос.
+2. Адрес `https://localhost:5001/items`.
+3. Send.
+
+При запуске ругнется: "SSL Error: Unable to verify the first certificate". Это нормально, т.к.
+сертификаты у нас самоподписанные и для разработки. Жмем на "Disable SSL Verification".
+
+### POST запрос
+
+1. Ставится `POST` запрос.
+2. Адрес `https://localhost:5001/items`.
+3. Переключение на Body.
+4. Выбор флага `raw`.
+5. В выпадающем списке `Text` выбирается `JSON`.
+6. Сам текст (поле ниже):
+
+```json
+{
+    "name": "Potion",
+    "description": "Restores a small amount of HP",
+    "price": 5
+}
+```
+
+7. Send.
+
+### Postman. Import from Swagger
+
+Это слишком сложно, долго и нудно вот так вот вручную вводить запросы в Postman. Их можно
+импортировать из Swagger.
+
+1. Открываем стартовую страницу микросервиса в браузере: `https://localhost:5001/swagger/index.html`.
+2. Копируем адрес ссылки с открывшейся страницы `https://localhost:5001/swagger/v1/swagger.json`
+в буфер обмена.
+3. В Postman нажимаем "Import" -> "Link" -> вставляется линк -> "Import".
+
+3 пункт через Link не получилось импортировать. Postman пишет: "error while fetching data from link".
+
+Получилось импортировать через:
+"Import" -> "Raw text" -> Вставить в виде текста содержимое `swagger.json` -> "Import".
+
+4. В Postman, во вкладке "Collections" появляются импортированные запросы.
+5. Адреса в импортированных запросах выглядят подобным образом: `{{baseUrl}}/items`.
+6. Задание значения для `{{baseUrl}}`:
+   1. Перейти на верхнюю папку коллекции запросов и выбрать `...` (View more actions).
+   2. Edit -> Variables
+   3. В столбцах "Initial value" и "Current value" для переменной "baseUrl" задать адрес запущенного
+   микросервиса: `https://localhost:5001`.
+   4. Update
+
+Теперь можно пробовать посылать запросы к API через Postman.
+
+### Postman. Export collection, History, Environment, 
+
+**Export collection**:
+
+1. Перейти на верхнюю папку коллекции запросов и выбрать `...` (View more actions).
+2. Export
+
+**History** (Закладка слева). Содержит список запросов, которые были выполнены ранее.
+
+**Environment** (комбобокс справа вверху). Позволяет переключать конфигурации запросов.
+
+**Authorization** (Закладка). Позволяет сгенерировать запрос для авторизации (разные виды) через API.
+
+### Отключение автоматического открытия броузера при запуске .NET Core приложения
+
+1. Файл `.vscode/launch.json` -> секция `serverReadyAction`
+2. Если удалить эту секцию, то браузер прекратит автоматически открываться при запуске приложения.
+Тем не менее, микросервис все равно будет запускаться.
