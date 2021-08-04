@@ -585,3 +585,21 @@ services.AddSingleton<IItemsRepository, ItemsRepository>();
 1. Файл `.vscode/launch.json` -> секция `serverReadyAction`
 2. Если удалить эту секцию, то браузер прекратит автоматически открываться при запуске приложения.
 Тем не менее, микросервис все равно будет запускаться.
+
+## Lesson 23. Reusing common code via NuGet
+
+* Don't Repeat Yourself (DRY). Надо вынести общий код для всех микросервисов в отдельное, доступное
+для них место.
+* Microservices should be independent of each other. Нельзя оставить общий код в одном микросервисе
+и сослаться на него из другого микросервиса.
+* Each microservice should live in its own source control repository. И положить библиотеку
+с общим кодом в виде проекта рядом с микросервисами тоже не получится.
+* Решение - NuGet.
+
+Немного про NuGet:
+
+* NuGet is the package manager for .NET.
+* A NuGet package is a single ZIP file (.nupkg) that contains files to share with others.
+* Microservice projects don't need to know where NuGet packages are hosted.
+* The common code is now maintained in a single place.
+* The time to build new microservices is significantly reduced.
