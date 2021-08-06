@@ -24,6 +24,8 @@
 
 * [Chapter 09](Chapter_09.md)
 
+* [Chapter 10](Chapter_10.md)
+
 ## Exercises
 
 * [Exercises 01](Exercises_01.md)
@@ -82,3 +84,5 @@ https://hackage.haskell.org/package/base-4.9.0.0/docs/Control-Applicative.html
 
 * Article "Choosing properties for property-based testing":
 https://fsharpforfunandprofit.com/posts/property-based-testing-2/
+
+* A specialized event DB such as Event Store (https://geteventstore.com).
