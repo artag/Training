@@ -603,3 +603,64 @@ services.AddSingleton<IItemsRepository, ItemsRepository>();
 * Microservice projects don't need to know where NuGet packages are hosted.
 * The common code is now maintained in a single place.
 * The time to build new microservices is significantly reduced.
+
+## Lesson 26. Moving generic code into a reusable NuGet package
+
+Используется отдельная директория `Play.Common`. Лежит по соседству с другими директориями
+микросервисов.
+
+Создание библиотеки:
+
+```text
+dotnet new classlib -n Play.Common
+```
+
+После создания нового проекта проверяем запущен ли OmniSharp сервер в VS Code: для этого отрываем
+любой `*.cs` файл в проекте.
+
+После, в Command Palette выбираем: ".NET Generate Assets for Build and Debug". Это сгенерирует
+директорию `.vscode` с `tasks.json` (сгенерится в директории, откуда запущен VS Code).
+
+В `tasks.json` добавляем:
+
+```json
+"tasks": [
+{
+    //...
+    "args": [ //...
+    ],
+    "problemMatcher": "$msCompile",    // Добавить под эту строку
+    "group": {
+        "kind": "build",
+        "isDefault": true
+    }
+},
+```
+
+Добавление nuget-пакетов:
+
+```text
+dotnet add package MongoDB.Driver
+dotnet add package Microsoft.Extensions.Configuration
+dotnet add package Microsoft.Extensions.Configuration.Binder
+dotnet add package Microsoft.Extensions.DependencyInjection
+```
+
+### Создание nuget-пакета
+
+```text
+dotnet pack -o ../../../packages
+```
+
+где `-o` - выходная директория.
+
+### Добавление в проект источника nuget-пакетов (локальная директория)
+
+```text
+dotnet nuget add source /полный_путь/packages -n PlayEconomy
+```
+
+где `n` - имя источника nuget-пакетов.
+
+В Linux источник nuget-пакетов добавляется сюда: `/home/USER/.nuget/NuGet/NuGet.Config`.
+`
