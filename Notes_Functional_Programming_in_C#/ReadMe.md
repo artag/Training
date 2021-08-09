@@ -26,6 +26,8 @@
 
 * [Chapter 10](Chapter_10.md)
 
+  * [Pattern](Pattern.md)
+
 ## Exercises
 
 * [Exercises 01](Exercises_01.md)

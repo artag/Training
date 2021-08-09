@@ -169,3 +169,141 @@ public sealed class AccountState
 This is dumb, immutable data object with read-only properties, some copy methods such as
 `WithStatus` , and with methods named `Debit` and `Credit`, which are also just copy methods
 and contain no business logic.
+
+### 10.2.4 An interlude on pattern matching
+
+*Pattern matching* is a language feature that allows you to execute different code
+depending on the "shape" of some data - most importantly, its type.
+It’s a staple (основа) of functional languages.
+
+You can think of the classic `switch` statement as a very limited form of pattern matching,
+because you can only match on the exact *value* of an expression.
+
+How to matching on the type?
+
+#### C#'s incipient (начальная/неполная) support for pattern matching
+
+Примеры разных способов применения соответствия по типу.
+
+Simple domain:
+
+```csharp
+enum Ripeness { Green, Yellow, Brown }
+
+abstract class Reward { }
+class Peanut : Reward { }
+class Banana : Reward { public Ripeness Ripeness; }
+```
+
+1. Matching on the type of an expression in C# 6:
+
+```csharp
+string Describe(Reward reward)
+{
+    Peanut peanut = reward as Peanut;
+    if (peanut != null)
+        return "It's a peanut";
+
+    Banana banana = reward as Banana;
+    if (banana != null)
+        return $"It's a {banana.Ripeness} banana";
+
+    return "It's a reward I don't know or care about";
+}
+```
+
+2. Matching on type in C# 7 with `is`:
+
+```csharp
+string Describe(Reward reward)
+{
+    if (reward is Peanut _)
+        return "It's a peanut";
+
+    else if (reward is Banana banana)
+        return $"It's a {banana.Ripeness} banana";
+
+    return "It's a reward I don't know or care about";
+}
+```
+
+3. Matching on type in C# 7 with `switch`:
+
+```csharp
+string Describe(Reward reward)
+{
+    switch (reward)
+    {
+        case Peanut _:
+            return "It's a peanut";
+        case Banana banana:
+            return $"It's a {banana.Ripeness} banana";
+        default:
+            return "It's a reward I don't know or care about";
+    }
+}
+```
+
+#### A custom solution for expression-based pattern matching
+
+```csharp
+// (1) - The generic parameter specifies the type that will be returned when calling Match.
+// (2) - A list of functions; the first one with a matching type will be evaluated.
+// (3) - Optionally add a default value or handler.
+// (4) - Supplies the value on which to match
+string Describe(Reward reward) =>
+    new Pattern<string>                                     // (1)
+    {
+        (Peanut _) => "It's a peanut",                      // (2)
+        (Banana b) => $"It's a {b.Ripeness} banana"         // (2)
+    }
+    .Default("It's a reward I don't know or care about")    // (3)
+    .Match(reward);                                         // (4)
+```
+
+1. Set up the functions that handle each case.
+2. You can optionally call `Default` to provide a default value, or handler, to use if no
+matching function is found.
+3. Use `Match` to supply the value to match on; this will evaluate the first function whose
+input type matches the type of the given value.
+
+`Pattern` class is useful for types that are open for inheritance, like `Event` or `Reward`,
+where you can envisage (предусмотреть) adding new subclasses as the system evolves
+(по мере развития системы).
+
+#### Matching on the structure of a list
+
+You may want to execute different code depending on whether a list is empty or not.
+
+As a reminder, here's an example of using `Match` to compute the length of a list:
+
+```csharp
+public static int Length<T>(this List<T> list) =>
+    list.Match(
+        () => 0,
+        (_, tail) => 1 + tail.Length());
+```
+
+A `Match` can be defined to work for any `IEnumerable`:
+
+```csharp
+// (1) - Calls the Empty handler if the list is empty.
+// (2) - Calls the Otherwise handler with the list's head and tail if it’s not empty.
+R Match<T, R>(
+    this IEnumerable<T> list, Func<R> empty, Func<T, IEnumerable<T>, R> otherwise) =>
+        list.Head()
+            .Match(
+                None: () => empty(),                            // (1)
+                Some: (head) => otherwise(head, list.Skip(1))   // (2)
+            );
+
+// Head returns None if the list is empty;
+// otherwise the head of the list wrapped in a Some.
+Option<T> Head<T>(this IEnumerable<T> list)
+{
+    var enumerator = list.GetEnumerator();
+    return enumerator.MoveNext()
+        ? Some(enumerator.Current)
+        : None;
+}
+```
