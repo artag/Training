@@ -664,3 +664,109 @@ dotnet nuget add source /полный_путь/packages -n PlayEconomy
 
 В Linux источник nuget-пакетов добавляется сюда: `/home/USER/.nuget/NuGet/NuGet.Config`.
 `
+
+## Lesson 27. Introduction to Docker Compose
+
+Why need yet another Docker tool?
+
+1. Multiple docker container to run.
+2. Too many steps to setup infrastructure services.
+3. Too many arguments to remember.
+4. Some containers may need to talk to each other.
+5. What if container depends on another container?
+
+### What is Docker Compose?
+
+A tool for defining and running multi-container Docker applications.
+
+1. Для конфигурации docker compose используется файл `docker-compose.yml`.
+Этот файл содержит информацию о:
+
+* Запускаемых контейнерах
+* Переменных окружения
+* Порты
+* Зависимости между контейнерами
+
+2. Одна команда для запуска: `docker-compose up`.
+
+3. Также docker compose предоставляет *Compose network*, благодаря которой контейнеры могут
+общаться друг с другом.
+
+## Lesson 28. Moving MongoDB to docker compose
+
+Включение показа пробелов в VS Code:
+
+```text
+File -> Preferences -> Settings ->
+-> Editor: Render Whitespace (поиск по "render whitespace") -> all
+```
+
+Установка extension для VS Code `Docker` (by Microsoft).
+
+В отдельной (соседней) директории (Play.Infra) создается файл `docker-compose.yml`.
+
+### В docker-compose.yml
+
+(Пробельные отступы для задания свойств внутри секций обязательны - рекомендуется включить
+в IDE показ пробелов).
+
+1. Задание *version*. Version определяет какие features будут доступны для docker compose engine.
+
+```yml
+version: "3.8"      # На linux у меня запустилась только версия "3.3"
+```
+
+2. Секция *services*. Задает docker container. На примере container для mongodb.
+
+Напоминание. Для запуска под docker-контейнером использовалась следующая команда:
+
+```text
+docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db mongo:4.4.7
+```
+
+```yml
+services:                             # секция
+    mongo:                            # имя сервиса 
+        image: mongo:4.4.7            # имя image контейнера с версией (которое в конце команды)
+        container_name: mongo         # отображаемое имя контейнера (которое --name)
+        ports:
+            - 27017:27017             # массив портов, каждый порт на отдельной строке
+        volumes:
+            - mongodbdata:/data/db    # массив volumes (один элемент)
+
+volumes:
+    mongodbdata:
+```
+
+**Примечания:**
+
+1. Если для `image` версия не нужна, то она просто не указывается.
+
+2. docker-compose создает новый экземпляр `volumes` при переходе с обычного запуска docker.
+Поэтому все `volumes` при таком переходе становятся пустыми.
+
+### Остановка контейнера docker
+
+1. Смотрим запущен ли контейнер:
+
+```text
+docker ps
+```
+
+2. Остановка контейнера:
+
+```text
+docker stop mongo
+```
+
+где `mongo` - имя контейнера, которое устанавливается при помощи атрибута `--name`.
+
+### Запуск docker compose
+
+Из директории, где лежит файл `docker-compose.yml`.
+
+```text
+docker-compose up -d
+```
+
+* `-d` (detach) - запуск docker-compose в "backround" режиме (в консоль не выводятся логи работы).
