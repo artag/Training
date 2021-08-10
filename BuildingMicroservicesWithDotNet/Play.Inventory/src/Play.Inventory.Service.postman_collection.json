@@ -1,0 +1,136 @@
+{
+	"info": {
+		"_postman_id": "ddd705e0-550a-485a-9273-50f4ade22cb7",
+		"name": "Play.Inventory.Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "items",
+			"item": [
+				{
+					"name": "/items",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/items?userId=urn:uuid:fbd027d0-40a9-95a6-6645-9982c8dbe466",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"items"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "urn:uuid:fbd027d0-40a9-95a6-6645-9982c8dbe466"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/items?userId=urn:uuid:fbd027d0-40a9-95a6-6645-9982c8dbe466",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"items"
+									],
+									"query": [
+										{
+											"key": "userId",
+											"value": "urn:uuid:fbd027d0-40a9-95a6-6645-9982c8dbe466"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n {\n  \"catalogItemId\": \"1693bfa6-dd69-73c1-227e-2f63e9ec7039\",\n  \"quantity\": -22515342,\n  \"acquiredDate\": \"2014-10-28T00:15:52.695Z\"\n },\n {\n  \"catalogItemId\": \"urn:uuid:a8438f36-5f85-964c-c437-ca8a21b5b620\",\n  \"quantity\": -76351977,\n  \"acquiredDate\": \"1962-10-23T13:56:38.842Z\"\n }\n]"
+						}
+					]
+				},
+				{
+					"name": "/items",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"885187fa-f227-0d3f-4333-81f7f7fac536\",\n    \"catalogItemId\": \"892f4fa5-eec5-1c91-ab1d-c894bcbd31aa\",\n    \"quantity\": -36022163\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/items",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"items"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"userId\": \"885187fa-f227-0d3f-4333-81f7f7fac536\",\n    \"catalogItemId\": \"892f4fa5-eec5-1c91-ab1d-c894bcbd31aa\",\n    \"quantity\": -36022163\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/items",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"items"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								}
+							],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "/",
+			"type": "string"
+		}
+	]
+}

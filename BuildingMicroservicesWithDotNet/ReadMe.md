@@ -770,3 +770,110 @@ docker-compose up -d
 ```
 
 * `-d` (detach) - запуск docker-compose в "backround" режиме (в консоль не выводятся логи работы).
+
+## Lesson 30. Creating the Inventory microservice
+
+### В VS Code
+
+1. В терминале VS Code. Переоткрытие VS Code в новом каталоге, в том же самом окне.
+
+```text
+code . -r
+```
+
+2. Создание нового микросервиса:
+
+```text
+dotnet new webapi -n Play.Inventory.Service
+```
+
+3. Открытие файла `Program.cs` в новом проекте, активация OmniSharp server в VS Code ->
+автоматическое создание `.vscode` вместе с настройками запуска приложения.
+
+4. Как обычно, в `.vscode/tasks.json` добавляется:
+
+```json
+"group": {
+    "kind": "build",
+    "isDefault": true
+}
+```
+
+5. В `.vscode/launch.json` удаляется секция `serverReadyAction`.
+
+6. В `Properties/launchSetting.json` для этого микросервиса поставим другие порты, чтобы
+не пересекаться с соседним микросервисом (вместо 5001 и 5000):
+
+```json
+"applicationUrl": "https://localhost:5005;http://localhost:5004",
+```
+
+7. Добавление общего nuget-пакета в проект `Play.Inventory.Service`:
+
+```text
+dotnet add package Play.Common
+```
+
+8. Добавление:
+
+* `Controllers/ItemsController.cs`
+* `Entities/InventoryItem.cs`
+* `Dtos.cs`
+* `Extensions.cs`
+
+9. В `appsettings.json` добавлются настройки `ServiceSettings` и `MongoDbSettings`
+(по аналогии с `Play.Catalog.Service`):
+
+```json
+"ServiceSettings": {
+  "ServiceName": "Inventory"
+},
+"MongoDbSettings": {
+  "Host": "localhost",
+  "Port": "27017"
+},
+```
+
+10. В `Startup.cs`, в методе `ConfigureServices` регистрируем `MongoDB`:
+
+```csharp
+services.AddMongo()
+        .AddMongoRepository<InventoryItem>("inventoryitems");
+```
+
+### В броузере
+
+11. Запускаем микросервис, заходим по адресу `https://localhost:5005/swagger/index.html`.
+Копируем сгенеренный файл `/swagger/v1/swagger.json` виде текста для импорта в Postman.
+
+### В Postman
+
+12. Импортируем сохраненный json. В Postman:
+
+```text
+File -> Import... -> Raw text -> вставка текста -> Continue
+```
+
+13. Определяем значение `{{baseUrl}}` в запросах:
+
+```text
+Название коллекции -> ... -> Edit -> Variables
+В "Initial Value" и "Current Value" вставляем адрес микросервиса https://localhost:5005
+```
+
+### Генерация guid в запросе в Postman
+
+В Postman есть встроенная функция `$guid` для генерации guid в body запроса:
+
+```json
+{
+    "userId": {{$guid}},
+    ...
+}
+```
+
+Узнать сгенеренный guid можно после выполнения запроса в Console Postman (внизу окна):
+
+```text
+Console -> Развернуть выполненный запрос (в видео это Post) -> Request Body -> нужный guid.
+```
