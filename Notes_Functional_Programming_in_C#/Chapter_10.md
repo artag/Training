@@ -229,6 +229,8 @@ string Describe(Reward reward)
 
 3. Matching on type in C# 7 with `switch`:
 
+*Кажется, что сопоставление в этом виде наиболее оптимально в использовании*
+
 ```csharp
 string Describe(Reward reward)
 {
@@ -273,6 +275,8 @@ where you can envisage (предусмотреть) adding new subclasses as the
 
 #### Matching on the structure of a list
 
+*Используется для восстановления/(вычисления) состояний по событиям*
+
 You may want to execute different code depending on whether a list is empty or not.
 
 As a reminder, here's an example of using `Match` to compute the length of a list:
@@ -307,3 +311,87 @@ Option<T> Head<T>(this IEnumerable<T> list)
         : None;
 }
 ```
+
+### 10.2.5 Representing state transitions
+
+1. We have a *state* and an *event*.
+2. We can compute the next state by *applying* the event to the state.
+
+This computation is called a *state transition*. Signature in general form:
+
+```text
+state -> event -> state
+```
+
+В нашем примере со счетом в банке эта сигнатура в таком виде:
+
+```text
+AccountState -> Event -> AccountState
+```
+
+При создании счета в банке, сигнатура имеет такой вид:
+
+```text
+event -> state
+```
+
+Modeling state transitions:
+
+```csharp
+
+public static class Account
+{
+    // CreatedAccount is a special case, because there is no prior state.
+    public static AccountState Create(CreatedAccount evt) =>
+        new AccountState
+        (
+            Currency: evt.Currency,
+            Status: AccountStatus.Active
+        );
+
+    // (2) - Calls the relevant transition depending on the type of the event
+    public static AccountState Apply(this AccountState account, Event evt) =>
+        new Pattern
+        {
+            (DepositedCash e) => account.Credit(e.Amount),
+            (DebitedTransfer e) => account.Debit(e.DebitedAmount),
+            (FrozeAccount _) => account.WithStatus(AccountStatus.Frozen),
+        }
+        .Match(evt);
+}
+```
+
+The first method is the special case of creation: it takes a `CreatedAccount` event and
+creates a new `AccountState`.
+
+The `Apply` method is the more general formulation of a state transition, and it will
+process all other types of events.
+
+### 10.2.6 Reconstructing the current state from past events
+
+Recovering the present state of an entity from its event history:
+
+```csharp
+// (1) - "history" - Given the history of events.
+// (2) - Creates a new account from the first event, and uses it as an accumulator.
+// (3) - Applies each subsequent event
+public static Option<AccountState> From(IEnumerable<Event> history) =>      // (1)
+    history.Match(
+        Empty: () => None,
+        Otherwise: (created, otherEvents) => Some(
+            otherEvents.Aggregate(
+                seed: Account.Create((CreatedAccount)created),              // (2)
+                func: (state, evt) => state.Apply(evt))));                  // (3)
+```
+
+1. We're taking a sequence of events: the entity's history (`IEnumerable<Event> history`).
+2. List of events you get from the DB when you query all events for a given `EntityID`.
+3. Assuming that the sequence is *sorted*: first event should be at the top of the list.
+4. If the history is empty, the code returns `None`.
+5. Otherwise the sequence must contain a `CreatedAccount` at the head of the list,
+with the tail containing all following events.
+    * The code creates the initial state from the `CreatedAccount` event.
+    * Initial state uses that as an accumulator to `Aggregate`.
+    * `Aggregate` applies all subsequent events to the state, finally obtaining the current state.
+6. Можно получить любой промежуточный статус счета, просто ограничив применение событий
+требуемой датой.
