@@ -877,3 +877,167 @@ File -> Import... -> Raw text -> вставка текста -> Continue
 ```text
 Console -> Развернуть выполненный запрос (в видео это Post) -> Request Body -> нужный guid.
 ```
+
+## Lesson 31. Introduction to synchronous communication
+
+2 способа коммуникации между сервисами:
+
+* *Synchronous* - The client sends a request and waits for a response from the service.
+
+* *Asynchronous* - The client sends a request to the service but the response, if any, is not
+sent immediately.
+
+### Synchronous communication style
+
+* The client sends a request and waits for a response from the service.
+
+* The client cannot proceed without the response.
+
+* The client thread may use a blocking or non-blocking implementation (callback).
+
+* REST + HTTP protocol is the traditional approach.
+
+* gRPC is an increasingly popular approach for internal inter-service communication.
+
+## Lesson 32. Implementing synchronous communication via IHttpClientFactory
+
+1. Проблема предыдущей реализации Inventory service. Для пользователя возвращаются предметы,
+но о предметах информация представлена в виде `catalogItemId` и `quantity`.
+
+2. Вся информация о предмете содержится в Catalog service
+
+3. Inventory service должен обратиться к Catalog service, чтобы считать по `catalogItemId`
+свойства предмета (`name` и `description`) и сформировать более полный ответ.
+
+### Реализация
+
+1. Алгоритм работы на сервисе Play.Inventory такой:
+
+```text
+1) В ItemsController приходит запрос GetAsync(Guid userId)
+
+2) Из каталога считываются через HttpClient все item'ы:
+_catalogClient.GetCatalogItemsAsync() -> IReadOnlyCollection<CatalogItemDto>
+где CatalogItemDto содержит: Guid Id, string Name, string Description
+
+3) Из БД считываются все предметы, принадлежащие определенному user:
+_itemsRepository.GetAllAsync(item => item.UserId == userId) -> IReadOnlyCollection<InventoryItem>
+где InventoryItem содержит: Guid Id, Guid UserId, Guid CatalogItemId, int Quantity, DateTimeOffset AcquiredDate.
+
+4) Для каждого InventoryItem из IReadOnlyCollection<InventoryItem> выбирается CatalogItemDto
+и из них создается InventoryItemDto,
+где InventoryItemDto содержит: Guid CatalogItemId, string Name, string Description, int Quantity, DateTimeOffset AcquiredDate.
+```
+
+2. Для синхронной связи между сервисами будет использоваться `HttpClient`
+(см. `Play.Inventory.Service/Clients/CatalogClient.cs`).
+
+3. Регистрация `CatalogClient` в `Startup.ConfigureServices`:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    // ...
+    services.AddHttpClient<CatalogClient>(client =>
+    {
+        // Адрес другого микросервиса (для связи).
+        client.BaseAddress = new Uri("https://localhost:5001");
+    });
+    // ...
+}
+```
+
+### Проблемы с ошибкой SSL certificate в HttpClient
+
+У меня, в реальности, запрос по `HttpClient` не проходил - вылетало исключение при попытке сделать
+запрос на соседний микросервис из `CatalogClient`:
+что-то типа SSL certificate of that site comes from untrusted site.
+
+#### Решение 1. Отключение проверки SSL certificate
+
+Эту проверку можно отключить при регистрации `CatalogClient` в `Startup.ConfigureServices`:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    // ...
+    services.AddHttpClient<CatalogClient>(client =>
+    {
+        client.BaseAddress = new Uri("https://localhost:5001");
+    })
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        return  new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback =     // эта строка отключает
+            (message, cert, chain, errors) => true          // проверку SSL certificate
+        };
+    });
+    // ...
+}
+```
+
+#### Решение 2. Шаманство в Linux. Не проверено
+
+Ссылки от лектора:
+
+* [How to run 'dotnet dev-certs https --trust'?](https://stackoverflow.com/a/59702094/6105076)
+
+* [Running API and MVC projects SSL connection could not be established](https://forums.asp.net/t/2174270.aspx?Running+API+and+MVC+projects+SSL+connection+could+not+be+established)
+
+#### 1. Ответ от некоего Fa
+
+*First*: modifying the `Main` method via:
+
+```csharp
+public static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(webBuilder =>
+        {
+            webBuilder
+            .UseKestrel(options =>
+            {
+                options.Listen(IPAddress.Loopback, 5004);
+                options.Listen(IPAddress.Loopback, 5005,
+                    listenOptions =>
+                    {
+                        listenOptions.UseHttps("/home/https/localhost.pfx", "******");
+                    });
+            })
+            .UseStartup<Startup>(); 
+        });
+}
+```
+
+*Second*: I added the `certificate.pem` file to Postman from the settings then certificate section.
+
+#### 2. Ответ от некоего Neas
+
+I also had this issue on Ubuntu 20.04;
+
+I found Fa solution a bit vague and couldn't get it to work.
+I can see how it should work though but being somewhat naive with respect to ssl certificate
+and https workflow still had the issue described.
+
+I found the following How to run
+[How to run 'dotnet dev-certs https --trust'?](https://stackoverflow.com/a/59702094/6105076)
+detailed solution useful in creating pfx and pem.
+
+Then similar the following changes to both `Play.Catalog.Service` and
+`Play.Inventory.Service` `Program.cs`:
+
+```csharp
+public static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureServices((context, services) =>
+        {
+            // Added this section to read kestrel options
+            services.Configure<KestrelServerOptions>(
+                context.Configuration.GetSection("Kestrel"));
+        })
+        .ConfigureWebHostDefaults(webBuilder =>
+        {
+            webBuilder.UseStartup<Startup>();
+            // webBuilder.UseUrls("http://*:5000", "https://*:5001");
+        });
+```
