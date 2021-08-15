@@ -1088,6 +1088,42 @@ Client          Inventory Service  Wait 2 secs   Catalog Service
        <-------                   <-------------
 ```
 
+### Для тестирования задержек при синхронном общении Play.Inventory и Play.Catalog
+
+В `Play.Catalog.ItemsController`, метод `GetAsync` добавляется искусственные задержки с целью
+отладки обработки задержек передач в `Play.Inventory`:
+
+```csharp
+private static int requestCounter = 0;
+
+[HttpGet]
+public async Task<ActionResult<IEnumerable<ItemDto>>> GetAsync()
+{
+    // Для тестирования обработки Timeout и прочих ошибок соединения на другой стороне
+    requestCounter++;           // Счетчик для эмуляции разного поведения ответа сервиса
+    Console.WriteLine($"Request {requestCounter}: Starting...");
+
+    if (requestCounter <= 2)
+    {
+        Console.WriteLine($"Request {requestCounter}: Delaying...");
+        await Task.Delay(TimeSpan.FromSeconds(10));
+    }
+
+    if (requestCounter <= 4)
+    {
+        Console.WriteLine($"Request {requestCounter}: 500 (Internal Server Error).");
+        return StatusCode(500);
+    }
+
+    // Полезная логика
+    var items = (await _itemsRepository.GetAllAsync())
+        .Select(item => item.AsDto());
+
+    Console.WriteLine($"Request {requestCounter}: 200 (OK).");
+    return Ok(items);
+}
+```
+
 ## Lesson 34. Implementing a timeout policy via Polly
 
 Добавляется Fail Fast поведение в работу микросервиса `Play.Inventory`.
@@ -1103,13 +1139,64 @@ package add package Microsoft.Extensions.Http.Polly
 
 2. Добавление конфигурации для `HttpClient` в `Startup.ConfigureServices`:
 
+*(Порядок определения/задания правил для HttpClient важен)*
+
 ```csharp
-// ...
 services.AddHttpClient<CatalogClient>(client =>
 {
     client.BaseAddress = new Uri("https://localhost:5001");
 })
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+    // Мое добавление для отключения проверки сертификата (см. пред. уроки).
+})
 // Добавление timeout в секундах (1 секунда в примере)
+// По превышении timeout кидает TimeoutRejectedException.
 .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(1))
-// ...
 ```
+
+## Lesson 35. Implementing retries with exponential backoff
+
+Для включения повторных попыток связи, в `Play.Inventory` для `HttpClient` в
+`Startup.ConfigureServices` добавляется `AddTransientHttpErrorPolicy`:
+
+*(Порядок определения/задания правил для HttpClient важен)*
+
+```csharp
+ var jitterer = new Random();    // Для рандомизации времени попытки доступа.
+
+services.AddHttpClient<CatalogClient>(client =>
+{
+    // ..
+})
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+    // ..
+})
+// (1) AddTransientHttpErrorPolicy добавляется до AddPolicyHandler
+// (2) Specifies the type of exception that this policy can handle.
+// (3) Количество повторов соединения
+// (4) Время между повторами. Каждый раз увеличивается в 2 раза.
+// (5) Небольшой случайный разброс по времени нужен для сглаживания пиковой нагрузки на
+//     сервис, если сразу несколько клиентов будут делать повторные запросы.
+// (6) Делегат, срабатывающий при повторе. Логгер здесь достается через serviceProvider.
+//     В production code так делать НЕ НАДО, только для учебного примера.
+.AddTransientHttpErrorPolicy(builder =>                                     // (1)
+    builder.Or<TimeoutRejectedException>().WaitAndRetryAsync(               // (2)
+        retryCount: 5,                                                      // (3)
+        retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)) +   // (4)
+                        TimeSpan.FromMilliseconds(jitterer.Next(0, 1000)),  // (5)
+        onRetry: (outcome, timespan, retryAttempt) => {                     // (6)
+            var serviceProvider = services.BuildServiceProvider();
+            serviceProvider.GetService<ILogger<CatalogClient>>()?
+                .LogWarning($"Delaying for {timespan.TotalSeconds} seconds, than making retry {retryAttempt}");
+        }
+    ))
+.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(1));
+```
+
+В справке описано, что `AddTransientHttpErrorPolicy` обрабатывает следующие виды ошибок:
+
+* Network failures (as System.Net.Http.HttpRequestException)
+* HTTP 5XX status codes (server errors)
+* HTTP 408 status code (request timeout)
