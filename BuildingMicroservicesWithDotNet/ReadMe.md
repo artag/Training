@@ -1041,3 +1041,75 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
             // webBuilder.UseUrls("http://*:5000", "https://*:5001");
         });
 ```
+
+## Lesson 33. Understanding timeouts and retries with exponential backoff
+
+Но микросервис "Catalog" может быть иногда недоступен для микросервиса "Inventory".
+
+In a distributed system, whenever a service makes a synchronous request to another service,
+there is an *ever-present* (постоянный) risk of partial failure.
+
+Возможные причины такой недоступности:
+
+* Network outages (перебои в работе сети)
+* Hardware failures
+* Dependency failure
+* Deployment in-progress
+
+You must design your service to be resilent (невосприимчивый) to those partial failures.
+
+### Setting timeouts
+
+A service client should be designed not to block indefinitely and use timeouts.
+
+```text
+                                     Timeout: 1 sec
+       --------->                   ---------------->
+Client            Inventory Service                   Catalog Service
+       Fail Fast                        Fail Fast
+       <---------                   <---------------
+```
+
+**Совет**: use timeouts for a more responsive experience and to ensure resources are never tied up
+indefenitely.
+
+### Retries with exponential backoff
+
+Performs call retries a certain number of times with a longer wait between each retry.
+
+```text
+       ------->                   ------------->
+Client          Inventory Service  Wait 2 secs   Catalog Service
+                                  ------------->
+                                   Wait 4 secs   
+                                  ------------->
+                                      ...
+        Fail                          Fail
+       <-------                   <-------------
+```
+
+## Lesson 34. Implementing a timeout policy via Polly
+
+Добавляется Fail Fast поведение в работу микросервиса `Play.Inventory`.
+Добавляется Timeout к соединению по http с сервисом `Play.Catalog`: если последний не отвечает
+по истечении Timeout, то `Play.Inventory` отключается от соединения, не дожидаясь его окончания.
+
+1. Add nuget package `Polly` в `Play.Inventory`.
+Polly позволяет to properly handle transient errors in an easy way.
+
+```text
+package add package Microsoft.Extensions.Http.Polly
+```
+
+2. Добавление конфигурации для `HttpClient` в `Startup.ConfigureServices`:
+
+```csharp
+// ...
+services.AddHttpClient<CatalogClient>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:5001");
+})
+// Добавление timeout в секундах (1 секунда в примере)
+.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(1))
+// ...
+```
