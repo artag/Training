@@ -1200,3 +1200,40 @@ services.AddHttpClient<CatalogClient>(client =>
 * Network failures (as System.Net.Http.HttpRequestException)
 * HTTP 5XX status codes (server errors)
 * HTTP 408 status code (request timeout)
+
+## Lesson 36. Understanding the circuit breaker pattern
+
+Политика повторов хорошая вещь, но всегда стоит помнить об ограниченности сервисных ресурсов.
+
+Если сервис недоступен по каким-либо причинам, то его клиент(ы) постоянно пытается достучаться
+до этого сервиса. Но ресурсы сервиса (потоки) ограничены. При таком сценарии вполне
+вероятно столкнуться с *Resource Exhaustion* (исчерпанием ресурсов) на стороне клиента.
+
+Когда это происходит, то этот клиент-сервис становится целиком недоступным для других
+компонентов (служб/приложений) системы.
+
+Для борьбы с *Resource Exhaustion* на клиенте можно применить circuit breaker pattern.
+
+### Circuit breaker pattern (схема автоматического выключателя)
+
+* Prevents the service from performing an operation taht's likely to fail
+(предотвращает выполнение службой операции, которая может привести к сбою).
+
+* Prevents our service from reaching resource exhaustion (исчерпание ресурсов).
+
+* Avoids overwhelming the dependency (позволяет избежать чрезмерной зависимости).
+
+Все запросы от сервиса-клиента посылаются через circuit breaker к сервису-серверу.
+Circuit breaker следит за ошибками соединений.
+
+Когда количество ошибок превышает предварительно заданный предел (threshold), circuit breaker
+прерывает попытки соединения - переходит в состояние *Open circuit*.
+
+Из circuit breaker запросы продолжают изредка поступать на сервер с целью определения его статуса.
+После того, как сервер оживает, circuit breaker переходит в состояние *Close circuit* -
+он опять начинает пропускать запросы от клиента к серверу.
+
+```text
+Client -----> Inventory Service -> Circuit breaker -----> Catalog Service
+                 (Client)                           ....     (Server)
+```
