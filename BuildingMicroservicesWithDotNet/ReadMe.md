@@ -1298,3 +1298,61 @@ services.AddHttpClient<CatalogClient>(client =>
 
 Но, если через некоторое время снова сделать зарос с клиента (Postman) не перезагружая сервисы,
 то запрос проходит нормально.
+
+## Lesson 39. Introduction to asynchronous communication
+
+*Service Level Agreement* (SLA) - a commitment (обязательство) between a service provider
+and a client.
+
+### The problem with synchronous communication
+
+* Increased latency (если запрос от клиента идет через несколько промежуточных сервисов).
+* Partial failure amplification (отказ одного промежуточного сервиса приводит к отказу всех
+зависимых от него сервисов).
+* Reduced SLA - если любой из сервисов имеет SLA 99.9% (обязательство - процент времени доступности
+сервера). Несколько таких последовательно совязанных сервисов будут иметь более низкий SLA.
+
+### Asynchronous communication style
+
+* The client does not wait for a response in a timely manner.
+* There might be no response at all (возможно ответа вообще не будет).
+* Usually involves the use of a lightweight message broker. Брокер по натуре dumb и не содержит
+бизнес логики. Его задача - передача сообщений от sender к receiver.
+* Message broker has high availability.
+* Messages are send to the message broker and could be received by:
+  * A single receiver (asynchronous commands).
+  * Multiple receivers (publish/subscribe events).
+
+### Microservice autonomy
+
+Микросервисы общаются друг с другом посредством сообщений только через Message Broker.
+
+Если один из сервисов откажет, то работа других сервисов не прервется.
+
+* Partial failures are not propagated (не распространяются).
+* Independent service SLA. Для всех микросервисов SLA будет одинаковым.
+* Microservice autonomy enforced (обеспечивается автономия микросервисов).
+
+### Asynchronous propagation (распространение) of data
+
+Если у одного из микросервисов обновятся данные в БД, то для другого микросервиса через
+Message Broker можно также обновить данные.
+
+Все нужные данные можно своевременно подтягивать в требуемый микросервис. Для получения
+всех данных будет достаточно только одного запроса к этому микросервису.
+
+* Data is eventually consistent (согласование данных).
+* Preserves microservice autonomy (сохранение автономии микросервисов).
+* Removes inter-service latency (устранение/уменьшение задержек между службами).
+
+### Что будет использоваться
+
+*RabbitMQ* - lightweight message broker that supports the AMQP protocol.
+
+Работа с сообщениями в RabbitMQ напоминает почтовый ящик. Когда микросервис посылает сообщение
+в RabbitMQ, оно попадает в *Exchange*. Благодаря определенной привязки (*binding*) сообщение
+переправляется в нужный *Queue*, откуда RabbitMQ доставляет сообщение адресату(ам).
+
+С целью "отвязки" нашего кода от RabbitMQ используется MassTransit.
+*MassTransit* - distibuted application framework for .NET, поддерживает несколько message broker,
+и упрощает конфигурирование и взаимодействие с ними.
