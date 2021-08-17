@@ -1158,7 +1158,8 @@ services.AddHttpClient<CatalogClient>(client =>
 ## Lesson 35. Implementing retries with exponential backoff
 
 Для включения повторных попыток связи, в `Play.Inventory` для `HttpClient` в
-`Startup.ConfigureServices` добавляется `AddTransientHttpErrorPolicy`:
+`Startup.ConfigureServices` добавляется `AddTransientHttpErrorPolicy` с настройкой
+`WaitAndRetryAsync`:
 
 *(Порядок определения/задания правил для HttpClient важен)*
 
@@ -1229,11 +1230,71 @@ Circuit breaker следит за ошибками соединений.
 Когда количество ошибок превышает предварительно заданный предел (threshold), circuit breaker
 прерывает попытки соединения - переходит в состояние *Open circuit*.
 
-Из circuit breaker запросы продолжают изредка поступать на сервер с целью определения его статуса.
-После того, как сервер оживает, circuit breaker переходит в состояние *Close circuit* -
-он опять начинает пропускать запросы от клиента к серверу.
+В режиме "Open circuit" все запросы от клиента (Client) будут игнорироваться в течение заданного
+периода времени. После окончания этого периода ожидания circuit breaker вновь позволяет запросу пройти
+на сервер - circuit breaker переходит в состояние *Close circuit*.
 
 ```text
 Client -----> Inventory Service -> Circuit breaker -----> Catalog Service
                  (Client)                           ....     (Server)
 ```
+
+## Lesson 37. Implementing the circuit breaker pattern
+
+Для включения circuit breaker, в `Play.Inventory` для `HttpClient` в
+`Startup.ConfigureServices` добавляется `AddTransientHttpErrorPolicy` с настройкой
+`CircuitBreakerAsync`:
+
+*(Порядок определения/задания правил для HttpClient важен)*
+
+```csharp
+services.AddHttpClient<CatalogClient>(client =>
+{
+    // ... задается адрес сервера для соединения по http
+})
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+    // ... отключение проверки сертификата безопасности при соединении
+})
+.AddTransientHttpErrorPolicy(builder =>
+    builder.Or<TimeoutRejectedException>().WaitAndRetryAsync(
+        // ... задание повторов соединения
+    )
+)
+// (1) AddTransientHttpErrorPolicy добавляется до AddPolicyHandler
+// (2) Включение режима Circuit Breaker
+// (3) Кол-во попыток до того как Circuit Breaker перейдет в режим "open circuit"
+// (4) Время разрыва цепи.
+//     Время, в течение которого не будет никакой реакции на запросы со стороны клиента.
+// (5) Функция, которая выполняется, когда circuit opens
+// (6) Функция, которая выполняется, когда связь с сервером восстанавливается.
+//     Режим "close circuit"
+// (7) Логгер здесь достается через serviceProvider.
+//     В production code так делать НЕ НАДО, только для учебного примера.
+.AddTransientHttpErrorPolicy(builder =>                                     // (1)
+    builder.Or<TimeoutRejectedException>().CircuitBreakerAsync(             // (2)
+        handledEventsAllowedBeforeBreaking: 3,                              // (3)
+        durationOfBreak: TimeSpan.FromSeconds(15),                          // (4)
+        onBreak: (outcome, timespan) =>                                     // (5)
+        {
+            var serviceProvider = services.BuildServiceProvider();          // (7)
+            serviceProvider.GetService<ILogger<CatalogClient>>()?
+                .LogWarning($"Opening the circuit for {timespan.TotalSeconds} seconds...");
+        },
+        onReset: () =>                                                      // (6)
+        {
+            var serviceProvider = services.BuildServiceProvider();          // (7)
+            serviceProvider.GetService<ILogger<CatalogClient>>()?
+                .LogWarning($"Closing the circuit...");
+        }
+    )
+)
+// Задание timeout для соединения с сервером.
+.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(1));     
+```
+
+В режиме "open circuit" выкидывается исключение `BrokenCircuitException`, которое прилетает
+в клиент (в примере - Postman).
+
+Но, если через некоторое время снова сделать зарос с клиента (Postman) не перезагружая сервисы,
+то запрос проходит нормально.

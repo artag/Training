@@ -62,7 +62,36 @@ namespace Play.Inventory.Service
                         serviceProvider.GetService<ILogger<CatalogClient>>()?
                             .LogWarning($"Delaying for {timespan.TotalSeconds} seconds, than making retry {retryAttempt}");
                     }
-                ))
+                )
+            )
+            // (1) AddTransientHttpErrorPolicy добавляется до AddPolicyHandler
+            // (2) Включение режима Circuit Breaker
+            // (3) Кол-во попыток до того как Circuit Breaker перейдет в режим "open circuit"
+            // (4) Время разрыва цепи (между проверками доступности сервера).
+            //     Время, в течение которого не будет никакой реакции на запросы со стороны клиента.
+            // (5) Функция, которая выполняется, когда circuit opens
+            // (6) Функция, которая выполняется, когда связь с сервером восстанавливается.
+            //     Режим "close circuit"
+            // (7) Логгер здесь достается через serviceProvider.
+            //     В production code так делать НЕ НАДО, только для учебного примера.
+            .AddTransientHttpErrorPolicy(builder =>                                     // (1)
+                builder.Or<TimeoutRejectedException>().CircuitBreakerAsync(             // (2)
+                    handledEventsAllowedBeforeBreaking: 3,                              // (3)
+                    durationOfBreak: TimeSpan.FromSeconds(15),                          // (4)
+                    onBreak: (outcome, timespan) =>                                     // (5)
+                    {
+                        var serviceProvider = services.BuildServiceProvider();          // (7)
+                        serviceProvider.GetService<ILogger<CatalogClient>>()?
+                            .LogWarning($"Opening the circuit for {timespan.TotalSeconds} seconds...");
+                    },
+                    onReset: () =>                                                      // (6)
+                    {
+                        var serviceProvider = services.BuildServiceProvider();          // (7)
+                        serviceProvider.GetService<ILogger<CatalogClient>>()?
+                            .LogWarning($"Closing the circuit...");
+                    }
+                )
+            )
             .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(1));
 
             services.AddControllers();
