@@ -1371,4 +1371,81 @@ dotnet new classlib -n Play.Catalog.Contracts
 dotnet add reference ../Play.Catalog.Contracts/Play.Catalog.Contracts.csproj
 ```
 
-Добавим контракты в `Play.Catalog.Contracts` - `Contracts.cs`.
+Добавим контракты в `Play.Catalog.Contracts` - класс `Contracts.cs`.
+
+## Lesson 41. Publishing messages via MassTransit
+
+### Nuget пакеты для MassTransit
+
+Добавление nuget-пакетов в `Play.Catalog.Service`:
+
+```text
+dotnet add package MassTransit.AspNetCore
+dotnet add package MassTransit.RabbitMQ
+```
+
+### Добавление и использование IPublishEndpoint в контроллере
+
+В `ItemsController` добавляется `IPublishEndpoint` из MassTransit. В методах, где операции
+изменения/модификации (POST, DELETE, UPDATE), добавляется (например):
+
+```csharp
+_publishEndpoint.Publish(new CatalogItemCreated(item.Id, item.Name, item.Description));
+```
+
+### Конфигурация
+
+1. В `appsettings.json` добавляется секция (пока временно, потом будет изменено):
+
+```json
+  "RabbitMQSettings": {
+      "Host": "localhost"    // Где находится RabbitMQ
+  },
+```
+
+2. Директория `Settings`, класс `RabbitMQSettings` (для использования в `Startup`).
+
+3. Класс `Startup`, метод `ConfigureServices` регистрация MassTransit:
+
+```csharp
+//...
+services.AddMassTransit(x =>    
+{
+    // Задание транспорта, который будет использоваться (RabbitMQ)
+    x.UsingRabbitMq((context, configurator) =>
+    {
+        var rabbitMQSettings = Configuration
+            .GetSection(nameof(RabbitMQSettings))
+            .Get<RabbitMQSettings>();
+
+        configurator.Host(rabbitMQSettings.Host);       // Установка параметра host
+
+        configurator.ConfigureEndpoints(
+            context,
+            new KebabCaseEndpointNameFormatter(_serviceSettings.ServiceName, includeNamespace: false));
+    });
+});
+
+// To start MassTransit service. This service starts RabbitMQ bus.
+services.AddMassTransitHostedService();
+//...
+```
+
+4. (Необязательный шаг). В `appsettings.Development.json` меняется настройка уровня логирования:
+
+```json
+"LogLevel": {
+    "Default": "Information",
+    // ..
+```
+
+на
+
+```json
+"LogLevel": {
+    "Default": "Debug",
+    || ..
+```
+
+Уровень логирования изменен для изучения, что происходит на заднем плане, когда сервисы передают
+друг другу сообщения.
