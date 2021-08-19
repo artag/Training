@@ -1356,3 +1356,19 @@ Message Broker можно также обновить данные.
 С целью "отвязки" нашего кода от RabbitMQ используется MassTransit.
 *MassTransit* - distibuted application framework for .NET, поддерживает несколько message broker,
 и упрощает конфигурирование и взаимодействие с ними.
+
+## Lesson 40. Defining the message contracts
+
+Добавим новую библиотеку в `Play.Catalog`:
+
+```text
+dotnet new classlib -n Play.Catalog.Contracts
+```
+
+И сделаем на нее reference в `Play.Catalog.Service`:
+
+```text
+dotnet add reference ../Play.Catalog.Contracts/Play.Catalog.Contracts.csproj
+```
+
+Добавим контракты в `Play.Catalog.Contracts` - `Contracts.cs`.
