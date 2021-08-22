@@ -547,3 +547,66 @@ event streams, which guarantee that the event is delivered at *least once* to th
 By using Event Store, you could simplify the logic in `saveAndPublish` to only
 `save` the event.
 
+### 10.3.3 Adding validation
+
+Ensuring only valid transitions take place:
+
+```csharp
+public static class Account
+{
+    // Performs some account-specific validation.
+    public static Validation<(Event, AccountState)> Debit(
+        this AccountState account, MakeTransfer transfer)
+    {
+        if (account.Status != AccountStatus.Active)
+            return Errors.AccountNotActive;
+
+        if (account.Balance - transfer.Amount < account.AllowedOverdraft)
+            return Errors.InsufficientBalance;
+
+        Event evt = transfer.ToEvent();
+        AccountState newState = account.Apply(evt);
+
+        return (evt, newState);
+    }
+}
+```
+
+Revisit the main workflow, adding validation. Command handling, with validation:
+
+```csharp
+public class MakeTransferController : Controller
+{
+    // Added new dependency - validation.
+    Func<MakeTransfer, Validation<MakeTransfer>> validate;
+    Func<Guid, AccountState> getAccount;
+    Action<Event> saveAndPublish;
+
+    public IActionResult MakeTransfer([FromBody] MakeTransfer cmd) =>
+        validate(cmd)
+        .Bind(t => getAccount(t.DebitedAccountId).Debit(t))
+        .Do(result => saveAndPublish(result.Item1))
+        .Match<IActionResult>(
+            Invalid: errs => BadRequest(new { Errors = errs }),
+            Valid: result => Ok(new { Balance = result.Item2.Balance }));
+}
+```
+
+`Do` is similar to `ForEach` (см. главу 4.2) in that it takes a side-effecting function.
+But whereas `ForEach` "throws away" the inner value, `Do` passes the value along, like this:
+
+```csharp
+static Validation<T> Do<T>(this Validation<T> val, Action<T> action)
+{
+    val.ForEach(action);
+    return val;
+}
+```
+
+This revised version adds validation, but no exception handling: `getAccount` and
+`saveAndPublish` perform IO, so they could both fail. To express this, we'd have to
+combine `Validation` with another effect, such as `Exceptional`. You'll see how this can
+be achieved in chapter 14.
+
+### 10.3.4 Creating views of the data from events
+
