@@ -395,3 +395,155 @@ with the tail containing all following events.
     * `Aggregate` applies all subsequent events to the state, finally obtaining the current state.
 6. Можно получить любой промежуточный статус счета, просто ограничив применение событий
 требуемой датой.
+
+## 10.3 Architecture of an event-sourced system
+
+Event-sourced system can be split into two separate parts:
+
+* *The command side*. This side has the job of writing data, which consists mainly of
+validating commands received from users. Valid commands will result in events
+being persisted and propagated.
+
+* *The query side* - This side has the job of reading data. View models are dictated by
+what you want to show on the client, and the query side must populate those
+view models from the stored events. Optionally, the query side can also publish
+notifications to the client when new events cause the views to change.
+
+![Два подхода к работе с БД](/img/working_with_db.png)
+
+Достоинства такого разделения:
+
+* Smaller, more focused components.
+* Command and query sides can be completely separate applications.
+* Can be scaled and deployed independently. Если много чтения, то можно увеличить
+только query side, оставив a single instance of the command side (чтобы prevent concurrent
+changes).
+
+The command and query side необязательно разделять на два отдельных приложения - они
+успшено могут работать внутри одного приложения (просто разделить по классам/интрефейсам
+и т.п.).
+
+### 10.3.1 Handling commands
+
+Commands are:
+
+1. The earliest source of data.
+2. Sent to your application by users (or by other systems).
+3. Handled by the command side:
+    * Validate the command
+    * Turn the command into an event
+    * Persist the event and publish it to interested parties (стороны).
+
+Comparing commands and events:
+
+* *Commands* are requests from a user or other application. It's possible for a command
+to be disregarded (игнорирование) for some reason. Maybe the command
+fails validation, or maybe the system crashes while handling it. Commands are
+named in the imperative form, such as `MakeTransfer` or `FreezeAccount`.
+
+* *Events* can't fail because they’'e already happened. They're named
+in the past tense (прошедшее время), such as `DebitedTransfer` or `FrozeAccount`.
+
+* Commands and events *generally* (в большинстве случаев) capture the same information.
+And creating an event from a command is just a matter of copying field by field (sometimes
+with some variations).
+
+* An event directly affects a single entity, but events are broadcast within your system,
+so they may trigger the creation of other events that affect other entities.
+
+The command side of an event-sourced system:
+
+![The command side of an event-sourced system](/img/command_side_of_event-sourced_system.png)
+
+Top-level command-handling workflow:
+
+```csharp
+public class MakeTransferController : Controller
+{
+    Func<Guid, AccountState> getAccount;
+    Action<Event> saveAndPublish;
+
+    // Handles receiving a command
+    public IActionResult MakeTransfer([FromBody] MakeTransfer cmd)
+    {
+        // Retrieves the account
+        var account = getAccount(cmd.DebitedAccountId);
+
+        // Performs the state transition; returns a tuple with the event and the new state.
+        var (evt, newState) = account.Debit(cmd);
+
+        // Persists the event and publishes to interested parties (стороны).
+        saveAndPublish(evt);
+
+        // Returns information to the user about the new state.
+        return Ok(new { Balance = newState.Balance });
+    }
+}
+
+public static class Account
+{
+    // Converts the command into an event and obtain the account's new state.
+    public static (Event Event, AccountState NewState) Debit(
+        this AccountState state, MakeTransfer transfer)
+    {
+        // Translates the command into an event.
+        Event evt = transfer.ToEvent();
+        // Computes the new state
+        AccountState newState = state.Apply(evt);
+        return (evt, newState);
+    }
+}
+```
+
+> ### Tuples in C# 7
+> ```csharp
+> (string, string, int) GetAuthorInfo() =>    // Declares tuple as the method's return type
+>     ("Enrico", "Buonanno", 40);             // Creates a tuple literal
+>
+> // Tuples can be deconstructed.
+> var (first, last, age) = GetAuthorInfo();
+> first     // => "Enrico"
+> age       // => 40
+> ```
+> You can assign meaningful names to the elements of a tuple:
+> ```csharp
+> (string First, string Last, int Age) GetAuthorInfo() =>
+>     ("Enrico", "Buonanno", 40);
+>
+> var info = GetAuthorInfo();
+> info.First    // => "Enrico"
+> info.Age      // => 40
+> ```
+> The old tuples (since C# 4) are backed by the `System.Tuple` classes, which are *immutable*
+> reference types.
+>
+> The new tuples are backed by the `System.ValueTuple` structs. They're copied when passed
+> between functions, yet they're *mutable*, so you can update their members within methods.
+
+### 10.3.2 Handling events
+
+`saveAndPublish` - the newly created event should be propagated to interested parties.
+A dedicated service should subscribe to these events and may consume this event.
+For example:
+
+* Send the money to the receiving bank (SWIFT, ...).
+* Recomputing the ban'’s cash reserve.
+* Sending a toast notification to the client's phone.
+
+#### Why function is called `saveAndPublish`. Using Event Store
+
+Both things should happen atomically. If the process saves the event and then crashes before all subscribers were able to handle the event, the system may be left in an inconsistent state.
+
+For example, the account may be debited but the money not sent to SWIFT.
+
+How this atomicity is achieved is somewhat intricate (насколько сложно) and strictly depends
+on the infrastructure you're targeting.
+
+For instance, if you use *Event Store*, you can take advantage of *durable* subscriptions to
+event streams, which guarantee that the event is delivered at *least once* to the subscriber:
+
+![Using Event Store](img/event_handler_event_store.png)
+
+By using Event Store, you could simplify the logic in `saveAndPublish` to only
+`save` the event.
+
