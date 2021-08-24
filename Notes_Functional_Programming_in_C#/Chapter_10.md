@@ -610,3 +610,116 @@ be achieved in chapter 14.
 
 ### 10.3.4 Creating views of the data from events
 
+We'll have a parent object, `AccountStatement`, with a list of `Transaction`'s:
+
+```csharp
+public class AccountStatement
+{
+    public int Month { get; }
+    public int Year { get; }
+    public decimal StartingBalance { get; }
+    public decimal EndBalance { get; }
+    public IEnumerable<Transaction> Transactions { get; }
+}
+
+public class Transaction
+{
+    public DateTime Date { get; }
+    public decimal DebitedAmount { get; }
+    public decimal CreditedAmount { get; }
+    public string Description { get; }
+}
+```
+
+Calculating start and end balance:
+
+```csharp
+public class AccountStatement
+{
+    public decimal StartingBalance { get; }
+    public decimal EndBalance { get; }
+
+    public AccountStatement(int month, int year, IEnumerable<Event> events)
+    {
+        var startOfPeriod = new DateTime(year, month, 1);
+        var endOfPeriod = startOfPeriod.AddMonths(1);
+
+        var eventsBeforePeriod = events
+            .TakeWhile(e => e.Timestamp < startOfPeriod);
+
+        var eventsInPeriod = events
+            .SkipWhile(e => e.Timestamp < startOfPeriod)
+            .TakeWhile(e => endOfPeriod < e.Timestamp);
+
+        StartingBalance = eventsBeforePeriod.Aggregate(0m, BalanceReducer);
+        EndBalance = eventsInPeriod.Aggregate(StartingBalance, BalanceReducer);
+    }
+
+    // (1) - Events that affect the balance
+    // (2) - Other events don't affect the balance,
+    //       so this default clause returns the running balance.
+    decimal BalanceReducer(decimal bal, Event evt) =>
+        new Pattern
+        {
+            (DepositedCash e) => bal + e.Amount,                // (1)
+            (DebitedTransfer e) => bal - e.DebitedAmount,       // (1)
+        }
+        .Default(bal)       // (2)
+        .Match(evt);
+}
+```
+
+We can calculate the starting balance by aggregating all events up to the start of the
+statement period by using 0 as a seed value and a reducer function that increments or
+decrements the balance, depending on what the event was and how it affected the balance.
+
+Not all events affect the balance; hence (поэтому) the call to `Default`, which will return
+`bal`, the running balance.
+
+Populating the list of transactions on the statementЖ
+
+```csharp
+public class AccountStatement
+{
+    public AccountStatement(int month, int year, IEnumerable<Event> events)
+    {
+        var startOfPeriod = new DateTime(year, month, 1);
+        var endOfPeriod = startOfPeriod.AddMonths(1);
+
+        var eventsDuringPeriod = events
+            .SkipWhile(e => e.Timestamp < startOfPeriod)
+            .TakeWhile(e => endOfPeriod < e.Timestamp);
+
+        Transactions = eventsDuringPeriod.Bind(CreateTransaction);
+    }
+
+    // (1) - Creates a Transaction from each event
+    // (2) - Returns None for events that don't involve (учавствуют) a transaction
+    Option<Transaction> CreateTransaction(Event evt) =>
+        new Pattern<Option<Transaction>>
+        {
+            (DepositedCash e) => new Transaction(e),        // (1)
+            (DebitedTransfer e) => new Transaction(e),      // (1)
+        }
+        .Default(None)      // (2)
+        .Match(evt);
+}
+```
+
+#### Замечания по быстродействию
+
+1. Populating a view model can be computationally intensive if it involves processing
+a large number of events, so some optimization is often required to avoid recomputing
+a view model every time it’s required. One such optimization is for the query side
+to cache the current version for every view model, and update it as new events are
+received. In this case, the query side subscribes to events published by the command
+side, and upon receiving these, updates the cached version and optionally publishes
+the updated view model to connected clients.
+
+2. If you want an event-sourced model with the performance characteristics
+of a relational database (or better), some extra work is required to precompute
+and maintain view models. Some more sophisticated optimizations involve a
+dedicated DB for the query side, where data is stored in an optimized format for querying.
+For example, if you need to query views with arbitrary (произвольными) filters,
+this can be a relational DB. This "query model" is always a by-product of past events,
+so that the event store acts as a "source of truth."
