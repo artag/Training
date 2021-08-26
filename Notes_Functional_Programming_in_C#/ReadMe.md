@@ -88,3 +88,5 @@ https://hackage.haskell.org/package/base-4.9.0.0/docs/Control-Applicative.html
 https://fsharpforfunandprofit.com/posts/property-based-testing-2/
 
 * A specialized event DB such as Event Store (https://geteventstore.com).
+
+* Datomic (http://www.datomic.com/) - the assertion-based approach to store data.

@@ -723,3 +723,106 @@ dedicated DB for the query side, where data is stored in an optimized format for
 For example, if you need to query views with arbitrary (произвольными) filters,
 this can be a relational DB. This "query model" is always a by-product of past events,
 so that the event store acts as a "source of truth."
+
+## 10.4 Comparing different approaches to immutable storage
+
+В этой главе в основном описывался *event-based* подход для хранения данных.
+Другой подход, который был упомянут в начале главы это *assertion-based* подход (на основе
+утверждений).
+
+### Описание assertion-based подхода
+
+Больше похожа на relational model: можно определять entities и attributes, которые
+по сути как rows и columns в relational БД.
+(Для примера, можно определить entity "Person" с attribute "Email".)
+
+БД модифицируется при помощи *assertions* наподобие такого:
+
+```text
+"starting now, the 'Email' attribute of the ‘Person’ with id 123 has value `jobl@manning.com`." 
+```
+
+Потом, этот attribute может быть привязан к другому value, но данные о том, что в течение
+определенного времени он был привязан к "jobl@manning.com" сохранятся. В этой модели, БД это
+постоянно растущая коллекция facts.
+
+Затем можно query БД также как и для обычной relational БД, но можно определить, будем ли мы
+query the current state или the state at any point in time.
+
+### Преимущества event-based и assertion-based подходов 
+
+With both the assertion-based and event-based approaches, you get the following:
+* An audit trail (аудиторский след/шлейф), making it possible to query the state of an entity
+at any point in time.
+* No database contention (нет конкуренции между данными в БД), потому что никакие данные никогда
+не перезаписываются.
+
+### 10.4.1 Datomic vs. Event Store
+
+Assertion-based подход достаточно сложно реализовать, в отличие от event-based подхода.
+Для event-based подхода можно использовать любую БД. Для large-scale систем желательно
+использовать специальные БД и технологии, ориентированные на ES - Event Store, Apache Kafka,
+Samza.
+
+*Datomic* - это assertion-based подход к хранению данных. Единственный реально известный
+proprietary продукт, который имеет ограниченную free версию. Написан на Clojure, не очень хорошо
+совместим с .NET.
+
+*Event Store* open source, was developed in .NET. Provides a .NET client for communicating with
+the store via TCP, and the project has good visibility in the .NET community.
+
+### 10.4.2 How event-driven is your domain? (Насколько ваш домен зависит от событий?)
+
+Использовать или не использовать ES? Ответ на этот вопрос зависит от домена.
+
+Вопросы, на которые стоит ответить:
+1. Зависимость от событий. Что считается "событиями" в домене; насколько они важны?
+2. Есть ли разница между типом предоставляемых данных и данными, потребляемыми заинтересованными сторонами.
+
+Первый пример - онлайн аукционы: типичное событие - ставкa клиента на вещь.
+Это событие инициирует изменения: у клиента теперь самая высокая ставка и
+увеличивается значение следующей ставки.
+Другое важное событие, когда молоток опускается: вещь приобретается клиентом с наиболее
+высокой ставкой и снимается с продажи.
+Этот домен определенно *event-driven*.
+
+Более того, потребляемые клиентами данные отличны от данных, которые они создают:
+большинство клиентов делают единичные ставки, но они потребляют данные,
+содержащие детали о продаваемой вещи, историю ставок на товар, или список товаров, которые
+они приобрели. Здесь наблюдается естественное разделение между действиями пользователей
+(*commands*) и данными, которые они читают (*queries*). ES очень хорошо подходит для использования в этом домене.
+
+Второй пример, поставщик страховых услуг, управляющий этими услугами.
+What events can you think of? Новое правило может быть создано или удалено или может 
+быть изменена какая-либо опция, но это признаки CRUD операций!
+Здесь требуется журнал аудита, т.к. изменение характеристик продукта может повлиять на
+тысячи контрактов. Для этого случая больше всего подходит an *assertion-based* DB.
+
+## Summary
+
+* Thinking functionally about data also encompasses (охватывает) storage.
+Instead of mutating stored data, consider the database as a big immutable collection:
+you can append new data, but never overwrite existing data.
+* There are two main approaches to immutable storage:
+  * *Event-based* - The DB is an ever-growing (постоянно растущая) collection of events.
+  * *Assertion-based* - The DB is an ever-growing (постоянно растущая) collection of facts.
+* Event sourcing means persisting event data as events occur. The state of an
+entity need not be stored, because it can always be computed as the "sum" of all
+events that affected the entity.
+* An event-sourced system naturally separates the concerns of reading and writing data,
+enabling a CQRS architecture that separates between
+  * The command side, where commands are received, validated, and turned
+into events that are persisted and published.
+  * The query side, where events are combined to create view models, which are
+served to clients and, optionally, cached for better performance.
+* Event-sourced systems have several main components:
+  * *Commands* - Simple, immutable data objects encapsulating a request from a
+client program.
+  * *Events* - Simple, immutable data objects capturing what happened.
+* *States* - Data objects representing the state of an entity at a certain (определенный)
+point in time.
+* *State transitions* (переход) - Functions that take a state and an event, and produce a new
+state.
+* *View models* - Data objects for populating (создания) views. They're computed from events.
+* *Event handlers* - These subscribe to events to perform business logic (on the command
+side) or to update view models (on the query side).
