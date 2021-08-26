@@ -31,7 +31,7 @@ namespace Play.Catalog.Service
             services.AddMongo()
                     .AddMongoRepository<Item>(collectionName: "items");
 
-            services.AddMassTransit(x =>    
+            services.AddMassTransit(x =>
             {
                 // Задание транспорта, который будет использоваться (RabbitMQ)
                 x.UsingRabbitMq((context, configurator) =>

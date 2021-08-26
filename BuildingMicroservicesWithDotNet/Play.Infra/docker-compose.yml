@@ -1,15 +1,27 @@
-# docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db mongo:4.4.7
-
 version: "3.3"
 
 services:
-    mongo:
-        image: mongo:4.4.7
-        container_name: mongo
-        ports:
-            - 27017:27017
-        volumes:
-            - mongodbdata:/data/db
+  # docker run -d --rm --name mongo -p 27017:27017 -v mongodbdata:/data/db mongo:4.4.7
+  mongo:
+    image: mongo:4.4.7
+    container_name: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodbdata:/data/db
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - 5672:5672     # To publish and consume messages from RabbitMQ
+      - 15672:15672   # To access to the RabbitMQ portal
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    hostname: rabbitmq    # Если не будет указано, то каждый раз при перезапуске RabbitMQ
+                          # будет брать random name, и будет internally сохранять данные
+                          # в разных местах
 
 volumes:
-    mongodbdata:
+  mongodbdata:
+  rabbitmqdata:       # To store RabbitMQ messages

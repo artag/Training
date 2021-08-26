@@ -1449,3 +1449,42 @@ services.AddMassTransitHostedService();
 
 Уровень логирования изменен для изучения, что происходит на заднем плане, когда сервисы передают
 друг другу сообщения.
+
+## Lesson 42. Standing up a RabbitMQ docker container
+
+### Добавление RabbitMQ в Docker Compose
+
+В `docker-compose.yml` добавляется конфигурация для RabbitMQ container:
+
+```yml
+services:
+  # ..
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - 5672:5672     # To publish and consume messages from RabbitMQ
+      - 15672:15672   # To access to the RabbitMQ portal
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    hostname: rabbitmq    # Если не будет указано, то каждый раз при перезапуске RabbitMQ
+                          # будет брать random name, и будет internally сохранять данные
+                          # в разных местах
+  #..
+
+volumes:
+  # ..
+  rabbitmqdata:       # To store RabbitMQ messages
+```
+
+### Запуск контейнеров и проверка работы
+
+```text
+docker-compose up -d
+docker ps
+```
+
+#### Запуск RabbitMQ Management
+
+Адрес web client'а: `localhost:15672`, логин/пароль: `guest` / `guest`
+
