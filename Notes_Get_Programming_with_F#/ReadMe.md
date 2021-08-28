@@ -1,42 +1,6 @@
 # Get Programming with F#
 
-## Lesson 2
-
-### Console application entry point
-
-`<EntryPoint>]` - An attribute that tells F# that this is the function to call
-when starting the application.
-
-```fsharp
-[<EntryPoint>]
-let main argv =         // The declaration of the function
-    let items = argv.Length
-    printfn "Passed in %d items: %A" items argv
-    0                   // return an integer exit code
-```
-
-### Array
-
-In F#, the syntax for arrays is as follows:
-
-```fsharp
-let items = [| "item"; "item"; "item"; "item" |]
-```
-
-### printfn in F#
-
-`printfn` is a useful function (along with its sibling `sprintf`) that allows
-you to inject values into strings by using placeholders.
-
-These placeholders are also used to indicate the type of data being supplied:
-
-* `%d` - int
-* `%f` - float
-* `%b` - Boolean
-* `%s` - string
-* `%O` - The .ToString() representation of the argument
-* `%A` - An F# pretty-print representation of the argument that
-falls back to `%O` if none exists
+* [Lesson 02. Creating your first F# program](Lesson_02.md)
 
 ## Lesson 4
 
