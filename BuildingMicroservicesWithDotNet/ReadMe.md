@@ -841,7 +841,7 @@ services.AddMongo()
         .AddMongoRepository<InventoryItem>("inventoryitems");
 ```
 
-### В броузере
+### В браузере
 
 11. Запускаем микросервис, заходим по адресу `https://localhost:5005/swagger/index.html`.
 Копируем сгенеренный файл `/swagger/v1/swagger.json` виде текста для импорта в Postman.
@@ -1488,3 +1488,91 @@ docker ps
 
 Адрес web client'а: `localhost:15672`, логин/пароль: `guest` / `guest`
 
+## Lesson 43. Refactoring MassTransit configuration into the reusable NuGet package
+
+Перенос MassTransit из `Play.Catalog` в общий проект `Play.Common`.
+
+### Изменения в `Play.Common`
+
+1. Перенос из `Play.Catalog.Service.Settings` класса `RabbitMQSettings` в
+`Play.Common.Settings`
+
+2. Добавление nuget-пакетов в `Play.Common`:
+
+```text
+dotnet add package MassTransit.AspNetCore
+dotnet add package MassTransit.RabbitMQ
+```
+
+3. Перенос конфигурации MassTransit из `Play.Catalog`, метода `Startup.ConfigureServices` в
+`Play.Common.MassTransit`, статический класс `Extensions` (аналогично как для MongoDB).
+
+Плюс добавление consumers registration для обработки сообщений из RabbitMQ.
+Этого не было в `Play.Catalog`, но будет использоваться в `Play.Inventory`.
+Есть несколько способов регистрации consumers, в видео рассмотрен способ регистрации через
+`Assembly`'s to scan for consumers.
+
+Вот что было добавлено в `Play.Common.MassTransit`, класс `Extensions`:
+
+```csharp
+services.AddMassTransit(configure =>
+{
+    // Регистрация consumers. Adds all consumers in the specified assemblies.
+    configure.AddConsumers(Assembly.GetEntryAssembly());
+
+    // Задание транспорта, который будет использоваться (RabbitMQ)
+    configure.UsingRabbitMq((context, configurator) =>
+    {
+        var configuration = context.GetService<IConfiguration>();
+        var serviceSettings = configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
+        var rabbitMQSettings = configuration.GetSection(nameof(RabbitMQSettings)).Get<RabbitMQSettings>();
+        configurator.Host(rabbitMQSettings.Host);
+        configurator.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter(serviceSettings.ServiceName, includeNamespace: false));
+    });
+});
+
+// To start MassTransit service. This service starts RabbitMQ bus.
+services.AddMassTransitHostedService();
+```
+
+4. Создание nuget-пакета.
+
+На этот раз при создании nuget-пакета укажем номер версии. Если не указать (как в прошлый раз),
+то по умолчанию выставляется номер версии `1.0.0`.
+
+```text
+dotnet pack -p:PackageVersion=1.0.1 -o ../../../packages
+```
+
+где `-o` - выходная директория.
+
+### Изменения в `Play.Catalog`
+
+1. Удаление класса `RabbitMQSettings` в `Settings`.
+
+2. В `csproj`:
+
+* Удаление ссылок на пакеты `MassTransit.AspNetCore` и `MassTransit.RabbitMQ`.
+* Поднятие версии `Play.Common` до `1.0.1`.
+
+3. В `Startup` классе удаляются все перенесенные строки конфигурации MassTransit и
+все удаленное заменяется добавлением одной строки:
+
+```csharp
+//..
+// (1) - Добавление конфигурации MassTransit из Play.Common.
+services.AddMongo()
+        .AddMongoRepository<Item>(collectionName: "items")
+        .AddMassTransitWithRabbitMQ();          // (1)
+//..
+```
+
+### Создание nuget-пакетов для `Play.Catalog.Contracts`
+
+В директории Play.Catalog/src/Play.Catalog.Contracts создаем nuget package:
+
+```text
+dotnet pack -o ../../../packages/
+```
+
+Сервис `Play.Inventory` будет использовать данный пакет для consume the messages.
