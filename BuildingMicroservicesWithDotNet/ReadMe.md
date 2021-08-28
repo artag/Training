@@ -1576,3 +1576,102 @@ dotnet pack -o ../../../packages/
 ```
 
 Сервис `Play.Inventory` будет использовать данный пакет для consume the messages.
+
+## Lesson 44. Consuming messages for eventual data consistency
+
+Изменения в сервисе `Play.Inventory`.
+
+1. Добавление в Entities `CatalogItem`.
+
+Необязательно использовать/определять все поля/свойства сущности из одного микросервиса
+для использования в другом. В частности, в `CatalogItem` нужны только лишь следующие свойства:
+
+* `Id`
+* `Name`
+* `Description`
+
+2. Добавление в проект `Play.Inventory` nuget-пакетов:
+
+```text
+dotnet add package Play.Catalog.Contracts       // Контракты сообщений для consume the messages
+```
+
+... и повышение версии пакета `Play.Common` с `1.0.0.` на `1.0.1`.
+
+### Defining the consumers
+
+В новом каталоге Consumers опеределяются consumers, по одному на каждую операцию, которая будет
+происходить в `Play.Catalog`: create, update and delete:
+
+* `CatalogItemCreatedConsumer`
+* `CatalogItemUpdatedConsumer`
+* `CatalogItemDeletedConsumer`
+
+1. Все эти классы реализуют интерфейс `IConsumer<T>`, где `T` - тип сообщения, который handle
+(берется из nuget пакета `Play.Catalog.Contracts`).
+
+2. Для обработки сообщений в этих классах используется storage in our local catalog items database -
+инжектируем в конструкторы классов `IRepository<CatalogItem>`.
+
+3. Для всех классов реализуем метод `Consume(ConsumeContext<T> context)`.
+
+### Добавление RabbitMQ в `appsettings.json`
+
+(Такие же строки, как и для `appsettings.json` в `Play.Catalog`)
+
+```json
+// ..
+  "RabbitMQSettings": {
+      "Host": "localhost"
+  },
+//..
+```
+
+### Измененения в `Startup`
+
+1. Добавление новой коллекции `CatalogItem` для хранения в MongoDB.
+И регистрация в MassTransit, RabbitMQ.
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    // ..
+    services.AddMongo()
+            .AddMongoRepository<InventoryItem>("inventoryitems")
+            .AddMongoRepository<CatalogItem>("catalogitems")        // добавление
+            .AddMassTransitWithRabbitMQ();                          // добавление
+    // ..
+}
+```
+
+Обе коллекции хранятся в одной БД.
+
+### Необязательный шаг
+
+В `appsettings.Development.json` меняется настройка уровня логирования:
+
+```json
+"LogLevel": {
+    "Default": "Information",
+    // ..
+```
+
+на
+
+```json
+"LogLevel": {
+    "Default": "Debug",
+    || ..
+```
+
+Уровень логирования изменен для изучения, что происходит на заднем плане, когда сервисы передают
+друг другу сообщения.
+
+### Перед запуском сервисов. Чистка БД
+
+Перед запуском сервисов в обновленной конфигурации (добавление синхронизации БД через
+шину сообщений) необходимо почистить БД у обоих сервисов, т.к. они находятся в
+несинхронизированном состоянии.
+
+Для этого в VSCode переключаемся на extension `MongoDB for VS Code`, делаем ПКМ на нужной
+базе -> команда "Drop Database...".
