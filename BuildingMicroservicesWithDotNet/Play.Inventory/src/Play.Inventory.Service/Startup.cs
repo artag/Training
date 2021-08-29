@@ -33,7 +33,9 @@ namespace Play.Inventory.Service
                     .AddMongoRepository<CatalogItem>("catalogitems")
                     .AddMassTransitWithRabbitMQ();
 
-            AddCatalogClient(services);
+            // Синхронное взаимодействие с Play.Catalog теперь ненужно, т.к. информация доступна
+            // через шину сообщений RabbitMQ.
+            // AddCatalogClient(services);
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -64,6 +66,14 @@ namespace Play.Inventory.Service
             });
         }
 
+        /// <summary>
+        /// Добавляет клиента для сервиса Play.Catalog.
+        /// Синхронные запросы.
+        /// Не используется, т.к. обновление информации происходит через RabbitMQ.
+        /// </summary>
+        /// <param name="services">
+        /// Specifies the contract for a collection of service descriptors.
+        /// </param>
         private static void AddCatalogClient(IServiceCollection services)
         {
             var jitterer = new Random();    // Для рандомизации времени попытки доступа.

@@ -1675,3 +1675,76 @@ public void ConfigureServices(IServiceCollection services)
 
 Для этого в VSCode переключаемся на extension `MongoDB for VS Code`, делаем ПКМ на нужной
 базе -> команда "Drop Database...".
+
+## Lesson 45. Remove the inter-service synchronous communication. Enable RabbitMQ message retries.
+
+Удаление синхронного взаимодействия `Play.Inventory` <-> `Play.Catalog`. Теперь ненужно, т.к.
+вся информация о `CatalogItem` есть у сервиса `Play.Inventory` в его БД.
+
+Все изменения производятся в сервисе `Play.Inventory`.
+
+1. Удаление синхронного взаимодействия из `Controllers.ItemsController`.
+    * Удаление поля (и его инициализации) `CatalogClient`.
+    * Добавление `IRepository<CatalogItem>`.
+    * Модификация метода `GetAsync`.
+
+### Enable RabbitMQ message retries
+
+Настройка повторных посылок сообщений в конфигурации RabbitMQ. Если вдруг consumer
+не смог по какой-либо причине обработать сообщение.
+
+Настройка в сервисе `Play.Common`, `MassTransit`, класс `Extensions`, метод расширение
+`AddMassTransitWithRabbitMQ`:
+
+```csharp
+public static IServiceCollection AddMassTransitWithRabbitMQ(this IServiceCollection services)
+{
+    services.AddMassTransit(configure =>
+    {
+        // ..
+
+        // Задание транспорта, который будет использоваться (RabbitMQ)
+        configure.UsingRabbitMq((context, configurator) =>
+        {
+            // ..
+            configurator.UseMessageRetry(retryConfigurator =>
+            {
+                retryConfigurator.Interval(retryCount: 3, interval: TimeSpan.FromSeconds(5));
+            });
+        });
+    });
+}
+```
+
+* `retryCount` - количество повторов сообщений
+* `interval` - интервал между сообщениями
+
+#### Обновление nuget-пакета. (Напоминание)
+
+```text
+dotnet pack -p:PackageVersion=1.0.2 -o ../../../packages
+```
+
+*Примечание*: PackageVersion - это версия nuget пакета, сама сборка подписывается как 1.0.0.
+Чтобы подписать сборку, надо заводить либо `AssemblyInfo.cs` файл, либо добавлять
+соответствующие атрибуты в файл проекта `Play.Common`.
+
+### Проверка взаимодействия в Postman. (Напоминание)
+
+1. Генерация произвольного user guid в запросе Post - в теле запроса пишется `{{$guid}}`:
+
+```json
+{
+    "userId": "{{$guid}}",
+    "catalogItemId": "d06ca638-0213-4a58-9fee-77566d514704",
+    "quantity": 1
+}
+```
+
+2. Узнать какой user guid был сгенерирован в ходе запроса Post.
+
+После запроса Post, внизу экрана в Postman:
+
+```text
+Console -> Раскрыть последний запрос Post -> Раскрыть Request Body -> Поле userId
+```
