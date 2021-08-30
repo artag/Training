@@ -13,3 +13,5 @@
 * [Module 6. Asynchronous inter-service communication](Module_06.md)
 
 * [Module 7. Frontend Integration](Module_07.md)
+
+* [Play.Frontend ReadMe.md](./Play.Frontend/README.md)
