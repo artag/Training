@@ -120,4 +120,134 @@ resource. If an opaque response serves your needs, set the request's mode to 'no
 to fetch the resource with CORS disabled.
 ```
 
-*CORS* cross-origin resource sharing.
+В следующем уроке будет рассмотрено решение данной проблемы - использование CORS.
+
+## Lesson 50. Understanding CORS (Cross-Origin Resource Sharing)
+
+Origin:
+
+```text
+protocol://host:port
+```
+
+Пример:
+
+```text
+http://localhost:3000
+http      - protocol
+localhost - host
+3000      - port
+```
+
+Для browser и web server (node.js) их origin полностью совпадают - у обоих `http://localhost:3000`.
+
+Web Server на Node.js хостит frontend и REST API.
+
+В данном сценарии, браузер вначале обращается к Web Server для загрузки начальной страницы
+frontend'а. Когда запрошена секция Catalog, браузер делает GET запрос к Catalog REST API *(1)*.
+Web Server в ответ присылает JSON представление catalog data *(2)*.
+
+```text
+                       (1)  GET /items
+        Browser       ----------------->      Web Server
+                      <-----------------       Node.js
+http://localhost:3000  (2)  JSON (answer)  http://localhost:3000
+```
+
+Сервис `Catalog` работает отдельно, на ASP.NET Core Kestrel webserver, который также
+хостит REST API.
+Когда browser делает запрос к `Catalog`, он делает cross origin request (разные origin)
+напрямую к сервису *(3)*:
+
+```text
+GET https://localhost:5001/items
+```
+
+Сервис также возвращает JSON представление данных каталога *(4)*, но клиент теперь знает, что
+response идет из другого origin (благодаря Request Header):
+
+```text
+                       (3)  GET https://localhost:5001/items
+        Browser       --------------------------------------->       Catalog
+                      <---------------------------------------
+http://localhost:3000           (4)  JSON (answer)             https://localhost:5001
+
+                                Request Headers
+               http://localhost:3000  !=  https://localhost:5001
+```
+
+Поэтому клиент (броузер) отклоняет запрос с CORS Error: он следует Same-origin policy.
+
+*Same-origin policy* - a web application can only request resources from the same origin
+the application was loaded from.
+
+Это сделано, чтобы избежать чтения конфиденциальной информации посторонними сайтами.
+
+Решение - использование Cross-Origin Resource Sharing (CORS).
+
+*CORS* - allows a server to indicate (указывать/задавать) any other origins than its own from
+which a browser should permit (разрешать) loading of resources.
+
+Браузер опять отсылает GET-запрос сервису Catalog. Но на этот раз микросервис сконфигурирован
+с `Access-Control-Allow-Origin` header, который указывает, что разрешены доступ к API для
+других origins:
+
+```text
+                       (5)  GET https://localhost:5001/items
+                            Headers:
+                            Origin: http://localhost:3000
+        Browser       --------------------------------------->      Catalog
+                      <---------------------------------------
+http://localhost:3000  (4)  JSON (answer)                      https://localhost:5001
+                            Headers:                           Access-Control-Allow-Origin:
+                            Access-Control-Allow-Origin:       http://localhost:3000
+                            http://localhost:3000
+```
+
+Теперь Request Headers совпадают и браузер принимает ответ.
+
+Этот прием работает только для простых запросов GET. Для запросов POST, PUT и т.д. работает
+немного более сложно.
+
+Клиент (бразуер) отправляет серверу предварительный запрос *CORS Preflighted request*
+с тремя Headers:
+
+* `Origin: http://localhost:3000`
+* `Access-Control-Request-Headers: content-type`
+* `Access-Control-Request-Method: POST`
+
+В ответ сервер должен отправить ответ также с тремя Headers:
+
+* `Origin: http://localhost:3000`
+* `Access-Control-Request-Headers: content-type`
+* `Access-Control-Request-Method: POST`
+
+```text
+                       GET https://localhost:5001/items
+                       Headers:
+                       Origin: http://localhost:3000
+                       Access-Control-Request-Headers: content-type
+                       Access-Control-Request-Method: POST
+        Browser       --------------------------------------------->        Catalog
+                      <---------------------------------------------
+http://localhost:3000  Headers:                                      https://localhost:5001
+                       Origin: http://localhost:3000
+                       Access-Control-Request-Headers: content-type
+                       Access-Control-Request-Method: POST
+
+                      POST https://localhost:5001/items
+                      {"name":"a","description":"b","price":9}
+                      Headers:
+                      Origin: http://localhost:3000
+                      --------------------------------------------->
+                      <---------------------------------------------
+                      201 Created
+                      Headers:
+                      Access-Control-Allow-Origin: http://localhost:3000
+```
+
+Только потом клиент (бразуер) отправляет серверу запрос POST с данными JSON. В ответ
+сервер, если все закончилось удачно, должен прислать ответ 201 Created.
+
+Т.о., чтобы все работало необходимо сконфигурировать CORS на стороне микросервисов
+`Play.Catalog` и `Play.Inventory`.
