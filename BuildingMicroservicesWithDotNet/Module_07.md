@@ -344,3 +344,34 @@ Failed to load resource: net::ERR_CERT_AUTHORITY_INVALID
 
 На этот раз связано с установкой (точнее отсутствием) сертификатов безопасности.
 Помогло разрешение в браузере unsafe соединения.
+
+## Lesson 52. Exploring the frontend to microservices communication
+
+Исследование поведения микросервисов и frontend'а. Для этого все они запускаются
+из VS Code в debug режиме.
+
+Итого запущены:
+
+1. docker контейнеры.
+2. `Play.Catalog` service
+3. `Play.Inventory` service
+4. `Play.Frontend`
+
+* `Play.Catalog` и `Play.Inventory` зарускаются командой из VS Code "Start Debugging".
+
+* `Play.Frontend` запускается командой из VS Code "Run and Debug", в режиме (Server/Client).
+
+*Мое замечание*: может понадобиться поправить `Play.Frontend/.vscode/launch.json`, раздел
+клиента для запуска нужного браузера:
+
+```json
+//"type": "pwa-msedge",   -- Изначально был такой параметр. Для Windows.
+"type": "pwa-chrome",                           // Выставил для Linux, для отладки в chromium.
+"runtimeExecutable": "/usr/bin/chromium",       // В Linux, добавил путь для запуска chromium.
+"request": "launch",
+"name": "Client",
+"url": "http://localhost:3000",
+"webRoot": "${workspaceFolder}/src"
+```
+
+Client fronend'а запускается в браузере не сразу - надо подождать, пока открывается `localhost:3000`.

@@ -17,7 +17,8 @@
             ]
         },
         {
-            "type": "pwa-msedge",
+            "type": "pwa-chrome",
+            "runtimeExecutable": "/usr/bin/chromium",
             "request": "launch",
             "name": "Client",
             "url": "http://localhost:3000",
