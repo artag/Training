@@ -251,3 +251,96 @@ http://localhost:3000  Headers:                                      https://loc
 
 Т.о., чтобы все работало необходимо сконфигурировать CORS на стороне микросервисов
 `Play.Catalog` и `Play.Inventory`.
+
+## Lesson 51. Adding the CORS middleware
+
+Добавление CORS на примере `Play.Catalog`. Аналогично добавляется и в `Play.Inventory`.
+
+1. Правка файла конфигурации `appsettings.Development.json`.
+
+Добавлена секция со строкой:
+
+```json
+"Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+"AllowedOrigin": "http://localhost:3000"
+```
+
+Добавлен адрес frontend'а.
+
+Правка сделана в `appsettings.Development.json`, а не в `appsettings.json`, т.к. origin frontend'а
+a development server at this point. Нам не требуется настройка CORS policy для origin in production.
+
+2. Правка файла `Startup`.
+
+2.1. Добавление константы
+
+```csharp
+string AllowedOriginSetting = "AllowedOrigin";
+```
+
+Для использования в качестве ключа при чтении значения из файла конфигурации.
+
+2.2. Метод `void Configure(IApplicationBuilder, IWebHostEnvironment)`.
+
+Добавление производится в секцию `if (env.IsDevelopment())` т.к. добавляем origin для режима
+development.
+
+```csharp
+if (env.IsDevelopment())
+{
+    // ..
+
+    app.UseCors(builder =>
+    {
+        builder.WithOrigins(Configuration[AllowedOriginSetting])
+            .AllowAnyHeader()       // Allow any header that the client wants to send
+            .AllowAnyMethod();      // Allow any method used from the client side
+    });
+}
+```
+
+*(Напоминание)*
+`Configuration` является объектом:
+
+```csharp
+public IConfiguration Configuration { get; }
+```
+
+который автоматически инициализируется ASP.NET. Данное свойство включает в себя все содержимое
+конфигурационных файлов `appsettings.Development.json` и `appsettings.json`.
+
+### Проверка работы. Теперь удачная
+
+Запущено:
+
+1. docker контейнеры.
+2. `Play.Catalog` service
+3. `Play.Frontend`
+
+Пытаемся посмотреть каталоги через `Play.Frontend`, в браузере
+`http://localhost:3000/`
+
+Теперь каталог `Play.Catalog` будет доступен для просмотра.
+
+Можно посмотреть детали запроса: `F12 -> Network` -> request `items` В разделе Headers:
+
+* в секции Request Headers можно увидеть значение *origin*, который отсылает клиент.
+
+* в секции Response Headers можно увидеть значение *access-control-allow-origin* со стороны сервера.
+
+#### Замечание
+
+Может опять возникнуть ошибка при попытке загрузки Catalog. На этот раз такая:
+
+```text
+Failed to load resource: net::ERR_CERT_AUTHORITY_INVALID
+```
+
+На этот раз связано с установкой (точнее отсутствием) сертификатов безопасности.
+Помогло разрешение в браузере unsafe соединения.

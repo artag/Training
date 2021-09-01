@@ -13,6 +13,8 @@ namespace Play.Catalog.Service
 {
     public class Startup
     {
+        private const string AllowedOriginSetting = "AllowedOrigin";
+
         private ServiceSettings _serviceSettings;
 
         public Startup(IConfiguration configuration)
@@ -47,6 +49,13 @@ namespace Play.Catalog.Service
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Play.Catalog.Service v1"));
+
+                app.UseCors(builder =>
+                {
+                    builder.WithOrigins(Configuration[AllowedOriginSetting])
+                        .AllowAnyHeader()       // Allow any header that the client wants to send
+                        .AllowAnyMethod();      // Allow any method used from the client side
+                });
             }
 
             app.UseHttpsRedirection();
