@@ -375,3 +375,4 @@ Failed to load resource: net::ERR_CERT_AUTHORITY_INVALID
 ```
 
 Client fronend'а запускается в браузере не сразу - надо подождать, пока открывается `localhost:3000`.
+Компиляция и запуск сервера видны в VS Code, в Debug Console.
