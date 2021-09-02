@@ -2,15 +2,7 @@
 
 * [Lesson 02. Creating your first F# program](Lesson_02.md)
 
-## Lesson 4
-
-### Comparing functional equivalents to core object-oriented class features
-
-Class | Function|
-------|---------|
-Constructor / single public method | Arguments passed to the function
-Private fields | Local values
-Private methods | Local functions
+* [Lesson 04. Saying a little, doing a lot](Lesson_04.md)
 
 ## Lesson 5
 
