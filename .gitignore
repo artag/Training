@@ -12,3 +12,6 @@
 #Paket dependency manager
 **/.paket/
 **/paket-files
+
+#Include .vscode
+!/BuildingMicroservicesWithDotNet/Play.Frontend/.vscode
