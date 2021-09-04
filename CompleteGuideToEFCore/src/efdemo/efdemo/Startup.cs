@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Model;
 
 namespace efdemo
 {
@@ -24,6 +20,15 @@ namespace efdemo
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            // To use with SQLite database
+            services.AddEntityFrameworkSqlite().AddDbContext<ApplicationDbContext>();
+
+            // To use with MSSql database
+            // var dbConnectionString = Configuration.GetConnectionString("DefaultConnection");
+
+            // services.AddDbContext<ApplicationDbContext>(options =>
+            //    options.UseSqlServer());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

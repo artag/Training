@@ -2,7 +2,7 @@
 
 ## Lesson 4. Why Entity Framework
 
-### What is persistence layer.
+### What is persistence layer
 
 ```text
 Application layer ---> Persistence Framework ---> Database
@@ -83,7 +83,13 @@ dotnet sln add Model/Model.csproj
 <TargetFramework>netstandard2.0</TargetFramework>
 ```
 
-5. (Только для VS Code). Добавление конфигурации для build всего solution. Файл `.vscode/tasks.json`:
+5. Добавление проекта "Model" как reference в проект "efdemo":
+
+```text
+dotnet add reference ../Model/Model.csproj
+```
+
+6. (Только для VS Code). Добавление конфигурации для build всего solution. Файл `.vscode/tasks.json`:
 
 ```json
 {
@@ -125,9 +131,9 @@ public class ExpenseHeader
 
 Работа в проекте `Model`. Теперь надо создать database context - позволит "общаться" с БД.
 
-### Установка nuget пакетов
+### Добавление nuget пакетов
 
-* Microsoft.EntityFrameworkCore - установка в проекты "efcore" и "Model". В курсе версия 3.1.6.
+* Microsoft.EntityFrameworkCore - установка в проекты "efcore" и "Model". В видео версия 3.1.6.
 
 Для VS Code. Я поставил не самую свежую версию 3.1.18, т.к. она поддерживает netstandard2.0:
 
@@ -158,3 +164,71 @@ public class ApplicationDbContext : DbContext
 `DbSet` описывает таблицы, которые будут созданы и к которым будет происходить соединение.
 
 Название таблицы по соглашению принято назвать множественным числом от POCO class.
+
+## Lesson 8. Setup your database configuration
+
+### Добавление connectionString
+
+Работа в проекте `efdemo`, файл `appsettings.json`. Добавлена секция для работы с локальной БД
+MSSQL:
+
+```json
+"ConnectionStrings": {
+      "DefaultConnection": "Data Source=(LocalDB)\\MSSQLLocalDB;Initial Catalog=EFExpenseDemo;Integrated Security=True"
+  },
+```
+
+Таких строк соединений в файле может быть несколько.
+
+Т.к. я буду использовать SQLite, то мне сюда добавлять ничего не надо.
+
+Зато мне надо добавить (в отличие от видео) строку в класс `ApplicationDbContext`,
+в метод `OnConfiguring`:
+
+```csharp
+protected override void OnConfiguring(DbContextOptionsBuilder options)
+{
+    options.UseSqlite("Filename=EFExpenseDemo.db");
+}
+```
+
+### Добавление nuget пакетов - провайдеров для БД и tooling
+
+* Microsoft.EntityFrameworkCore.SqlServer - установка в проекты "efcore" и "Model".
+В видео версия 3.1.6. Для БД MSSql - в видео используется локальная БД - LocalDB.
+
+* Microsoft.EntityFrameworkCore.Tools - установка в проекты "efcore" и "Model".
+В видео версия 3.1.6.
+
+Я вместо MSSQL буду использовать SQLite - мне вместо SqlServer надо поставить nuget:
+
+* Microsoft.EntityFrameworkCore.Sqlite
+
+```text
+dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 3.1.18
+dotnet add package Microsoft.EntityFrameworkCore.Tools --version 3.1.18
+```
+
+### Добавление в `Startup`
+
+Работа в проекте `efdemo`, файл `Startup.cs`.
+В метод `ConfigureServices`, для MSSQL добавляется:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    // ...
+    var dbConnectionString = Configuration.GetConnectionString("DefaultConnection");
+    services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer());
+}
+```
+
+Мне, для SQLite надо добавить:
+
+```cs
+public void ConfigureServices(IServiceCollection services)
+{
+    // ..
+    services.AddEntityFrameworkSqlite().AddDbContext<ApplicationDbContext>()
+}
+```

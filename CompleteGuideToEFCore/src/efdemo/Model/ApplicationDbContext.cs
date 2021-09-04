@@ -10,5 +10,10 @@ namespace Model
         }
 
         public DbSet<ExpenseHeader> ExpenseHeaders { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder options)
+        {
+            options.UseSqlite("Filename=EFExpenseDemo.db");
+        }
     }
 }
