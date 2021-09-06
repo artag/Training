@@ -169,3 +169,33 @@ SQLite does not support this migration operation ('AlterColumnOperation') ...
 * Проект `Model` переведен на netstandard2.1, т.к. 5 версия не поддерживает netstandard2.0.
 
 После этих манипуляции миграция прошла, БД обновилась.
+
+## Lesson 13. Modifying a model with data annotations
+
+Data annotations позволяют избирательно задать ограничения для полей таблицы.
+
+1. Аннотации добавляются в POCO класс (проект `Model`, класс `ExpenseHeader`).
+2. Используется namespace `System.ComponentModel.DataAnnotations`.
+
+### Рассмотренные аннотации
+
+* `Key` - говорит, что свойство явлюяется ключом. Для свойства с именем `Id` или `HeaderId`
+задание данной аннотации необязательно - EF Core определит, что это ключ.
+* `Required` - поле обязательно должно содержать какое-либо значение.
+* `MaxLength(100)` - максимально допустимый размер данных в поле.
+Например, максимальная длина строки - 100 символов.
+* `MinLength(10)` - минимально допустимый размер данных в поле.
+
+### Опять создание migration
+
+Команды из Visual Studio, Package Manager Console:
+
+```text
+add-migration dataannotationexample
+```
+
+Или, для VS Code (запуск из директории, где лежит *.sln файл):
+
+```text
+dotnet ef migrations add DataAnnotationExample -s efdemo/efdemo.csproj -p Model/Model.csproj
+```
