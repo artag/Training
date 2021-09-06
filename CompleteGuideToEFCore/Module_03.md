@@ -199,3 +199,19 @@ add-migration dataannotationexample
 ```text
 dotnet ef migrations add DataAnnotationExample -s efdemo/efdemo.csproj -p Model/Model.csproj
 ```
+
+## Lesson 14. Create custom error messages with data annotations
+
+В аннотациях можно задать показ сообщений об ошибках пользователю (на Web Form и прочем),
+если ограничение было нарушено.
+
+Пример для аннотаций `Required` и `MaxLength` (проект `Model`, POCO класс `ExpenseHeader`):
+
+```csharp
+// ..
+[Required(ErrorMessage = "{0} is required")]
+[MaxLength(100, ErrorMessage = "{0} can not be more than 100 characters")]
+public string Description { get; set; }
+```
+
+Для данного аттрибута вместо "{0}" будет поставлено наименование свойства "Description".

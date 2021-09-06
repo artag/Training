@@ -10,8 +10,8 @@ namespace Model
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        [MaxLength(100)]
+        [Required(ErrorMessage = "{0} is required")]
+        [MaxLength(100, ErrorMessage = "{0} can not be more than 100 characters")]
         [MinLength(10)]
         public string Description { get; set; }
 
