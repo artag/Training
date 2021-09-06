@@ -37,6 +37,8 @@ add-migration initial
 
 #### Создание migration из VS Code (.NET Core CLI)
 
+*(Первые два этапа делаются только раз)*
+
 1. Installing the tools
 `dotnet ef` can be installed as either a global or local tool.
 Most developers prefer installing dotnet ef as a global tool using the following command:
@@ -88,3 +90,82 @@ dotnet ef database update -v
 ```
 
 Для SQLite файл БД `EFExpenseDemo.db` будет создан прямо в директории проекта efdemo.
+
+## Lesson 12. Using a migration to modify your existing database tables
+
+Что надо сделать если захотелось поменять что-то в модели?
+
+### Изменение model
+
+Работа в проекте `Model`. Например, меняем:
+
+```csharp
+public class ExpenseHeader
+{
+    // ..
+    public DateTime ExpenseDate { get; set; }
+}
+```
+
+на
+
+```csharp
+public DateTime? ExpenseDate { get; set; }
+```
+
+### Новая migration для изменения в model
+
+Теперь надо сделать новую migration. В Package Manager Console:
+
+1. Default Project -> Model
+2. `efdemo` указан как Startup Project
+3. Команда в Package Manager Console:
+
+```text
+add-migration expensedate-null
+```
+
+#### Новая migration из VS Code (.NET Core CLI)
+
+Создание migration. Запуск из директории, где лежит файл *.sln.
+
+```text
+dotnet ef migrations add ExpenseDateNull -s efdemo/efdemo.csproj -p Model/Model.csproj
+```
+
+* `ExpenseDateNull` - имя миграции
+* `-s efdemo/efdemo.csproj` - The startup project to use. Defaults to the current working directory.
+* `-p Model/Model.csproj` - The project to use. Defaults to the current working directory.
+(Именно здесь и будет создана migration).
+
+### Применение migration к БД
+
+В Package Manager Console:
+
+```text
+update-database
+```
+
+Та же команда, только в VS Code (.NET Core CLI). Запуск из корня запускаемого проекта `efdemo`:
+
+```text
+dotnet ef database update
+```
+
+#### Трудности с SQLite версии 3.x
+
+Но, с SQLite миграция не прошла, в консоли вылетела ошибка:
+
+```text
+SQLite does not support this migration operation ('AlterColumnOperation') ...
+```
+
+Сайт ms сообщил, что операция 'AlterColumnOperation' для SQLite поддерживается начиная с EF Core
+версии 5.
+
+Поэтому:
+
+* Все nuget-пакеты EF Core во всех проектах обновлены до последней версии 5.0.9
+* Проект `Model` переведен на netstandard2.1, т.к. 5 версия не поддерживает netstandard2.0.
+
+После этих манипуляции миграция прошла, БД обновилась.
