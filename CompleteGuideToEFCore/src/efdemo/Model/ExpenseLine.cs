@@ -10,9 +10,11 @@ namespace Model
 
         public string Description { get; set; }
 
+        [Range(1, 10, ErrorMessage = "{0} must be between 1 and 10")]
         public int Quantity { get; set; }
 
         [Column("UnitPrice", TypeName = "decimal(16, 2)")]
+        [Range(0.01, 100.0, ErrorMessage = "Unit Cost must be between 0.01 and 100.00")]
         public decimal UnitCost { get; set; }
     }
 }

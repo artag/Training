@@ -309,3 +309,23 @@ dotnet ef database update
 ### История миграций
 
 Все примененные миграции расположены в БД, в таблице `__EFMigrationsHistory`.
+
+## Lesson 17. Field range validation with data annotations
+
+Аннотация *Range*. Позволяет задать ограничение на минимально и максимально допустимую величину.
+
+Пример:
+
+```csharp
+public class ExpenseLine
+{
+    // 1 - минимальнок значение, 10 - максимальное значение
+    // Вместо {0} в сообщение об ошибке будет подставлено имя свойства - "Quantity"
+    [Range(1, 10, ErrorMessage = "{0} must be between 1 and 10")]
+    public int Quantity { get; set; }
+
+    // Ограничение возможно не только для целых, но и для чисел с плавающей запятой.
+    [Range(0.01, 100.0, ErrorMessage = "Unit Cost must be between 0.01 and 100.00")]
+    public decimal UnitCost { get; set; }
+}
+```
