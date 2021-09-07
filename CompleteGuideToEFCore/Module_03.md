@@ -216,7 +216,7 @@ public string Description { get; set; }
 
 Для данного аттрибута вместо "{0}" будет поставлено наименование свойства "Description".
 
-### Lesson 15. Removing data migrations
+## Lesson 15. Removing data migrations
 
 При добавлении migration для добавления error messages в БД видно, что ничего в такой migration
 не будет происходить: методы `Up` и `Down` в созданном migration классе пустые.
@@ -238,3 +238,74 @@ remove-migration
 ```text
 dotnet ef migrations remove -s efdemo/efdemo.csproj -p Model/Model.csproj
 ```
+
+## Lesson 16. Adding a second database table and overriding Entity Framework defaults
+
+Добавление нового POCO класса для новой таблицы - проект `Model`, класс `ExpenseLine`.
+
+### Еще аннотации
+
+1. Аннотация для задания имени таблицы и имени столбца. Плюс, задание точности decimal числа.
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+// Таблица будет названа "ExpenseDetails"
+[Table("ExpenseDetails")]
+public class ExpenseLine
+{
+    public int ExpenseLineId { get; set; }
+    public string Description { get; set; }
+    public int Quantity { get; set; }
+
+    // "UnitPrice" - имя столбца в БД.
+    // TypeName = "decimal(16, 2) - задание точности: 16 разрядов до запятой, 2 разряда после.
+    [Column("UnitPrice", TypeName = "decimal(16, 2)")]
+    public decimal UnitCost { get; set; }
+}
+```
+
+### Попытка сделать migration
+
+Если прямо попробовать сделать migration, то будет создана пустая миграция (методы `Up` и `Down` в
+созданном migration классе будут пустыми).
+
+Чтобы такого не было, необходимо добавить `DbSet` в `ApplicationDbContext`:
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    // ..
+
+    public DbSet<ExpenseLine> ExpenseLines { get; set; }
+}
+```
+
+Тепеь миграция будет создана правильно. Для Visual Studio:
+
+```text
+add-migration addexpenselines
+```
+
+Или, тоже самое для VS Code (запуск из директории, где лежит *.sln файл):
+
+```text
+dotnet ef migrations add AddExpenseLines -s efdemo/efdemo.csproj -p Model/Model.csproj
+```
+
+Обновление БД как обычно. Для Visual Studio:
+
+```text
+update-database
+```
+
+Для VS Code (запуск из корня проекта `efdemo`)
+
+```text
+dotnet ef database update
+```
+
+### История миграций
+
+Все примененные миграции расположены в БД, в таблице `__EFMigrationsHistory`.

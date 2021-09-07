@@ -10,6 +10,7 @@ namespace Model
         }
 
         public DbSet<ExpenseHeader> ExpenseHeaders { get; set; }
+        public DbSet<ExpenseLine> ExpenseLines { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
