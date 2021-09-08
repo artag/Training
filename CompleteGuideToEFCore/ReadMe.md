@@ -2,3 +2,4 @@
 
 * [Module 2. Starting with Entity Framework](Module_02.md)
 * [Module 3. Applying migrations and tweaking the data model](Module_03.md)
+* [Module 4. Working with multiple models - Navigation properties](Module_04.md)

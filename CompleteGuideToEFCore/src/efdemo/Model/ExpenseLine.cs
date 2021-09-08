@@ -18,5 +18,12 @@ namespace Model
 
         [NotMapped]
         public string Secret { get; set; }
+
+        // Foreign key to ExpenseHeader Id
+        public int ExpenseHeaderId { get; set; }
+
+        // Navigation property.
+        // One-to-many. Один ExpenseHeader содержит ссылки на множество ExpenseLine.
+        public ExpenseHeader ExpenseHeader { get; set; }
     }
 }

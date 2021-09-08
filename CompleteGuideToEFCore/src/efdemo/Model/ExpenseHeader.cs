@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Model
@@ -16,5 +17,9 @@ namespace Model
         public string Description { get; set; }
 
         public DateTime? ExpenseDate { get; set; }
+
+        // Navigation property.
+        // One-to-many. Один ExpenseHeader содержит ссылки на множество ExpenseLine.
+        public List<ExpenseLine> ExpenseLines { get; set; }
     }
 }
