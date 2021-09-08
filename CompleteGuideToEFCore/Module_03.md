@@ -329,3 +329,17 @@ public class ExpenseLine
     public decimal UnitCost { get; set; }
 }
 ```
+
+## Lesson 18. Not Mapped Property
+
+Иногда в Entity классе требуется свойство, которое не надо сохранять в БД. Такое свойство
+можно пометить атрибутом `NotMapped`:
+
+```csharp
+public class ExpenseLine
+{
+    // ..
+    [NotMapped]
+    public string Secret { get; set; }
+}
+```
