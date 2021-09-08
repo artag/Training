@@ -9,6 +9,9 @@
 **/packages
 **/seq-data
 
+#Exclude SQLite DB
+/CompleteGuideToEFCore/src/efdemo/efdemo/*.db
+
 #Paket dependency manager
 **/.paket/
 **/paket-files
