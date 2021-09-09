@@ -10,8 +10,7 @@ namespace Model.Migrations
                 name: "ExpenseHeaderId",
                 table: "ExpenseLines",
                 type: "INTEGER",
-                nullable: false,
-                defaultValue: 0);
+                nullable: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ExpenseLines_ExpenseHeaderId",
@@ -24,7 +23,7 @@ namespace Model.Migrations
                 column: "ExpenseHeaderId",
                 principalTable: "ExpenseHeaders",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Restrict);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

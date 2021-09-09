@@ -9,8 +9,8 @@ using Model;
 namespace Model.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210908195144_ExpenseHeaderId")]
-    partial class ExpenseHeaderId
+    [Migration("20210909194025_AddedInverseNavigation")]
+    partial class AddedInverseNavigation
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

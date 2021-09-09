@@ -43,6 +43,9 @@ public class ExpenseLine
 }
 ```
 
+Рекомендуется добавлять navigation properties с обеих "сторон", как это было сделано чуть выше
+(т.н. best practices). Но такое объявление зависимости не всегда может подходить (см. урок 23).
+
 ### Создание migration
 
 Из Visual Studio, Package Manager Console:
@@ -102,3 +105,104 @@ key values for the related (связанной) entity. (Пример - `Expense
   * **Inverse navigation property** - When discussing a particular (определенный) navigation property,
   this term refers to the navigation property on the other end of the relationship.
   (Пример - `ExpenseLine.ExpenseHeader` is the inverse of `ExpenseHeader.ExpenseLine`).
+
+## Lesson 23. Removing a navigation property
+
+Что надо сделать, если не хочется запретить каскадное удаление (урок 21): когда при удалении
+`ExpenseHeader` удаляются все ссылающиеся на него `ExpenseLine`ы.
+
+1. Revert database. Сначала надо отменить изменения в БД, сделанные в последней мирации (урок 21).
+
+```text
+update-database renameexpenseline
+```
+
+renameexpenseline - наименование миграции, на которую мы хотим откатить изменения в БД.
+
+Аналогично, для VS Code:
+
+```text
+dotnet ef database update RenameExpenseLine
+```
+
+2. Удалить последнюю миграцию. Из Visual Studio:
+
+```text
+remove-migration
+```
+
+или в VS Code (запуск из директории, где лежит *.sln файл):
+
+```text
+dotnet ef migrations remove -s efdemo/efdemo.csproj -p Model/Model.csproj
+```
+
+>### Варианты поведения записи в child table (dependent entity) при удалении записи из parent table (principal entity)
+>* *Cascade* - удаление из parent table приводит к удалению записи(ей) в child table.
+>* *No Action* - удаление из parent table не оказывает эффекта на записи в child table.
+>* *Restrict* - нельзя удалить запись из parent table, предварительно не удалив записи из child table.
+>* *SetDefault* - при удалении записи из parent table, устанавливает значения по умолчанию в Foreign Key записи(ей) в child table.
+>* *SetNull*
+
+### Запрет на каскадное удаление записи(ей) в child table (dependent entity)
+
+*Решение* - надо убрать navigation property со стороны `ExpenseLine` (navigation property остается только
+в `ExpenseHeader`):
+
+```csharp
+public class ExpenseLine
+{
+    // // Foreign key to ExpenseHeader Id
+    // public int ExpenseHeaderId { get; set; }
+
+    // // Navigation property.
+    // // One-to-many. Один ExpenseHeader содержит ссылки на множество ExpenseLine.
+    // public ExpenseHeader ExpenseHeader { get; set; }
+}
+```
+
+2. Сделать новую миграцию.
+
+В миграции будет также будет создана связь между `ExpenseHeader` и `ExpenseLine`, с теми же самыми
+изменениями, как в миграции из урока 21, за одним исключением:
+вместо `ReferentialAction.Cascade` (каскадного удаления) теперь `ReferentialAction.Restrict` удаление.
+
+3. Применить эту миграцию к БД.
+
+4. Все же, рекомендуется делать navigation property в `ExpenseLine`, как это было
+сделано ранее, в уроке 21.
+Просто удобно иметь ссылки в enities друг на друга: можно строить более "удобные" запросы к БД.
+
+Итак делаем очередную migration:
+
+```text
+add-migration addedinversenavigation
+```
+
+или
+
+```text
+dotnet ef migrations add AddedInverseNavigation -s efdemo/efdemo.csproj -p Model/Model.csproj
+```
+
+В этой миграции выдается предупреждение:
+
+```text
+An operation was scaffolded that may result in the loss of data. Please review the migration for accuracy.
+```
+
+Надо всегда проверять целостность данных в БД после применения подобных миграций.
+
+5. В файле миграции заменяем "руками" строку
+
+```text
+onDelete: ReferentialAction.Cascade
+```
+
+на строку
+
+```text
+onDelete: ReferentialAction.Restrict
+```
+
+6. Применяем миграцию к БД.
