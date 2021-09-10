@@ -4,26 +4,7 @@
 
 * [Lesson 04. Saying a little, doing a lot](Lesson_04.md)
 
-## Lesson 5
-
-### Type-inferred generics
-
-You can either use an underscore ( `_` ) to specify a placeholder for the generic type
-argument, or omit the argument completely.
-
-```fsharp
-open System.Collections.Generic
-
-// Creating a generic List, but omitting the type argument.
-let numbers = List<_>()
-numbers.Add(10)
-numbers.Add(20)
-
-// This syntax is also legal.
-let otherNumbers = List()
-otherNumbers.Add(10)
-otherNumbers.Add(20)
-```
+* [Lesson 05. Trusting the compiler](Lesson_05.md)
 
 ## Lesson 6
 
