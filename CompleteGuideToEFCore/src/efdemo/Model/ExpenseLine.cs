@@ -16,6 +16,11 @@ namespace Model
         [Range(0.01, 100.0, ErrorMessage = "Unit Cost must be between 0.01 and 100.00")]
         public decimal UnitCost { get; set; }
 
+        // Вычисляемое значение. Quantity * UnitCost
+        [Column(TypeName = "decimal(16, 2)")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public decimal TotalCost { get; set; }
+
         [NotMapped]
         public string Secret { get; set; }
 
