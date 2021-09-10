@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Model;
 
 namespace Model.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210909200850_AddUser")]
+    partial class AddUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,9 +24,6 @@ namespace Model.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ApproverId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -33,14 +32,7 @@ namespace Model.Migrations
                     b.Property<DateTime?>("ExpenseDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("RequesterId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ApproverId");
-
-                    b.HasIndex("RequesterId");
 
                     b.ToTable("ExpenseHeaders");
                 });
@@ -87,25 +79,6 @@ namespace Model.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Model.ExpenseHeader", b =>
-                {
-                    b.HasOne("Model.User", "Approver")
-                        .WithMany("ApproverExpenseHeaders")
-                        .HasForeignKey("ApproverId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Model.User", "Requester")
-                        .WithMany("RequesterExpenseHeaders")
-                        .HasForeignKey("RequesterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Approver");
-
-                    b.Navigation("Requester");
-                });
-
             modelBuilder.Entity("Model.ExpenseLine", b =>
                 {
                     b.HasOne("Model.ExpenseHeader", "ExpenseHeader")
@@ -120,13 +93,6 @@ namespace Model.Migrations
             modelBuilder.Entity("Model.ExpenseHeader", b =>
                 {
                     b.Navigation("ExpenseLines");
-                });
-
-            modelBuilder.Entity("Model.User", b =>
-                {
-                    b.Navigation("ApproverExpenseHeaders");
-
-                    b.Navigation("RequesterExpenseHeaders");
                 });
 #pragma warning restore 612, 618
         }

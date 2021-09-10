@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Model
 {
@@ -21,5 +22,23 @@ namespace Model
         // Navigation property.
         // One-to-many. Один ExpenseHeader содержит ссылки на множество ExpenseLine.
         public List<ExpenseLine> ExpenseLines { get; set; }
+
+        // Id пользователя, который будет запрашивать этот expense.
+        [ForeignKey("Requester")]
+        public int RequesterId { get; set; }
+
+        // Navigation property к пользователю, который будет запрашивать этот expense.
+        // Inverse property указывает на свойство User.RequesterExpenseHeaders для связывания.
+        [InverseProperty("RequesterExpenseHeaders")]
+        public User Requester { get; set; }
+
+        // Id пользователя, который будет approve (подтверждать) этот expense.
+        [ForeignKey("Approver")]
+        public int ApproverId { get; set; }
+
+        // Navigation property к пользователю, который будет approve этот expense.
+        // Inverse property указывает на свойство User.ApproverExpenseHeaders для связывания.
+        [InverseProperty("ApproverExpenseHeaders")]
+        public User Approver { get; set; }
     }
 }

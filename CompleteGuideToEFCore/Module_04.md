@@ -206,3 +206,157 @@ onDelete: ReferentialAction.Restrict
 ```
 
 6. Применяем миграцию к БД.
+
+## Lesson 24. Multiple navigation properties
+
+Допустим, есть два пользователя, один из которых requester, а другой approver.
+Оба могут запрашивать один или несколько экземпляров `ExpenseHeader`.
+Как организовать такое взаимодействие?
+
+1. Создаем entity `User` (в проекте `Model`):
+
+```csharp
+public class User
+{
+    public int UserId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
+```
+
+И создаем соответствующую таблицу в `ApplicationDbContext`:
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    // ..
+    public DbSet<User> Users { get; set; }
+}
+```
+
+2. Далее, как обычно, создание и применение миграции.
+
+```text
+add-migration adduser
+или
+dotnet ef migrations add AddUser -s efdemo/efdemo.csproj -p Model/Model.csproj
+```
+
+```text
+update-database
+или
+dotnet ef database update
+```
+
+3. В `ExpenseHeader` добавляем navigation property для пользователя requester и для пользователя
+approver:
+
+```csharp
+ public class ExpenseHeader
+{
+    // ..
+
+    // Id пользователя, который будет запрашивать этот expense.
+    public int RequesterId { get; set; }
+    // Navigation property к пользователю, который будет запрашивать этот expense.
+    public User Requester { get; set; }
+
+    // Id пользователя, который будет approve (подтверждать) этот expense.
+    public int ApproverId { get; set; }
+    // Navigation property к пользователю, который будет approve этот expense.
+    public User Approver { get; set; }
+}
+```
+
+EF достаточно умен, чтобы привязать `RequesterId` к `Requester`, а `ApproverId` к `Approver`.
+Но для непохожих имен можно использовать аннотацию `ForeignKey(name)`:
+
+```csharp
+public class ExpenseHeader
+{
+    // ..
+
+    // Id пользователя, который будет запрашивать этот expense.
+    [ForeignKey("Requester")]
+    public int RequesterId { get; set; }
+
+    // Navigation property к пользователю, который будет запрашивать этот expense.
+    // Inverse property указывает на свойство User.RequesterExpenseHeaders для связывания.
+    [InverseProperty("RequesterExpenseHeaders")]
+    public User Requester { get; set; }
+
+
+    // Id пользователя, который будет approve (подтверждать) этот expense.
+    [ForeignKey("Approver")]
+    public int ApproverId { get; set; }
+
+    // Navigation property к пользователю, который будет approve этот expense.
+    // Inverse property указывает на свойство User.ApproverExpenseHeaders для связывания.
+    [InverseProperty("ApproverExpenseHeaders")]
+    public User Approver { get; set; }
+
+}
+```
+
+Рекомендуется помечать атрибутом `ForeignKey` для лучшей читаемости. Даже в таких очевидных случаях.
+
+Атрибут `InverseProperty` устанавливает связь с navigation property в `User` entity.
+
+4. Создание navigation property со стороны `User`. Для Requester и Approver:
+
+```csharp
+public class User
+{
+    // ..
+
+    // Navigation property. Для одного/нескольких ExpenseHeader.
+    public List<ExpenseHeader> RequesterExpenseHeaders { get; set; }
+
+    // Navigation property. Для одного/нескольких ExpenseHeader.
+    public List<ExpenseHeader> ApproverExpenseHeaders { get; set; }
+}
+```
+
+5. Создание migration и обновление БД
+
+```text
+add-migration usertoexpenseheader
+или
+dotnet ef migrations add UserToExpenseHeader -s efdemo/efdemo.csproj -p Model/Model.csproj
+
+update-database
+или
+dotnet ef database update -s efdemo/efdemo.csproj
+```
+
+При попытке обновления БД ничего не выйдет: проблема существовании constraint на каскадное удаление
+полей `FK_ExpenseHeaders_Users_ApproverId` и `FK_ExpenseHeaders_Users_RequesterId`
+и возникающей циклической зависимости. Решение - поправить эти constraint в файле миграции:
+
+эти строки
+
+```csharp
+onDelete: ReferentialAction.Cascade
+```
+
+исправить на
+
+```csharp
+ReferentialAction.NoAction
+```
+
+Теперь обновление БД должно успешно завершиться.
+
+У меня и еще одного чувака с курса БД все равно не желала обновляться:
+
+I was getting the following error when trying to update my database after we added
+the `InverseProperty` stuff to the `ExpenseHeader.cs` file.
+
+The ALTER TABLE statement conflicted with the FOREIGN KEY constraint "FK_ExpenseHeaders_Users_ApproverId".
+The conflict occurred in database `EfExpenseDemo`, table `dbo.Users`, column `UserId`.
+
+To **resolve** this, go to the `ExpenseHeaders` table in the SQL Server Object Explorer
+and right-click to View Data. Delete any records you have in there by highlighting
+the row and pressing delete on your keyboard or right-click then Delete from your menu.
+
+Если кратко, то надо удалить все записи из таблицы `ExpenseHeaders` в БД.
