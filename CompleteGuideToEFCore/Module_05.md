@@ -88,3 +88,65 @@ dotnet ef database update -s efdemo/efdemo.csproj
 
 Зато, после добавления записи в таблицу `ExpenseLines`, DB Browser for SQLite опять стал ее
 отображать.
+
+## Lesson 27. Computing string columns with the fluent API
+
+Пример. Для entity пользователя `User` необходимо сделать поле, которое является "суммой" его
+свойств `FirstName` и `LastName`.
+
+1. Назовем это свойство `FullName`:
+
+```csharp
+public class User
+{
+    // ..
+
+    // (Было определено ранее)
+    public string FirstName { get; set; }
+
+    // (Было определено ранее)
+    public string LastName { get; set; }
+
+    // Вычисляемое свойство
+    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    public string FullName { get; set; }
+}
+```
+
+2. В `ApplicationDbContext`, в метод `OnModelCreating` необходимо добавить:
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    // ..
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        // ..
+
+        builder.Entity<User>()
+            .Property(p => p.FullName)
+            .HasComputedColumnSql("[FirstName] + ' ' + [LastName]");
+    }
+```
+
+Инструкции для fluent API можно определять в любом порядке.
+
+3. Опять создание migration и обновление БД:
+
+```text
+add-migration fullname
+или
+dotnet ef migrations add FullName -s efdemo/efdemo.csproj -p Model/Model.csproj
+
+update-database
+или
+dotnet ef database update -s efdemo/efdemo.csproj
+```
+
+### Возможные проблемы с вычисляемыми свойствами в SQLite
+
+У меня SQLite на Linux не воспринял последние изменения.
+Значения в столбце `FullName` "не вычисляются" - пишется значение 0.

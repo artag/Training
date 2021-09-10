@@ -20,6 +20,10 @@ namespace Model
             builder.Entity<ExpenseLine>()
                 .Property(e => e.TotalCost)
                 .HasComputedColumnSql("[Quantity] * [UnitCost]");
+
+            builder.Entity<User>()
+                .Property(p => p.FullName)
+                .HasComputedColumnSql("[FirstName] + ' ' + [LastName]");
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
