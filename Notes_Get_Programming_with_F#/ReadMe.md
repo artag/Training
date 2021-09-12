@@ -6,44 +6,7 @@
 
 * [Lesson 05. Trusting the compiler](Lesson_05.md)
 
-## Lesson 6
-
-### Mutability basics in F#
-
-Creating immutable values:
-
-```fsharp
-let name = "isaac"      // Creating an immutable value
-name = "kate"           // the = operator represents equality (as == in C#)
-name <- "kate"          // error FS0027: This value is not mutable
-```
-
-Creating a mutable variable:
-
-```fsharp
-let mutable name = "isaac"      // Defining a mutable variable
-name <- "kate"                  // Assigning a new value to the variable
-```
-
-Working with mutable objects:
-
-```fsharp
-open System.Windows.Forms
-let form = new Form()           // Creating the form object
-form.Show()
-form.Width <- 400               // Mutating the form by using the <- operator
-form.Height <- 400
-form.Text <- "Hello from F#!"
-```
-
-Shorthand for creating mutable objects
-(creating and mutating properties of a form in one expression):
-
-```fsharp
-open System.Windows.Forms
-let form = new Form(Text = "Hello from F#!", Width = 300, Height = 300)
-form.Show()
-```
+* [Lesson 06. Working with immutable data](Lesson_06.md)
 
 ## Lesson 7
 
