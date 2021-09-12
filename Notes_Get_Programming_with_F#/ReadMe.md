@@ -10,38 +10,7 @@
 
 * [Lesson 07. Expressions and statements](Lesson_07.md)
 
-## Lesson 8
-
-### while, try-catch
-
-```fsharp
-while true do
-    try                                                 // (1)
-        let destination = getDestination()              // (2)
-        printfn "Trying to drive to %s" destination
-        petrol <- driveTo petrol destination            // (3)
-        printfn "Made it to %s! You have %d petrol left" destination petrol
-    with ex -> printfn "ERROR: %s" ex.Message           // (4)
-0                                                       // (5)
-
-// (1) Start of a try/with exception-handling block
-// (2) Get the destination from the user
-// (3) Get updated petrol from core code and mutate state
-// (4) Handle any exceptions
-// (5) Return code
-```
-
-### failwith (Throw exception)
-
-```fsharp
-let getDistance destination =                   // Function definition
-    if destination = "Gas" then 10              // (1)
-    // some code here...
-    else failwith "Unknown destination!"        // (2)
-
-// (1) - Checking the destination and returning an int as an answer
-// (2) - Throwing an exception if you can’t find a match
-```
+* [Lesson 08. Capstone 1](Lesson_08.md)
 
 ## Lesson 9
 
