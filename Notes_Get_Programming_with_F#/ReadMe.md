@@ -8,53 +8,7 @@
 
 * [Lesson 06. Working with immutable data](Lesson_06.md)
 
-## Lesson 7
-
-### Statements and expressions compared
-
-| -          | Returns something? | Has side-effects?
-|------------|--------------------|------------------
-| Statements | Never              | Always
-| Expressions| Always             | Rarely
-
-C# - statement-based language
-
-F# - use expressions as the default way of working
-
-### Explicitly ignoring the result of an expression
-
-`ignore` takes in a value and discards it, before returning `unit`
-
-```fsharp
-let writeTextToDisk text =                          // Writes text to disk
-    let path = System.IO.Path.GetTempFileName()
-    System.IO.File.WriteAllText(path, text)
-    path
-
-let createManyFiles() =
-    writeTextToDisk "The fox jumped over the lazy dog"    // warning from compiler
-    writeTextToDisk "The fox jumped over the lazy dog"    // warning from compiler
-    writeTextToDisk "The fox jumped over the lazy dog"
-
-// Using ignore
-let createManyFiles() =
-    ignore(writeTextToDisk "The fox jumped over the lazy dog")
-    ignore(writeTextToDisk "The fox jumped over the lazy dog")
-    writeTextToDisk "The fox jumped over the lazy dog"
-```
-
-### Forcing statement-based code with unit
-
-```fsharp
-let now = System.DateTime.UtcNow.TimeOfDay.TotalHours
-if now < 12.0 then Console.WriteLine "It's morning"         // returns unit
-elif now < 18.0 then Console.WriteLine "It's afternoon"     // returns unit
-elif now < 20.0 then ignore(5 + 5)                          // (1)
-else ()                                                     // (2)
-
-// (1) Ignoring an expression to return unit
-// (2) else branch here is optional - explicitly returning unit for the final case
-```
+* [Lesson 07. Expressions and statements](Lesson_07.md)
 
 ## Lesson 8
 
