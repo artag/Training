@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Model.EntityConfigurations;
 
 namespace Model
 {
@@ -21,9 +22,13 @@ namespace Model
                 .Property(e => e.TotalCost)
                 .HasComputedColumnSql("[Quantity] * [UnitCost]");
 
-            builder.Entity<User>()
-                .Property(p => p.FullName)
-                .HasComputedColumnSql("[FirstName] + ' ' + [LastName]");
+            // Конфигурация перенесена в класс "UserConfiguration".
+            // builder.Entity<User>()
+            //     .Property(p => p.FullName)
+            //     .HasComputedColumnSql("[FirstName] + ' ' + [LastName]");
+
+            // Применение файла конфигурации "UserConfiguration".
+            builder.ApplyConfiguration(new UserConfiguration());
 
             builder.Entity<ExpenseHeader>()
                 .Property(e => e.UsdExchangeRate)

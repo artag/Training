@@ -268,3 +268,53 @@ dotnet ef database update -s efdemo/efdemo.csproj
 Из кода миграции видно, что настройки из fluent API перезаписывают аннотации в entities.
 *(Мое примечание - а если вначале применить на БД настройки из fluent API,*
 *а потом data annotations, что в итоге получится?)*
+
+## Lesson 30. Using separate fluent API configuration files
+
+Работа идет в проекте `Model`.
+
+При наличии множества entity и использовании конфигурирования через fluent API, метод
+`OnModelCreating` в `ApplicationDbContext` очень быстро превращается в трудночитаемый.
+
+Существует способ избавиться от такого беспорядка - разнести конфигурацию по нескольким файлам.
+
+Пример. Вынесем конфигурацию для entity `User` из `ApplicationDbContext.OnModelCreating`
+в отдельный файл `UserConfigiration` (папка EntityConfigurations).
+
+```csharp
+public class UserConfiguration : IEntityTypeConfiguration<User>
+{
+    public void Configure(EntityTypeBuilder<User> builder)
+    {
+        builder.Property(u => u.FullName)
+            .HasComputedColumnSql("[FirstName] + ' ' + [LastName]");
+    }
+}
+```
+
+Класс для конфигурирования должен реализовывать `IEntityTypeConfiguration<T>`, где `T` - это
+конфигурируемая entity.
+
+Изменения в `ApplicationDbContext`, методе `OnModelCreating`:
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    // ..
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+
+            // Конфигурация перенесена в класс "UserConfiguration".
+            // builder.Entity<User>()
+            //     .Property(p => p.FullName)
+            //     .HasComputedColumnSql("[FirstName] + ' ' + [LastName]");
+
+            // Применение файла конфигурации "UserConfiguration".
+            builder.ApplyConfiguration(new UserConfiguration());
+    }
+}
+```
+
+Если создать migration, то там не будет никаких изменений - перенос конфигурации в отдельный
+файл не влияет на настройки entity и БД.
