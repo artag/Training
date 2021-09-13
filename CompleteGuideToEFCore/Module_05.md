@@ -199,3 +199,72 @@ update-database
 или
 dotnet ef database update -s efdemo/efdemo.csproj
 ```
+
+## Lesson 29. One to many relationships
+
+Здесь будет показано как задать отношение one-to-many, используя fluent API.
+
+Пример, который был реализован выше через Data annotations. Один `User` может быть связан
+с несколькими `ExpenseHeader`:
+
+```csharp
+
+public class ExpenseHeader
+{
+    // ..
+
+    // Id пользователя, который будет запрашивать этот expense.
+    public int RequesterId { get; set; }
+
+    // Navigation property к пользователю, который будет запрашивать этот expense.
+    public User Requester { get; set; }
+}
+
+public class User
+{
+    // ..
+
+    // Navigation property. Для одного/нескольких ExpenseHeader.
+    public List<ExpenseHeader> RequesterExpenseHeaders { get; set; }
+
+    // Navigation property. Для одного/нескольких ExpenseHeader.
+    public List<ExpenseHeader> ApproverExpenseHeaders { get; set; }
+}
+```
+
+Связь через fluent API описывается так:
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    // ..
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        // ..
+
+        builder.Entity<ExpenseHeader>()
+            .HasOne(e => e.Requester)
+            .WithMany(e => e.RequesterExpenseHeaders)
+            .HasForeignKey(e => e.RequesterId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(true);
+        }
+    }
+```
+
+Добавление миграции и обновление БД:
+
+```text
+add-migration fluentapirequester
+или
+dotnet ef migrations add FluentApiRequester -s efdemo/efdemo.csproj -p Model/Model.csproj
+
+update-database
+или
+dotnet ef database update -s efdemo/efdemo.csproj
+```
+
+Из кода миграции видно, что настройки из fluent API перезаписывают аннотации в entities.
+*(Мое примечание - а если вначале применить на БД настройки из fluent API,*
+*а потом data annotations, что в итоге получится?)*

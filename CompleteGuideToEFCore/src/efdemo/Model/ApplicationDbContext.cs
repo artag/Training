@@ -29,6 +29,13 @@ namespace Model
                 .Property(e => e.UsdExchangeRate)
                 .HasColumnType("decimal(13,4)")
                 .IsRequired(true);
+
+            builder.Entity<ExpenseHeader>()
+                .HasOne(e => e.Requester)
+                .WithMany(e => e.RequesterExpenseHeaders)
+                .HasForeignKey(e => e.RequesterId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(true);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
