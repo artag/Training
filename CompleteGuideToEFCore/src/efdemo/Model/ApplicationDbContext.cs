@@ -24,6 +24,11 @@ namespace Model
             builder.Entity<User>()
                 .Property(p => p.FullName)
                 .HasComputedColumnSql("[FirstName] + ' ' + [LastName]");
+
+            builder.Entity<ExpenseHeader>()
+                .Property(e => e.UsdExchangeRate)
+                .HasColumnType("decimal(13,4)")
+                .IsRequired(true);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)

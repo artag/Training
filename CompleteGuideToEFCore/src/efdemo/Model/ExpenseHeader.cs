@@ -19,6 +19,8 @@ namespace Model
 
         public DateTime? ExpenseDate { get; set; }
 
+        public decimal UsdExchangeRate { get; set; }
+
         // Navigation property.
         // One-to-many. Один ExpenseHeader содержит ссылки на множество ExpenseLine.
         public List<ExpenseLine> ExpenseLines { get; set; }

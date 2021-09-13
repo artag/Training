@@ -150,3 +150,52 @@ dotnet ef database update -s efdemo/efdemo.csproj
 
 У меня SQLite на Linux не воспринял последние изменения.
 Значения в столбце `FullName` "не вычисляются" - пишется значение 0.
+
+## Lesson 28. Setting data types using the fluent API
+
+Можно настраивать поля в entity не только при помощи аннотаций, но и при помощи fluent API.
+
+Например, добавим поле `UsdExchangeRate` в entity `ExpenseHeader`:
+
+```csharp
+public class ExpenseHeader
+{
+    // ..
+
+    public decimal UsdExchangeRate { get; set; }
+}
+```
+
+А вместо аннотаций можно добавить строки конфигурации в `ApplicationDbContext`,
+метод `OnModelCreating`:
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        // ..
+
+        builder.Entity<ExpenseHeader>()
+            .Property(e => e.UsdExchangeRate)
+            .HasColumnType("decimal(13,4)")
+            .IsRequired(true);
+        }
+    }
+}
+```
+
+Эти два способа конфигурирования полей entity с точки зрения получения итогового результата
+одинаковы.
+
+Как обычно, добавление миграции и обновление БД:
+
+```text
+add-migration exchangerate
+или
+dotnet ef migrations add ExchangeRate -s efdemo/efdemo.csproj -p Model/Model.csproj
+
+update-database
+или
+dotnet ef database update -s efdemo/efdemo.csproj
+```
