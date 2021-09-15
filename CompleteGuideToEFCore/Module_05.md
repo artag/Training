@@ -318,3 +318,36 @@ public class ApplicationDbContext : DbContext
 
 Если создать migration, то там не будет никаких изменений - перенос конфигурации в отдельный
 файл не влияет на настройки entity и БД.
+
+## Lesson 31. Pulling fluent API configuration information from the assembly
+
+Работа идет в проекте `Model`.
+
+Можно выносить описания/конфигурации entity в отдельные файлы, как это было показано на предущем
+уроке (lesson 30). Но всегда существует вероятность забыть применить один из файлов конфигурации
+в методе `OnModelCreating`.
+
+Существует способ применить все объекты типа `IEntityTypeConfiguration<T>` разом путем
+объявления их загрузки из сборки:
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    // ..
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        // Эта строка применит все объекты типа `IEntityTypeConfiguration<T>`,
+        // существующие в текущей сборке.
+        builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // Применение файла конфигурации "UserConfiguration".
+        // Заменено строкой выше: builder.ApplyConfigurationsFromAssembly(...)
+        // builder.ApplyConfiguration(new UserConfiguration());
+    }
+}
+```
+
+Если создать migration, то по сравнению с предыдущим состоянием не будет никаких изменений.

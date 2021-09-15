@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Model.EntityConfigurations;
 
@@ -18,6 +19,10 @@ namespace Model
         {
             base.OnModelCreating(builder);
 
+            // Эта строка применит все объекты типа `IEntityTypeConfiguration<T>`,
+            // существующие в текущей сборке.
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
             builder.Entity<ExpenseLine>()
                 .Property(e => e.TotalCost)
                 .HasComputedColumnSql("[Quantity] * [UnitCost]");
@@ -28,7 +33,8 @@ namespace Model
             //     .HasComputedColumnSql("[FirstName] + ' ' + [LastName]");
 
             // Применение файла конфигурации "UserConfiguration".
-            builder.ApplyConfiguration(new UserConfiguration());
+            // Заменено строкой выше: builder.ApplyConfigurationsFromAssembly(...)
+            // builder.ApplyConfiguration(new UserConfiguration());
 
             builder.Entity<ExpenseHeader>()
                 .Property(e => e.UsdExchangeRate)
