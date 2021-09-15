@@ -351,3 +351,64 @@ public class ApplicationDbContext : DbContext
 ```
 
 Если создать migration, то по сравнению с предыдущим состоянием не будет никаких изменений.
+
+## Lesson 32. Generating default dates using the fluent API
+
+Здесь описывается как сделать автоматическую подстановку текущей даты в БД,
+например при добавлении и/или изменении какого-либо поля с помощью fluent API.
+
+Это хорошая практика, когда требуется отслеживать изменения в БД.
+
+1. Добавление двух свойств типа `DateTime` в entity `User`:
+
+```csharp
+public class User
+{
+    // ..
+
+    // Добавленные поля для tracking changes in the database.
+    public DateTime CreatedDate { get; set; }
+    public DateTime LastModified { get; set; }
+}
+```
+
+2. Добавление настроек fluent API в файл конфигурации `UserConfiguration`:
+
+```csharp
+public class UserConfiguration : IEntityTypeConfiguration<User>
+{
+    public void Configure(EntityTypeBuilder<User> builder)
+    {
+        // ..
+
+        // Генерация даты при создании новой записи в таблице. Для MSSQL.
+        // Для SQLite не получилось сделать.
+        builder.Property(u => u.CreatedDate).ValueGeneratedOnAdd()
+            .HasDefaultValueSql("GETUTCDATE()");
+
+        // Генерация даты при добавлении/обновлении записи в таблице. Для MSSQL.
+        // Для SQLite не получилось сделать.
+        builder.Property(u => u.LastModified).ValueGeneratedOnAddOrUpdate()
+            .HasDefaultValueSql("GETUTCDATE()");
+    }
+}
+```
+
+`HasDefaultValueSql` задает значение по умолчанию, которое будет создано для свойства.
+В качестве аргумента здесь передается SQL-инструкция в виде строки.
+
+3. Добавление миграции и обновление БД:
+
+```text
+add-migration createddate
+или
+dotnet ef migrations add CreatedDate -s efdemo/efdemo.csproj -p Model/Model.csproj
+
+update-database
+или
+dotnet ef database update -s efdemo/efdemo.csproj
+```
+
+В видео было показано, что столбцы `CreatedDate` и `LastModified` правильно создаются при добавлении
+новой записи, но при обновлении записи никакого изменения в `LastModified` не наблюдается.
+Автор пообещал, что далее в лекциях эта проблема будет решена.
