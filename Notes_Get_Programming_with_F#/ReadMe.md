@@ -12,63 +12,7 @@
 
 * [Lesson 08. Capstone 1](Lesson_08.md)
 
-## Lesson 9
-
-### Tuples
-
-* Tuples желательно использовать только для работы с элементами до 3-х штук. Если больше, то лучше
-использовать `record`.
-
-* Tuples желательно использовать только локально, в публичных API надо использовать `record`.
-
-```fsharp
-let parse (person:string) =
-    let parts = person.Split(' ')
-    let playername = parts.[0]
-    let game = parts.[1]
-    let score = Int32.Parse(parts.[2])
-    playername, game, score             // Creating a tuple
-
-// Deconstructing a tuple into meaningful values
-let playername, game, score = parse "Mary Asteroids 2500"
-// val playername : string = "Mary"
-// val game : string = "Asteroids"
-// val score : int = 2500
-```
-
-### Nested (grouped) tuples
-
-You can also nest, or group, tuples together:
-
-```fsharp
-// (string * string) * int 
-let nameAndAge = ("Joe", "Bloggs"), 28          // Creating a nested tuple
-let name, age = nameAndAge                      // Deconstructing a tuple
-let (forename, surname), theAge = nameAndAge    // Deconstructing with the nested component
-```
-
-### Wildcards
-
-If there are elements of a tuple that you’re not interested in, you can discard them while
-deconstructing a tuple by assigning those parts to the underscore symbol:
-
-```fsharp
-let nameAndAge = "Jane", "Smith", 25
-let forename, surname, _ = nameAndAge       // Discarding the third element
-```
-
-### Implicit mapping of out parameters to tuples
-
-```fsharp
-var number = "123";
-var result = 0;                                     // (1)
-var parsed = Int32.TryParse(number, out result);    // (2)
-let result, parsed = Int32.TryParse(number);        // (3)
-
-// (1) - Declaring the "out" result variable with a default value
-// (2) - Trying to parse number in C#
-// (3) - Replacing "out" parameters with a tuple in a single call in F#
-```
+* [Lesson 09. Shaping data with tuples](Lesson_09.md)
 
 ## Lesson 10
 
