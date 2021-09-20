@@ -27,6 +27,8 @@ namespace efdemo
 
             // services.AddDbContext<ApplicationDbContext>(options =>
             //    options.UseSqlServer());
+
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,7 +49,8 @@ namespace efdemo
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            // Авторизация не настроена и не используется в данном приложении.
+            // app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

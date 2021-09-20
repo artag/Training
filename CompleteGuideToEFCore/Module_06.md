@@ -101,3 +101,47 @@ public class Startup
     // ..
 }
 ```
+
+## Lesson 34. Getting all data from a database table
+
+Продолжение предыдущего урока - реализация GET метода в `UserController`:
+
+```csharp
+[Route("api/[controller]")]
+public class UserController : Controller
+{
+    // ..
+
+    // GET: api/<controller>
+    [HttpGet]
+    public IEnumerable<User> Get()
+    {
+        var users = _context.Users.ToList();
+        return users;
+    }
+}
+```
+
+Перед запуском приложения, в классе `Startup`:
+
+* В методе `Configure` комментируем строку `app.UseAuthorization()` (в данном приложении авторизация
+не сконфигурирована и не используется).
+
+* В метод `ConfigureServices` добавляется:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    // ..
+    services.AddControllers();
+}
+```
+
+Запускаем приложение, в адресной строке браузера вводим адрес наподобие:
+
+```text
+https://localhost:5001/api/user
+```
+
+По `api/user` автоматически попадаем в контроллер `UserController`, в метод `Get()`.
+Сразу происходит запрос в БД и вовзращения списка всех пользователей в виде JSON.

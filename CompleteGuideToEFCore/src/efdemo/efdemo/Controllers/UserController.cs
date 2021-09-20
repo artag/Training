@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Model;
 
@@ -16,9 +17,10 @@ namespace efdemo.Controllers
 
         // GET: api/<controller>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<User> Get()
         {
-            return new string[] { "value1", "value2" };
+            var users = _context.Users.ToList();
+            return users;
         }
 
         // GET: api/<controller>/5
