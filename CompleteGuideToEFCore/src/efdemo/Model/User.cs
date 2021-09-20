@@ -15,9 +15,15 @@ namespace Model
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public string FullName { get; set; }
 
-        // Поля для tracking changes in the database.
-        public DateTime CreatedDate { get; set; }
-        public DateTime LastModified { get; set; }
+        // Поле для tracking changes in the database.
+        // Генерация даты при создании новой записи в таблице. Для MSSQL.
+        // Для SQLite не получилось сделать.
+        // public DateTime CreatedDate { get; set; }
+
+        // Поле для tracking changes in the database.
+        // Генерация даты при добавлении/обновлении записи в таблице. Для MSSQL.
+        // Для SQLite не получилось сделать.
+        // public DateTime LastModified { get; set; }
 
         // Navigation property. Для одного/нескольких ExpenseHeader.
         public List<ExpenseHeader> RequesterExpenseHeaders { get; set; }
