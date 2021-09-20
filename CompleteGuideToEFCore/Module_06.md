@@ -145,3 +145,33 @@ https://localhost:5001/api/user
 
 По `api/user` автоматически попадаем в контроллер `UserController`, в метод `Get()`.
 Сразу происходит запрос в БД и вовзращения списка всех пользователей в виде JSON.
+
+## Lesson 35. Getting a single record of data
+
+Продолжение предыдущего - реализация GET метода, который возвращает определенного
+пользователя. В `UserController`:
+
+```csharp
+[Route("api/[controller]")]
+public class UserController : Controller
+{
+    // ..
+
+    // GET: api/<controller>/5
+    [HttpGet("{id}")]
+    public User Get(int id)
+    {
+        var user = _context.Users.Find(id);
+        return user;
+    }
+}
+```
+
+По адресу наподобие `https://localhost:5001/api/user/3` можно получить пользователя по его id.
+
+Более подробно можно посмотреть в chrome developer tools (вызов по F12),
+закладка Network -> Response.
+
+При запросе id несуществующего пользователя, на закладке Response будет отображено:
+"Failed to load response data". Необходимо добавить в метод `Get(int id)` обработку ошибок
+при запросе несуществующего пользователя.

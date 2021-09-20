@@ -25,9 +25,10 @@ namespace efdemo.Controllers
 
         // GET: api/<controller>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public User Get(int id)
         {
-            return "value";
+            var user = _context.Users.Find(id);
+            return user;
         }
 
         // POST: api/<controller>
