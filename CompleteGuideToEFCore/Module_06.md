@@ -175,3 +175,69 @@ public class UserController : Controller
 При запросе id несуществующего пользователя, на закладке Response будет отображено:
 "Failed to load response data". Необходимо добавить в метод `Get(int id)` обработку ошибок
 при запросе несуществующего пользователя.
+
+## Lesson 36. Adding a record to the database
+
+Здесь реализация добавления записи в БД. В `UserController`:
+
+```csharp
+[Route("api/[controller]")]
+public class UserController : Controller
+{
+    // ..
+
+    // POST: api/<controller>
+    [HttpPost]
+    public ActionResult<User> Post([FromBody] User user)
+    {
+        _context.Users.Add(user);
+        _context.SaveChanges();
+        return CreatedAtAction(nameof(Get), new { id = user.UserId }, user);
+    }
+}
+```
+
+При вызове `Add(user)` происходит добавление пользователя в БД и начало tracking этого значения.
+После этого необходимо сохранить это изменение в БД - команда `SaveChanges()`.
+В `SaveChanges` не указывается таблица - БД сохраняет все tracking записи.
+
+Можно добавить сразу несколько пользователей - использовать несколько вызовов `Add` и один
+вызов `SaveChanges`.
+
+`CreatedAtAction` - возвращает HTTP статус 201 (Created). После записи в БД мы считываем
+только что записанного `User` с новым id, полученным после его сохранения в БД.
+
+Для нового пользователя надо определить поля:
+
+* `FirstName`
+* `LastName`
+
+Все остальные поля (в особенности `UserId`) генерируются БД автоматически и не требуют определения.
+
+Для теста воспользуемся программой *Postman*.
+
+1. "New Request" -> Окно "Save request":
+
+* Request name: "postuser"
+* All collections: "efdemo"
+
+Команда "Save".
+
+*Примечание*: у меня версия Postman несколько отличается от показанной на видео: там несколько
+по другому создается и сохраняется коллекция и запрос.
+
+2. "Request" -> Вкладка "Body" -> raw -> выпадающий список "Text" перевести на "JSON"
+
+Задать body в виде JSON:
+
+```json
+{
+    "FirstName": "John",
+    "LastName": "Adams"
+}
+```
+
+3. Задать адрес для POST: `https://localhost:5001/api/user`
+
+4. При работающем приложении нажать кнопку "Send". Если все сделано верно, то в нижней части
+Postman можно увидеть содержимое ответа в виде JSON - сохраненные данные в БД.

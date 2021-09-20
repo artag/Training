@@ -33,8 +33,11 @@ namespace efdemo.Controllers
 
         // POST: api/<controller>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public ActionResult<User> Post([FromBody] User user)
         {
+            _context.Users.Add(user);
+            _context.SaveChanges();
+            return CreatedAtAction(nameof(Get), new { id = user.UserId }, user);
         }
 
         // PUT: api/<controller>/5
