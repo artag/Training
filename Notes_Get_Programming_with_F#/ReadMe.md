@@ -16,95 +16,9 @@
 
 * [Lesson 10. Shaping data with records](Lesson_10.md)
 
-* [Lesson 11. Building composable functions]()
+* [Lesson 11. Building composable functions](Lesson_11.md)
 
-## Lesson 12
-
-### Sets of rules for organizing code
-
-* Place related types together in namespaces.
-* Place related stateless functions together in modules.
-
-**Выводы**:
-
-* Use namespaces as in C#, to logically group types and modules.
-
-* Use modules primarily to store functions, and secondly to store types that are tightly related
-to those functions.
-
-### Namespaces and Modules
-
-1)
-* Namespaces can hold **only** types.
-* Namespaces can span multiple files.
-
-2)
-* Modules can hold types and functions.
-* Module can’t span multiple files.
-* Modules can be **private** (*nested module*).
-
-3)
-* Modules are like static classes in C#.
-* Modules are like namespaces but can also store functions.
-
-Example:
-
-```fsharp
-// File domain.fs         (domain.fs must live above dataAccess.fs)
-namespace MyApplication.BusinessLogic
-
-type Customer = { ... }
-type Account = { .. }
-
-// File dataAccess.fs     (References to domain.fs)
-module MyApplication.BusinessLogic.DataAccess
-
-type private DbError = { … }
-let private getDbConnection() = ...
-let saveCustomer = ...
-let loadCustomer = ...
-
-module private Helpers =            // Nested module - visible only in DataAccess module
-    let handleDbError ex = ...
-    let checkDbVersion conn = ...
-```
-
-```fsharp
-// Domain.fs     (выше чем Operation.fs)
-namespace Domain        // Namespace declaration
-// ...
-
-// Operation.fs
-module Operations       // Declaring a module
-open Domain             // Opening the Domain namespace
-// ...
-```
-
-### Tips for working with modules and namespaces
-
-#### Access modifiers
-
-* By default, types and functions are always public in F#.
-
-* If you want to use a function within a module (or a nested module) but don’t want to expose it
-publicly, mark it as **private**.
-
-#### The global namespace
-
-If you don’t supply a *parent* namespace when declaring namespaces or modules, it’ll
-appear in the `global` namespace, which is always open.
-
-#### Automatic opening of modules
-
-Add the `[<AutoOpen>]` attribute on the module.
-
-#### Scripts
-
-You can create `let`-bound functions directly in a script.
-This is possible because an implicit module is created for you based on the name of the script
-(similar to automatic namespacing).
-You can explicitly specify the module in code if you want, but with scripts it’s generally not
-needed.
+* [Lesson 12. Organizing code without classes](Lesson_12.md)
 
 ## Lesson 13
 
