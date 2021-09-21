@@ -303,8 +303,62 @@ id задается в строке адреса: `https://localhost:5001/api/us
 
 *Примечание*: Для `UserId` значение задается как число, без кавычек.
 
-3. Задать адрес для POST: `https://localhost:5001/api/user/5`. Id в строке совпадает
+3. Задать адрес для PUT: `https://localhost:5001/api/user/5`. Id в строке совпадает
 с `UserId` в теле запроса.
 
 4. При работающем приложении нажать кнопку "Send".
 Должен возвратиться статус "No Content" (204).
+
+## Lesson 38. Deleting data. Операция DELETE
+
+Реализация удаления записи из БД. В `UserController`:
+
+```csharp
+[Route("api/[controller]")]
+public class UserController : Controller
+{
+    // ..
+
+    // DELETE: api/<controller>/5
+    [HttpDelete("{id}")]
+    public ActionResult Delete(int id)
+    {
+        var user = _context.Users.Find(id);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        _context.Users.Remove(user);
+        _context.SaveChanges();
+
+        return NoContent();
+    }
+}
+```
+
+Сначала ищем пользователя в БД по id. Если пользователь не найден, то возвращаем результат
+`NotFound` (404).
+
+Ну а если пользователь найден, то он удаляется из таблицы БД и производится сохранение изменений.
+Возвращается `NoContent`.
+
+Для теста опять используется программа *Postman*.
+
+1. Создание запроса DELETE
+
+* ПКМ на Post запросе из предыдущего урока -> Duplicate
+* Переименовать дубликат в "deleteuser"
+* Поменять тип нового запроса с PUT на DELETE
+
+2. "Request" -> Вкладка "Body" -> none
+
+В теле запроса ничего не передаем.
+
+3. Задать адрес для DELETE: `https://localhost:5001/api/user/5`.
+
+4. При работающем приложении нажать кнопку "Send".
+
+Должен возвратиться статус "No Content" (204). В БД должна из таблицы "Users" должна исчезнуть
+соответствующая запись.
