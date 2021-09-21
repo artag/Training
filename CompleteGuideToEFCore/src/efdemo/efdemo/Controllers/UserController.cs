@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Model;
 
 namespace efdemo.Controllers
@@ -42,8 +43,17 @@ namespace efdemo.Controllers
 
         // PUT: api/<controller>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public ActionResult Put(int id, [FromBody] User user)
         {
+            if (id != user.UserId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(user).State = EntityState.Modified;
+            _context.SaveChanges();
+
+            return NoContent();
         }
 
         // DELETE: api/<controller>/5

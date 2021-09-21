@@ -102,7 +102,7 @@ public class Startup
 }
 ```
 
-## Lesson 34. Getting all data from a database table
+## Lesson 34. Getting all data from a database table. Операция GET
 
 Продолжение предыдущего урока - реализация GET метода в `UserController`:
 
@@ -146,7 +146,7 @@ https://localhost:5001/api/user
 По `api/user` автоматически попадаем в контроллер `UserController`, в метод `Get()`.
 Сразу происходит запрос в БД и вовзращения списка всех пользователей в виде JSON.
 
-## Lesson 35. Getting a single record of data
+## Lesson 35. Getting a single record of data. Операция GET (by id)
 
 Продолжение предыдущего - реализация GET метода, который возвращает определенного
 пользователя. В `UserController`:
@@ -176,7 +176,7 @@ public class UserController : Controller
 "Failed to load response data". Необходимо добавить в метод `Get(int id)` обработку ошибок
 при запросе несуществующего пользователя.
 
-## Lesson 36. Adding a record to the database
+## Lesson 36. Adding a record to the database. Операция POST
 
 Здесь реализация добавления записи в БД. В `UserController`:
 
@@ -241,3 +241,70 @@ public class UserController : Controller
 
 4. При работающем приложении нажать кнопку "Send". Если все сделано верно, то в нижней части
 Postman можно увидеть содержимое ответа в виде JSON - сохраненные данные в БД.
+
+## Lesson 37. Updating data. Операция PUT
+
+Здесь реализация редактирования записи в БД. В `UserController`:
+
+```csharp
+[Route("api/[controller]")]
+public class UserController : Controller
+{
+    // ..
+
+    // PUT: api/<controller>/5
+    [HttpPut("{id}")]
+    public ActionResult Put(int id, [FromBody] User user)
+    {
+        if (id != user.UserId)
+        {
+            return BadRequest();
+        }
+
+        _context.Entry(user).State = EntityState.Modified;
+        _context.SaveChanges();
+
+        return NoContent();
+    }
+}
+```
+
+Здесь `id` - идентификатор пользователя, который мы хотим отредактировать.
+id задается в строке адреса: `https://localhost:5001/api/user/5`.
+
+По стандарту, методы PUT не всегда возвращают значение измененного пользователя (так как
+мы его и так отправляем), поэтому метод возвращает `ActionResult` - ответ без содержимого.
+
+В методе сравниваются id в строке адреса и id из тела запроса `user.UserId`.
+При несовпадении идентификаторов возвращается `BadRequest`.
+
+В строке `Entry(user).State` обращаемся к отслеживаемой сущности и говорим, что ее содержимое
+было изменено, и далее вызывается сохранение результатов.
+
+Для теста опять используется программа *Postman*.
+
+1. Создание запроса PUT
+
+* ПКМ на Post запросе из предыдущего урока -> Duplicate
+* Переименовать дубликат в "putuser"
+* Поменять тип нового запроса с POST на PUT
+
+2. "Request" -> Вкладка "Body" -> raw -> выпадающий список "Text" перевести на "JSON"
+
+Задать body в виде JSON. В качестве `UserId` задать id, существующий в таблице `Users`:
+
+```json
+{
+    "UserId": 5,
+    "FirstName": "John",
+    "LastName": "Changed"
+}
+```
+
+*Примечание*: Для `UserId` значение задается как число, без кавычек.
+
+3. Задать адрес для POST: `https://localhost:5001/api/user/5`. Id в строке совпадает
+с `UserId` в теле запроса.
+
+4. При работающем приложении нажать кнопку "Send".
+Должен возвратиться статус "No Content" (204).
