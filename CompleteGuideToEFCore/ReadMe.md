@@ -5,3 +5,4 @@
 * [Module 4. Working with multiple models - Navigation properties](Module_04.md)
 * [Module 5. Manipulating the database using the fluent API](Module_05.md)
 * [Module 6. Manipulating data](Module_06.md)
+* [Module 7. Repository layer](Module_07.md)
