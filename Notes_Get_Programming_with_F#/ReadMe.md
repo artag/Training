@@ -20,33 +20,7 @@
 
 * [Lesson 12. Organizing code without classes](Lesson_12.md)
 
-## Lesson 13
-
-### Higher-order function (HOF) in F#. Dependency Injection (DI)
-
-* Dependencies in F# tend to be functions; in C#, they’re interfaces.
-
-```fsharp
-type Customer = { Age : int }
-let where filter customers =          // filer acts like a dependency injection
-    seq {
-        for customer in customers do
-            if filter customer then   // Calling the filter function with customer as an argument
-                yield customer }
-
-let customers = [ { Age = 21 }; { Age = 35 }; { Age = 36 } ]
-let isOver35 customer = customer.Age > 35    // filter
-
-// Supplying the isOver35 function into the where function
-customers |> where isOver35
-// Passing a function inline using lambda syntax
-customers |> where (fun customer -> customer.Age > 35)
-```
-
-* `seq { }` - This is a type of *computation expression*. Generate a sequence of customers by using
-the `yield` keyword.
-
-* `[ ; ; ; ] syntax` - F# list.
+* [Lesson 13. Achieving code reuse in F#](Lesson_13.md)
 
 ## Lesson 14
 
