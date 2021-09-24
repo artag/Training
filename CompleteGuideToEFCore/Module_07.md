@@ -74,7 +74,13 @@ public interface IRepository<TEntity> where TEntity : class
 dotnet add package Microsoft.EntityFrameworkCore --version 5.0.9
 ```
 
-2. В проект `Repository` добавляем generic класс `Repository<TEntity>`, который будет реализацией
+2. Добавить reference на проект `Model`:
+
+```text
+dotnet add reference ../Model/Model.csproj
+```
+
+3. В проект `Repository` добавляем generic класс `Repository<TEntity>`, который будет реализацией
 `IRepository<TEntity>`.
 
 ```csharp
@@ -115,3 +121,175 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
 а в другом entity такого поля нет?
 
 В следующем уроке будет продемонстирован прием, позволяющий расширить generic repository класс.
+
+## Lesson 42. Build application specific repository interfaces
+
+Для entity, для которого требуется реализовать что-то особое можно сделать новый интерфейс,
+специально под эту сущность и расширяющий базовый:
+
+```csharp
+public interface IUserRepository : IRepository<User>
+{
+    IEnumerable<User> GetByFirstName(string firstName);
+}
+```
+
+## Lesson 43. Create application specific repository implementations
+
+В проект `Repository` добавляется класс `UserRepository`:
+
+```csharp
+public class UserRepository : Repository<User>, IUserRepository
+{
+    public UserRepository(ApplicationDbContext context)
+        : base(context)
+    {
+    }
+
+    public ApplicationDbContext ApplicationDbContext =>
+        Context as ApplicationDbContext;
+
+    public IEnumerable<User> GetByFirstName(string firstName) =>
+        ApplicationDbContext.Users.Where(u => u.FirstName == firstName);
+}
+```
+
+Особенности:
+
+1. `UserRepository` расширяет generic `Repository<User>`.
+2. Через конструктор задается `ApplicationDbContext`.
+3. Доступ к `ApplicationDbContext` выполняется через свойство `Context`, находящемся в базовом
+классе.
+
+Таких specific repository implementations может быть очень много. Для их логического связывания
+используется паттерн "Unit of Work".
+
+## Lesson 44. Implementing a Unit of Work
+
+Проект `Repository`. Сначала добавляем интерфейс:
+
+```csharp
+public interface IUnitOfWork : IDisposable
+{
+    // Подобные ссылки делаются для каждого репозитория entity.
+    IUserRepository Users { get; }
+
+    int Complete();
+}
+```
+
+Особенности:
+
+1. Здесь приводятся все ссылки на все repository всех entity. В данном примере ссылка только
+на `IUserRepository`.
+2. Ссылки делаются через интерфейсы.
+3. `IDisposable` используется для закрытия соединения с БД.
+
+Через один экземпляр `IUnitOfWork` мы можем работать со всеми entities из одного места.
+
+Потом добавляется реализация:
+
+```csharp
+public class UnitOfWork : IUnitOfWork
+{
+    private readonly ApplicationDbContext _context;
+
+    public UnitOfWork(ApplicationDbContext context)
+    {
+        _context = context;
+        Users = new UserRepository(_context);
+    }
+
+    public IUserRepository Users { get; private set; }
+
+    public int Complete()
+    {
+        return _context != null
+            ? _context.SaveChanges()
+            : 0;        // Ничего не делаем.
+    }
+
+    public void Dispose()
+    {
+        if (_context != null)
+            _context.Dispose();
+    }
+}
+```
+
+Метод `Complete` позволяет "одним махом" сохранить изменения, сделанные в нескольких сущностях.
+
+## Lesson 45. Using the unit of work and repositories in your code
+
+Проект `efdemo`.
+
+1. Добавить reference на проект `Repository`:
+
+```text
+dotnet add reference ../Repository/Repository.csproj
+```
+
+2. Добавить `UnitOfWork` в `Startup` класс:
+
+```csharp
+public class Startup
+{
+    // ..
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // ..
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+    }
+}
+```
+
+3. Идем в `UserController`. Инжектируем `IUnitOfWork` через конструктор:
+
+```csharp
+public class UserController : Controller
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UserController(ApplicationDbContext context, IUnitOfWork unitOfWork)
+    {
+        _context = context;
+        _unitOfWork = unitOfWork;
+    }
+
+    // ..
+}
+```
+
+4. Теперь можно использовать `UnitOfWork` в контроллере `UserController`:
+
+```csharp
+public class UserController : Controller
+{
+    // ..
+
+    // GET: api/<controller>
+    [HttpGet]
+    public IEnumerable<User> Get()
+    {
+        var users = _unitOfWork.Users.GetAll().ToList();
+        return users;
+    }
+
+    // GET: api/<controller>/5
+    [HttpGet("{id}")]
+    public User Get(int id)
+    {
+        var user = _unitOfWork.Users.Get(id);
+        return user;
+    }
+
+    // ..
+}
+```
+
+Используя Unit of Work мы отвязываемся от зависимостей:
+
+* EF Core (при случае, можно безболезненно заменить на другой ORM).
+* `DbContext`

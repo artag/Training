@@ -3,24 +3,31 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using Repository;
 
 namespace efdemo.Controllers
 {
     [Route("api/[controller]")]
     public class UserController : Controller
     {
-        private ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserController(ApplicationDbContext context)
+        public UserController(ApplicationDbContext context, IUnitOfWork unitOfWork)
         {
             _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         // GET: api/<controller>
         [HttpGet]
         public IEnumerable<User> Get()
         {
-            var users = _context.Users.ToList();
+            // Было ранее. Без использования Unit of Work.
+            // var users = _context.Users.ToList();
+            // return users;
+
+            var users = _unitOfWork.Users.GetAll().ToList();
             return users;
         }
 
@@ -28,7 +35,11 @@ namespace efdemo.Controllers
         [HttpGet("{id}")]
         public User Get(int id)
         {
-            var user = _context.Users.Find(id);
+            // Было ранее. Без использования Unit of Work.
+            // var user = _context.Users.Find(id);
+            // return user;
+
+            var user = _unitOfWork.Users.Get(id);
             return user;
         }
 
