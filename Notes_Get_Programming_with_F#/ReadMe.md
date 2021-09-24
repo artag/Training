@@ -22,20 +22,7 @@
 
 * [Lesson 13. Achieving code reuse in F#](Lesson_13.md)
 
-## Lesson 14
-
-### Accessing .fs files from a script
-
-```fsharp
-#load "Domain.fs"           // Loading .fs files into a script
-#load "Operations.fs"
-#load "Auditing.fs"
-
-open Capstone2.Operations   // Opening namespaces of .fs files
-open Capstone2.Domain
-open Capstone2.Auditing
-open System
-```
+* [Lesson 14. Capstone 2](Lesson_14.md)
 
 ## Lesson 15
 
