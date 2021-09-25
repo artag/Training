@@ -24,75 +24,7 @@
 
 * [Lesson 14. Capstone 2](Lesson_14.md)
 
-## Lesson 15
-
-### Mutable DTO
-
-Example:
-
-```fsharp
-type TeamSummary = { Name : string; mutable AwayWins : int }
-```
-
-### Object Initializer
-7
-Create an instance of `IComparer` without having to first define a concrete type:
-
-```fsharp
-let comparer =
-    { new IComparer<TeamSummary> with
-        member this.Compare(x,y) =
-            if x.AwayWins > y.AwayWins then -1
-            elif x.AwayWins < y.AwayWins then 1
-            else 0 }
-```
-
-### Comparing F# sequences, lists, and arrays
-
-| -                        | Seq       | List        | Array  |
-|--------------------------|-----------|-------------|--------|
-| Eager/lazy               | Lazy      | Eager       | Eager  |
-| Forward-only             | Sometimes | Never       | Never  |
-| Immutable                | Yes       | Yes         | No     |
-| Performance              | Medium    | Medium/High | High   |
-| Pattern matching support | None      | Good        | Medium |
-| Interop with C#          | Good      | Medium      | Good   |
-
-### Sequences
-
-* Alias for the `IEnumerable<T>` type in the BCL
-* Lazily evaluated
-* Don’t cache evaluations (by default)
-* *Arrays* and *Lists* implement `IEnumerable<T>` => you can use functions in the
-Seq module over both of them as well.
-
-```fsharp
-seq { 1; 2; 3 }     // Create sequence
-```
-
-### Arrays
-
-* *Slice* allow you to extract a subset of an array
-* High performance, but ultimately mutable
-
-```fsharp
-let numbersArray = [| 1; 2; 3; 4; 6 |]          // Creating an array by using [| |] syntax
-let firstNumber = numbersArray.[0]              // Accessing an item by index
-let firstThreeNumbers = numbersArray.[0 .. 2]   // Array-slicing syntax
-numbersArray.[0] <- 99                          // Mutating the value of an item in an array
-```
-
-### Lists
-
-* Immutable
-
-```fsharp
-let numbers = [ 1; 2; 3; 4; 5; 6 ]  // Creating a list of six numbers
-let numbersQuick = [ 1 .. 6 ]       // Shorthand form of list creation (works for arrays and sequences)
-let head :: tail = numbers          // Decomposing a list into head (1) and a tail (2 .. 6)
-let moreNumbers = 0 :: numbers      // Creating a new list by placing 0 at the front of numbers
-let evenMoreNumbers = moreNumbers @ [ 7 .. 9 ]    // Append [ 7 .. 9 ] to create a new list
-```
+* [Lesson 15. Working with collections in F#](Lesson_15.md)
 
 ## Lesson 16
 
