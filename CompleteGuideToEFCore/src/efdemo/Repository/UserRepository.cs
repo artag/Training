@@ -25,5 +25,35 @@ namespace Repository
             return ApplicationDbContext.Users
                 .SingleOrDefault(u => u.FirstName == firstName);
         }
+
+        public bool HasAny()
+        {
+            return ApplicationDbContext.Users
+                .Any();
+        }
+
+        public int CountOfFirstNameJohn()
+        {
+            return ApplicationDbContext.Users
+                .Count(u => u.FirstName == "John");
+        }
+
+        public int CountMatchingFirstName(string firstName)
+        {
+            return ApplicationDbContext.Users
+                .Count(u => u.FirstName == firstName);
+        }
+
+        public int GetMaximumUserId()
+        {
+            return ApplicationDbContext.Users
+                .Max(u => u.UserId);
+        }
+
+        public int GetMinimumUserId()
+        {
+            return ApplicationDbContext.Users
+                .Min(u => u.UserId);
+        }
     }
 }

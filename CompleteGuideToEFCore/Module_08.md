@@ -41,11 +41,9 @@ return ApplicationDbContext.Users
 public class UserRepository : Repository<User>, IUserRepository
 {
     // ..
-    public User GetOneByFirstName(string firstName)
-    {
-        return ApplicationDbContext.Users
+    public User GetOneByFirstName(string firstName) =>
+        ApplicationDbContext.Users
             .First(u => u.FirstName == firstName);
-    }
 }
 ```
 
@@ -77,11 +75,9 @@ public class UserController : Controller
 public class UserRepository : Repository<User>, IUserRepository
 {
     // ..
-    public User GetOneByFirstName(string firstName)
-    {
-        return ApplicationDbContext.Users
+    public User GetOneByFirstName(string firstName) =>
+        ApplicationDbContext.Users
             .FirstOrDefault(u => u.FirstName == firstName);
-    }
 }
 ```
 
@@ -93,11 +89,9 @@ public class UserRepository : Repository<User>, IUserRepository
 public class UserRepository : Repository<User>, IUserRepository
 {
     // ..
-    public User GetOneByFirstName(string firstName)
-    {
-        return ApplicationDbContext.Users
+    public User GetOneByFirstName(string firstName) =>
+        ApplicationDbContext.Users
             .Single(u => u.FirstName == firstName);
-    }
 }
 ```
 
@@ -110,11 +104,9 @@ public class UserRepository : Repository<User>, IUserRepository
 public class UserRepository : Repository<User>, IUserRepository
 {
     // ..
-    public User GetOneByFirstName(string firstName)
-    {
-        return ApplicationDbContext.Users
+    public User GetOneByFirstName(string firstName) =>
+        ApplicationDbContext.Users
             .SingleOrDefault(u => u.FirstName == firstName);
-    }
 }
 ```
 
@@ -127,11 +119,9 @@ public class UserRepository : Repository<User>, IUserRepository
 public class UserRepository : Repository<User>, IUserRepository
 {
     // ..
-    public User GetOneByFirstName(string firstName)
-    {
-        return ApplicationDbContext.Users
+    public User GetOneByFirstName(string firstName) =>
+        ApplicationDbContext.Users
             .Find(firstName);
-    }
 }
 ```
 
@@ -145,10 +135,46 @@ public class UserRepository : Repository<User>, IUserRepository
 public class UserRepository : Repository<User>, IUserRepository
 {
     // ..
-    public User GetOneByFirstName(int id)
-    {
-        return ApplicationDbContext.Users
+    public User GetOneByFirstName(int id) =>
+        ApplicationDbContext.Users
             .Find(id);
-    }
+}
+```
+
+## Lesson 48. Any, Count, Min and Max
+
+Рассматривается несколько запросов.
+
+```csharp
+public class UserRepository : Repository<User>, IUserRepository
+{
+    // ...
+
+    // true - если хотя бы один пользователь есть в таблице Users,
+    // false - если в таблице Users нет пользователей.
+    public bool HasAny() =>
+        ApplicationDbContext.Users
+            .Any();
+
+    // Считает количество записей с FirstName = "John".
+    // В production обычно нет hardcoded values - этот пример чисто для демонстрации.
+    public int CountOfFirstNameJohn() =>
+        ApplicationDbContext.Users
+            .Count(u => u.FirstName == "John");
+
+    // Считает количество записей с firstName.
+    public int CountMatchingFirstName(string firstName) =>
+        ApplicationDbContext.Users
+            .Count(u => u.FirstName == firstName);
+
+    // Получает id с максимальным значением.
+    public int GetMaximumUserId() =>
+        ApplicationDbContext.Users
+            .Max(u => u.UserId);
+
+    // Получает id с минимальным значением.
+    public int GetMinimumUserId() =>
+        ApplicationDbContext.Users
+            .Min(u => u.UserId);
 }
 ```
