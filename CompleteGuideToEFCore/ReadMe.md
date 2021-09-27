@@ -6,3 +6,4 @@
 * [Module 5. Manipulating the database using the fluent API](Module_05.md)
 * [Module 6. Manipulating data](Module_06.md)
 * [Module 7. Repository layer](Module_07.md)
+* [Module 8. LINQ](Module_08.md)

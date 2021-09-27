@@ -16,7 +16,14 @@ namespace Repository
 
         public IEnumerable<User> GetByFirstName(string firstName)
         {
-            return ApplicationDbContext.Users.Where(u => u.FirstName == firstName);
+            return ApplicationDbContext.Users
+                .Where(u => u.FirstName == firstName);
+        }
+
+        public User GetOneByFirstName(string firstName)
+        {
+            return ApplicationDbContext.Users
+                .SingleOrDefault(u => u.FirstName == firstName);
         }
     }
 }
