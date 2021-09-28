@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Model;
@@ -54,6 +55,13 @@ namespace Repository
         {
             return ApplicationDbContext.Users
                 .Min(u => u.UserId);
+        }
+
+        public IEnumerable GetAllFirstNames()
+        {
+            return ApplicationDbContext.Users
+                .Select(u => u.FirstName)
+                .ToList();
         }
     }
 }

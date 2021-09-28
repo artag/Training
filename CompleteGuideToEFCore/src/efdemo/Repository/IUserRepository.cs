@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Model;
 
@@ -16,5 +17,7 @@ namespace Repository
         int GetMaximumUserId();
 
         int GetMinimumUserId();
+
+        IEnumerable GetAllFirstNames();
     }
 }

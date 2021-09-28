@@ -178,3 +178,40 @@ public class UserRepository : Repository<User>, IUserRepository
             .Min(u => u.UserId);
 }
 ```
+
+## Lesson 49. Using LINQ Select
+
+Пример, добавленный в `UserRepository`:
+
+```csharp
+public class UserRepository : Repository<User>, IUserRepository
+{
+    // ..
+    public IEnumerable GetAllFirstNames() =>
+        ApplicationDbContext.Users
+            .Select(u => u.FirstName)
+            .ToList();
+}
+```
+
+Его использование в контроллере `UserController`:
+
+```csharp
+[Route("api/[controller]")]
+public class UserController : Controller
+{
+    // GET: api/<controller>
+    [HttpGet]
+    public IEnumerable Get()
+    {
+        IEnumerable users = _unitOfWork.Users.GetAllFirstNames();
+        return users;
+    }
+}
+```
+
+Запрос `localhost:5001/api/user` вернет JSON, содержащий имена. Наподобие такого:
+
+```json
+["Scott", "Sam", "John", "John"]
+```
