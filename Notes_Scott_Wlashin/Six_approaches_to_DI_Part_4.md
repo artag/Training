@@ -21,7 +21,7 @@ The examples in this post build on the examples in previous posts, so please rea
 
 ## Dependency interpretation
 
-In the ["dependency rejection" approach]Six_approaches_to_DI_Part_1.md) we showed how to return
+In the ["dependency rejection" approach](Six_approaches_to_DI_Part_1.md) we showed how to return
 a data structure (typically a "choice" type) that represented a decision. The last segment of the
 pipeline would then do various I/O actions based on the choice provided. This kept the core code
 pure and pushed all I/O to the edges.
@@ -80,7 +80,7 @@ need to pass to the interpreter a pair: `interpreterInput * (interpreterOutput -
 
 ![Pic. 2](Six_approaches_to_DI/Dependencies6b.jpg "Pic. 2")
 
-For a concrete example, let's look at ReadLn. A normal ReadLn function has the signature
+For a concrete example, let's look at `ReadLn`. A normal `ReadLn` function has the signature
 `unit -> string`. In our new approach, we will give the interpreter a `unit` and we want
 it to give us back a `string`. But that's not quite right. Instead of feeding a string back
 to *us*, the interpreter will feed that string to the "*next*" function that we provide
@@ -173,6 +173,8 @@ We can now test that it works:
 interpret readFromConsole
 ```
 
+And it does! You can try it yourself using the code in the gist linked at the bottom of this post.
+
 ## Making life easier with a computation expression
 
 The `readFromConsole` implementation above is hard to write and ugly to look at.
@@ -200,8 +202,8 @@ Note that `bind` must be defined with `let rec` so it can be used recursively.
 
 Once we have `bind`, we can define the computation expression and its associated "builder" class.
 
-The `Bind` method uses the `bind` defined above.
-The `Return` and `Zero` methods use `Stop` to return a value.
+* The `Bind` method uses the `bind` defined above.
+* The `Return` and `Zero` methods use `Stop` to return a value.
 
 ```fsharp
 type ProgramBuilder() =

@@ -56,8 +56,8 @@ that it looks like this:
 
 ![Pic. 3](Six_approaches_to_DI/Dependencies5c.jpg "Pic. 3")
 
-So instead of our function returning the original `ComparisonResult`, it returns a function,
-a *function* with the signature `ILogger -> ComparisonResult`.
+So instead of our function returning the original `ComparisonResult`, it returns a *function*,
+a function with the signature `ILogger -> ComparisonResult`.
 
 What we are doing is delaying the need for the dependency. The function is now saying:
 I'll do my work assuming the dependency is available, and then later, you will actually
@@ -103,7 +103,7 @@ just like a function call, passing in the logger as the "last" parameter to the 
 ## FP-style dependency injection: returning a function
 
 What's the FP version of "passing in the dependencies later"? As we saw above,
-it simply means returning a function where the *function* has an `ILogger` parameter
+it simply means returning a *function* where the function has an `ILogger` parameter
 which will be provided later.
 
 Here's the `compareTwoStrings` function, but now with the `ILogger` dependency as the *last*
@@ -180,8 +180,8 @@ The reason is that the `Reader` type can be composed, transformed and chained in
 the same way that the `Option` or `Result` or `List` or `Async` types can be.
 If you are familiar with my [Railway Oriented Programming](https://fsharpforfunandprofit.com/rop/)
 post, you can use the same patterns to chain "Reader-returning" functions as you do for chaining
-"Result-returning" functions. You can write a map function for it, and a bind/flatMap function
-for it, and so on. It's a monad!
+"Result-returning" functions. You can write a `map` function for it, and a `bind`/`flatMap`
+function for it, and so on. It's a monad!
 
 Here's a module with some useful `Reader` functions:
 

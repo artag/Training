@@ -38,8 +38,8 @@ This approach is used in both OO
 [free monads](https://softwaremill.com/free-monads/)).
 
 For each approach, we will look at a sample implementation, and then discuss the pros and cons
-of each approach. And as a bonus, in the final post in the series, we'll take a different example
-and again implement it in the six different ways.
+of each approach. And as a bonus, in the [final post in the series](Six_approaches_to_DI_Part_5.md),
+we'll take a different example and again implement it in the six different ways.
 
 *NOTE: I did a [similar post](https://fsharpforfunandprofit.com/posts/dependency-injection-1/)*
 *a long time ago. That post is now superseded by these ones.*
