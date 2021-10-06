@@ -13,6 +13,13 @@
 
 ## Lesson 10. Critical sections
 
+* Uses the `lock` keyword
+* Typically locks on an existing object
+  * Best to make a new `object` to lock on
+* A shorthand for `Monitor.Enter()/Exit()`
+* Blocks until a lock is available
+  * Unless you use `Monitor.TryEnter()` with a timeout value
+
 Рассматривается пример изменения одного свойства через методы сразу из нескольких потоков.
 Возникает race condition.
 
@@ -52,6 +59,11 @@ public class BankAccount
 
 ## Lesson 11. Interlocked operations
 
+* Useful for atomically changing low-level primitives
+* `Interlocked.Increment()/Decrement()`
+* `Interlocked.Add()`
+* `Exchange()/CompareExchange()`
+
 Использование методов из класса `Interlocked`.
 
 `Interlocked` работает с `ref` полями класса, поэтому для свойства необходимо использовать
@@ -81,14 +93,23 @@ public class BankAccount
 * `Interlocked.MemoryBarrier` - это условное обозначение операции `Thread.MemoryBarrier()`.
 Полный барьер памяти гарантирует, что все чтения и записи расположенные до/после барьера будут
 выполнены так же до/после барьера, то есть никакая инструкция обращения к памяти не может
-перепрыгнуть барьер. (и больше никакой информации, кроме того, что это связано с `volatile`).
+перепрыгнуть барьер. (и больше никакой информации, кроме того, что этот механизм связан с
+`volatile`).
 
-* `Interlocked.Exchange` - безопасно устанавливает value и возвращает original value. 
+* `Interlocked.Exchange` - безопасно устанавливает value и возвращает original value.
 
 * `Interlocked.CompareExchange` - безопасно сравнивает два значения и если они эквивалентны,
 замещает первое значение.
 
 ## Lesson 12. Spin Locking and Lock Recursion
+
+* A spin lock wastes CPU cycles without yielding
+  * Useful for brief pauses to prevent rescheduling (без переключения контекста - быстрое освобождение)
+* `Enter()` to take, `Exit()` to release (if taken successfully)
+* Lock recursion = ability to enter a lock twice on the same thread
+* SpinLock does *not* support lock recursion
+* Owner tracking helps keep a record of thread that acquired the lock
+  * Recursion w/tracking = exception. w/o = deadlock
 
 ### Spin Locking
 
@@ -185,7 +206,18 @@ public static void LockRecursion(int x)
 
 ## Lesson 13. Mutex
 
-`Mutex` контролирует доступ к определенной области кода. Чем-то похоэ на `lock`.
+* A `WaitHandle`-derived synchronization primitive
+* `WaitOne()` to acquire
+  * Possibly with a timeout (можно задать timeout ожидания захвата)
+* `ReleaseMutex()` to release
+* `Mutex.WaitAll()` to acquire several (захват нескольких mutex)
+* Global/named mutexes are shared between processes
+  * `Mutex.OpenExisting()` to acquire
+  * `mutex = new Mutex(false, <name>)`
+
+### Использование одного mutex
+
+`Mutex` контролирует доступ к определенной области кода. Чем-то похож на `lock`.
 
 Идея - с помощью mutex пытаемся сделать lock. Когда его делаем, то выполняем нужную операцию.
 После операции освобождаем mutex. Делается со стороны потоков.
@@ -202,6 +234,8 @@ for (int i = 0; i < 10; i++)
     {
         for (int j = 0; j < 1000; j++)
         {
+            // Приостанавливает выполнение потока до тех пор,
+            // пока не будет получен мьютекс.
             var haveLock = mutex.WaitOne();            // Захват.
             try
             {
@@ -209,7 +243,7 @@ for (int i = 0; i < 10; i++)
             }
             finally
             {
-                if (haveLock) mutex.ReleaseMutex();    // Освобождение.
+                if (haveLock) mutex.ReleaseMutex();    // Освобождение мьютекса.
             }
         }
     }));
@@ -225,12 +259,14 @@ for (int i = 0; i < 10; i++)
             }
             finally
             {
-                if (haveLock) mutex.ReleaseMutex();    // Освобождение.
+                if (haveLock) mutex.ReleaseMutex();    // Освобождение мьютекса.
             }
         }
     }));
 }
 ```
+
+### Использование нескольких mutex
 
 Mutex'ы могут взаимодействовать друг с другом. Пример - перевод с одного счета на другой в
 многопоточной среде с использованием двух mutex'ов:
@@ -258,4 +294,127 @@ finally
         mutex2.ReleaseMutex();
     }
 }
+```
+
+### Использование одного mutex в нескольких процессах
+
+Один mutex можно использовать между несколькими процессами. Например, одно приложение можно
+запустить в единственном экземпляре, для всех остальных выдавать ошибку:
+
+```csharp
+static void Main(string[] args)
+{
+    const string appName = "MyApp";
+    Mutex mutex;
+
+            try
+            {
+                // Пытается открыть именованный мьютекс, если он уже существует.
+                mutex = Mutex.OpenExisting(appName);
+                // Покажет это сообщение, если работает другой процесс этого приложения.
+                Console.WriteLine($"Sorry, {appName} is already running");
+            }
+            catch (WaitHandleCannotBeOpenedException)
+            {
+                // Первый экземпляр программы.
+                // Процесс не смог открыть мьютекс (т.к. его еще никто не создал).
+                Console.WriteLine("We can run the program just fine");
+                mutex = new Mutex(false, appName);      // Создание нового mutex
+            }
+
+            mutex.ReleaseMutex();       // Освобождение mutex
+        }
+```
+
+Мои примечания:
+
+1. В Linux этот прием срабатывает только в одном терминале.
+2. На `mutex.ReleaseMutex()` кидает исключение.
+
+## Lesson 14. Reader-Writer Locks
+
+* A reader-writer lock can lock for reading or writing
+  * (`Enter/Exit`)(`Read/Write`)`Lock()`
+* Supports lock recursion in ctor parameter
+  * Not recommended (трудно дебажить, легко сделать ошибку)
+* Supports upgradeability (чтение + запись внутри одной блокировки)
+  * `Enter/ExitUpgradeableReadLock()`
+
+Используется `ReaderWriterLockSlim`. Он может быть использован в рекурсии (параметр
+`recursionPolicy` (`LockRecursionPolicy.SupportsRecursion`) в конструкторе).
+
+Тем не менее, также не рекомендуется использовать read-write locks в рекурсии.
+
+### ReadLock и WriteLock
+
+Для операций read используется один вид lock'ов (`EnterReadLock` и `ExitReadLock`),
+для операций write - другой (`EnterWriteLock` и `ExitWriteLock`):
+
+```csharp
+static ReaderWriterLockSlim padLock = new ReaderWriterLockSlim();
+
+static void Main(string[] args)
+{
+    int x = 0;
+
+    var tasks = new List<Task>();
+    for (var i = 0; i < 10; i++)
+    {
+        tasks.Add(Task.Factory.StartNew(() =>
+        {
+            padLock.EnterReadLock();
+            Console.WriteLine($"Entered read lock, x = {x}");
+
+            Thread.Sleep(5000);
+
+            padLock.ExitReadLock();
+            Console.WriteLine($"Exited read lock, x = {x}");
+        }));
+    }
+    // ..
+    while (true)
+    {
+        // 
+        padLock.EnterWriteLock();
+        Console.WriteLine("Write lock acquired");
+
+        // Установка нового значения.
+        var newValue = random.Next(10);
+        x = newValue;
+        Console.WriteLine($"Set x = {x}");
+
+        // 
+        padLock.ExitWriteLock();
+        Console.WriteLine("Write lock released");
+    }
+}
+```
+
+### UpgradeableReadLock
+
+Иногда требуется на этапе чтения значения его поменять. Для этого применяют такую конструкцию
+(пример):
+
+```csharp
+var taskNum = i;
+tasks.Add(Task.Factory.StartNew(() =>
+{
+    padLock.EnterUpgradeableReadLock();
+    // Чтение
+    Console.WriteLine($"Entered read lock, x = {x}");
+
+    // Запись в нечетных задачах.
+    if (taskNum % 2 == 1)
+    {
+        padLock.EnterWriteLock();
+        x = random.Next(10);
+        Console.WriteLine($"Set {x}");
+        padLock.ExitWriteLock();
+    }
+
+    Thread.Sleep(5000);
+
+    Console.WriteLine($"Exited read lock, x = {x}");
+    padLock.ExitUpgradeableReadLock();
+}));
 ```

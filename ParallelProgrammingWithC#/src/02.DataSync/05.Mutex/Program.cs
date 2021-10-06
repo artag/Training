@@ -35,6 +35,8 @@ namespace MutexProj
                 {
                     for (int j = 0; j < 1000; j++)
                     {
+                        // Приостанавливает выполнение потока до тех пор,
+                        // пока не будет получен мьютекс.
                         var haveLock = mutex.WaitOne();     // Захват.
                         try
                         {
@@ -43,7 +45,7 @@ namespace MutexProj
                         finally
                         {
                             if (haveLock)
-                                mutex.ReleaseMutex();       // Освобождение.
+                                mutex.ReleaseMutex();       // Освобождение мьютекса.
                         }
                     }
                 }));
