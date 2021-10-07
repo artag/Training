@@ -1,6 +1,8 @@
 # Lesson 20. Program flow in F#
 
-## `for .. in` loops
+## A tour around loops in F#
+
+### `for ... in` loops
 
 ```fsharp
 for number in 1 .. 10 do                    // Upward-counting for loop
@@ -71,15 +73,18 @@ while (not reader.EndOfStream) do                           // (2)
     printfn "%s" (reader.ReadLine())
 ```
 
-### Breaking the loop
+>### Breaking the loop
+>
+>* There’s **no** concept of the `break` command.
+>
+>* To simulate premature exit of a loop, you should consider replacing the loop with a
+>sequence of values that you `filter` on (or `takeWhile`), and loop over that sequence
+>instead.
 
-* There’s **no** concept of the `break` command.
+### Comprehensions (`for ... in -> ...`)
 
-* To simulate premature exit of a loop, you should consider replacing the loop with a
-sequence of values that you `filter` on (or `takeWhile`), and loop over that sequence
-instead.
-
-### Comprehensions
+*Comprehensions* are a powerful way of generating lists, arrays, and sequences of data
+based on for loop-style syntax.
 
 The closest equivalent in C# would be the use of the `System.Linq.Enumerable.Range()`.
 
@@ -96,6 +101,8 @@ let listOfSquares = [ for i in 1 .. 10 -> i * i ]
 let seqOfStrings = seq { for i in 2 .. 4 .. 20 -> sprintf "Number %d" i }
 // seq ["Number 2"; "Number 6"; "Number 10"; "Number 14"; ...]
 ```
+
+## Branching logic in F#
 
 ### `If`/`then` expressions for complex logic
 
@@ -114,6 +121,8 @@ let limit =
 
 ### Pattern-matching
 
+*(Неофициальное название pattern-matching: "switch/case on steroids")*
+
 **!** Sequences can’t be pattern matched against; only arrays and lists are supported.
 
 ```fsharp
@@ -131,7 +140,17 @@ let limit =
     | _ -> 250                          // (5)
 ```
 
-### Pattern-matching. Guards
+* Всегда выполняется сопоставление только для одного объекта, как в switch/case.
+* Сопоставление выполняется используя *patterns*.
+* Компилятор автоматически определяет тип `customer` как `(string * int)`
+* В pattern-matching можно автоматически деконстрировать tuple или type и использовать для
+сопоставления его компоненты.
+* ou can model multiple patterns to a single, shared output.
+* Есть catchall сценарий сопоставления (`_` pattern).
+* Match всегда возвращает значение.
+* Компилятор F# выводит warning если отсутствует какое-либо условие (ветвление).
+
+### Pattern-matching. Guards (`when`)
 
 ```fsharp
 // Using the when guard to specify a custom pattern
@@ -146,6 +165,9 @@ let getCreditLimit customer =
 
 ### Pattern-matching. Nested matches
 
+Рекомендуется использовать nested (вложенные) конструкции только когда много повторяющегося
+кода. Иначе, код может стать сложным для понимания и чтения.
+
 ```fsharp
 let getCreditLimit customer =
     match customer with
@@ -157,6 +179,8 @@ let getCreditLimit customer =
         | _ -> 2000
     | _ -> 250                  // Global catchall
 ```
+
+## Flexible pattern matching
 
 ### Pattern-matching. Matching against lists example
 
@@ -172,6 +196,10 @@ let handleCustomer customers =
     | [ first; second ] ->
         printfn "Two customers, balance = %d" (first.Balance + second.Balance)  // (3)
     | customers -> printfn "Customers supplied: %d" customers.Length            // (4)
+
+// Usage
+handleCustomer []                                       // throws exception
+handleCustomer [ { Balance = 10; Name = "Joe" } ]       // prints name
 ```
 
 Another example:
@@ -200,6 +228,9 @@ let getStatus customer =
     | { Name = "Isaac" } -> "This is a great customer!"             // (2)
     | { Name = name; Balance = 50 } -> sprintf "%s has a large balance!" name
     | { Name = name } -> sprintf "%s is a normal customer" name     // (3)
+
+// Usage
+{ Balance = 50; Name = "Joe" } |> getStatus
 ```
 
 ### Pattern-matching. Combining multiple patterns
@@ -227,4 +258,9 @@ implicitly missing the default branch:
 ```fsharp
 // If/then with implicit default else branch
 if customer.Name = "Isaac" then printfn "Hello!"
+
+// Match with explicit default case
+match customer.Name with
+| "Isaac" -> printfn "Hello!"
+| _ -> ()
 ```
