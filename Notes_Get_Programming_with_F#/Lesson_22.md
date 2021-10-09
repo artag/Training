@@ -150,18 +150,18 @@ let describe score =
     | score when score > 0 -> "Hard Risk"
 
 // Customer -> string option
-let descriptionOne customer =
+let descriptionOne customer =               // Вариант 1
     match customer.Score with
     | Some score -> Some(describe score)
     | None -> None
 
 // Customer -> string option
-let descriptionTwo customer =
+let descriptionTwo customer =               // Вариант 2
     customer.Score
     |> Option.map(fun score -> describe score)
 
 // Customer -> string option
-let descriptionThree customer =
+let descriptionThree customer =             // Вариант 3
     customer.Score |> Option.map describe
 
 // int option -> string option
@@ -177,6 +177,8 @@ None |> Option.map(fun v -> v * 2)          // None
 
 ### `Option.iter`
 
+Обычно используется для функций которые выполняют side effects.
+
 ```fsharp
 None |> Option.iter(fun n -> printfn "Num = %i" n)      // Нет печати
 Some 0 |> Option.iter(fun n -> printfn "Num = %i" n)    // Num = 0
@@ -189,6 +191,8 @@ Some 1 |> Option.iter(fun n -> printfn "Num = %i" n)    // Num = 1
 
 It can flatten an `Option<Option<string>>` to `Option<string>`,
 just as `collect` can flatten a `List<List<string>>` to `List<string>`.
+
+This is useful if you chain multiple functions together, each of which returns an option.
 
 ```fsharp
 // int -> Customer option
@@ -204,6 +208,10 @@ let getScore customer = customer.Score
 // int -> int option
 let score = tryFindCustomer 10 |> Option.bind getScore
 ```
+
+Такой паттерн вызова функций через `bind` используется во многих местах ФП. Более
+подробно об этом можно почитать в статьях Scott Wlaschin про monads (монады). Например, статью
+"Railway-Oriented Programming".
 
 ### `Option.filter` (Filtering)
 
@@ -226,6 +234,8 @@ let test3 = Some 5 |> Option.filter(fun x -> x = 5)     // Some 5
 
 and the others in the `Option` module...
 
+## Collections and options
+
 ### `Option.toList`, `Option.toArray`
 
 Takes in an optional value, and if it’s `Some` value, returns a list/array with that single
@@ -235,7 +245,7 @@ value in it. Otherwise, it returns an empty list/array.
 
 You can think of it as a specialized combination of `map` and `filter` in one.
 It allows you to apply a function that might return a value, and then automatically
-strip out any of the items that returned `None`.
+strip out (удалить) any of the items that returned `None`.
 
 ```fsharp
 // int -> string option
