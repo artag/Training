@@ -165,7 +165,7 @@ foreach (var kv in capitals)
 * `TryDequeue`
 * `TryPeek`
 
-Методы `Try`* возвращают `bool`, true - если удалось выполнить операцию.
+Методы вида `Try`* возвращают `bool`, true - если удалось выполнить операцию.
 Возвращают значение, которое было получено в результате операции (если она была успешной).
 
 ```csharp
@@ -183,5 +183,56 @@ public static void Main(string[] args)
 
     if (q.TryPeek(out result))
         Console.WriteLine($"Front element is {result}");
+}
+```
+
+## Lesson 19. `ConcurrentStack`
+
+Основные методы:
+
+* `Push` - добавление элементов (как обычно)
+* `TryPeek`
+* `TryPop`
+* `TryPopRange` - пытается извлечь несколько элементов за раз.
+
+Методы `TryPeek` и `TryPop` возвращают `bool`, true - если удалось выполнить операцию.
+Возвращают значение, которое было получено в результате операции (если она была успешной).
+
+Метод `TryPopRange` возвращает `int` - количество элементов, которое удалось извлечьиз стека.
+Возвращается несколько элементов в виде массива - указывается смещение в массиве и сколько элементов
+необходимо получить из стека. Все остальные элементы в массиве остаются прежними.
+
+```csharp
+static void Main(string[] args)
+{
+    var stack = new ConcurrentStack<int>();
+
+    // Добавление элементов в стек.
+    stack.Push(1);
+    stack.Push(2);
+    stack.Push(3);
+    stack.Push(4);
+
+    int result;
+    if (stack.TryPeek(out result))
+        Console.WriteLine($"{result} is on top");
+        // Вывод в консоль: 4 is on top
+
+    if (stack.TryPop(out result))
+        Console.WriteLine($"Popped {result}");
+        // Вывод в консоль: Popped 4
+
+    var items = new int[5];
+    items[3] = 77;
+    items[4] = 666;     // 77 и 666 останутся, как будет видно ниже
+
+    // startIndex - с какого индекса будет заполнен массив items.
+    // count - сколько элементов попытаться извлечь из стека.
+    if (stack.TryPopRange(items, startIndex: 0, count: 5) > 0)    // В стеке осталось 3 элемента.
+    {
+        var text = string.Join(", ", items.Select(i => i.ToString()));
+        Console.WriteLine($"Popped these items: {text}");
+        // Вывод в консоль: Popped these items: 3, 2, 1, 77, 666
+    }
 }
 ```
