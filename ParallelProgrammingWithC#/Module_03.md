@@ -8,6 +8,17 @@
 * Producer-consumer pattern
   * `BlockingCollection`
 
+---
+
+* Concurrent collections:
+  * Use `TryXxx()` methods
+  * Return a `bool` indicating success
+* Optimized for multithreaded use
+  * Some ops (e.g., `Count`) can block and make collection slow
+* `ConcurrentBag`/`Queue`/`Stack` all implement `IProducerConsumerCollection`
+* A `BlockingCollection` is a wrapper around one of the `IProducerConsumerCollection` classes
+  * Provider blocjing and bounding capabilities
+
 ## Lesson 17. `ConcurrentDictionary`
 
 Коллекция `ConcurrentDictionary`.
@@ -233,6 +244,127 @@ static void Main(string[] args)
         var text = string.Join(", ", items.Select(i => i.ToString()));
         Console.WriteLine($"Popped these items: {text}");
         // Вывод в консоль: Popped these items: 3, 2, 1, 77, 666
+    }
+}
+```
+
+## Lesson 20. `ConcurrentBag`
+
+No ordering thread safe collection.
+
+`Add` - добавление элемента в коллекцию.
+`TryPeek` - пытается получить элемент коллекции без его удаления из нее. Если коллекция пуста,
+то возвратит `default<T>`.
+`TryTake` - пытается извлечь элемент из коллекции. Если коллекция пуста, то возвратит `default<T>`.
+
+Возвращается/берется из коллекции произвольный элемент.
+
+```csharp
+static void Main(string[] args)
+{
+    var bag = new ConcurrentBag<int>();
+    var tasks = new List<Task>();
+    for (int i = 0; i < 10; i++)
+    {
+        var i1 = i;
+        tasks.Add(Task.Factory.StartNew(() =>
+        {
+            bag.Add(i1);
+            Console.WriteLine($"Task {Task.CurrentId} has added {i1}");
+            int result;
+            if (bag.TryPeek(out result))
+            {
+                Console.WriteLine($"Task {Task.CurrentId} has peeked the value {result}");
+            }
+        }));
+    }
+
+    Task.WaitAll(tasks.ToArray());
+
+    int last;
+    if (bag.TryTake(out last))
+    {
+        Console.WriteLine($"I got {last}");
+    }
+}
+```
+
+## Lesson 21. `BlockingCollection` and the Producer-Consumer Pattern
+
+Идея паттерна: один или несколько потоков добавляют какие-либо элементы в общую коллекцию.
+Один или несколько потребителей из разных потоков извлекают элементы из этой коллекции.
+
+Для реализации такого паттерна можно использовать `ConcurrentBag<T>`. Проблема в том, что
+если эту коллекцию оставить без потребителей, то она может вызвать overflow.
+
+Использование `BlockingCollection` позволяет ограничить количество элементов в коллекции -
+producer'ы не смогут добавлять новые элементы.
+`BlockingCollection` используется как обертка вокруг коллеции, реализующей
+`IProducerConsumerCollection` (например `ConcurrentBag<T>`).
+
+```csharp
+BlockingCollection<int> messages =
+    new BlockingCollection<int>(new ConcurrentBag<int>(), boundedCapacity: 10);
+```
+
+`boundedCapacity` - максимальное количество элементов в коллекции.
+
+В `BlockingCollection` есть дополнительный enumerable, который позволяет потребителю узнавать о
+том, что в коллекции есть элементы для их обработки.
+Получить этот enumerable можно через вызов метода `GetConsumingEnumerable()`.
+
+При отсутствии элементов потребитель останавливает свою работу, при добавлении новых элементов
+начинает снова работать. Аналогично для Producer: если `BlockingCollection` переполняется, то
+поток Producer останавливается до тех пор, пока в коллекции не появится свободное место.
+
+```csharp
+static BlockingCollection<int> messages =
+    new BlockingCollection<int>(new ConcurrentBag<int>(), boundedCapacity: 10);
+
+static CancellationTokenSource cts = new CancellationTokenSource();
+static Random random = new Random();
+
+static void Main()
+{
+    Task.Factory.StartNew(ProduceAndConsume, cts.Token);
+    Console.ReadKey();
+    cts.Cancel();
+}
+
+private static void ProduceAndConsume()
+{
+    var producer = Task.Factory.StartNew(RunProducer);
+    var consumer = Task.Factory.StartNew(RunConsumer);
+
+    try
+    {
+        Task.WaitAll(new []{ producer, consumer }, cts.Token);
+    }
+    catch (AggregateException ae)
+    {
+        ae.Handle(e => true);
+    }
+}
+
+private static void RunProducer()
+{
+    while (true)
+    {
+        cts.Token.ThrowIfCancellationRequested();
+        int i = random.Next(100);
+        messages.Add(i);
+        Console.WriteLine($"+{i}");
+        Thread.Sleep(random.Next(1000));
+    }
+}
+
+private static void RunConsumer()
+{
+    foreach (var item in messages.GetConsumingEnumerable())
+    {
+        cts.Token.ThrowIfCancellationRequested();
+        Console.WriteLine($"-{item}");
+        Thread.Sleep(random.Next(1000));
     }
 }
 ```
