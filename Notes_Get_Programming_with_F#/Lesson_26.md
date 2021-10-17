@@ -1,14 +1,40 @@
 # Lesson 26. Working with nuget packages
 
-В проектах F# работа с NuGet такая же как и в проектах C#.
+## Using NuGet with F#
+
+В проектах F# работа с NuGet такая же как и в проектах C#. Пример:
+
+```fsharp
+module Library1
+open Newtonsoft.Json
+
+// Defining an F# record
+type Person = { Name : string; Age : int }
+
+let getPerson() =
+    // Sample JSON text that matches your record structure
+    let text = """{ "Name" : "Sam", "Age" : 18 }"""
+    // Using Sample JSON text that matches your record structure Newtonsoft.Json
+    // to deserialize the object
+    let person = JsonConvert.DeserializeObject<Person>(text)
+    printfn "Name is %s with age %d." person.Name person.Age
+    person
+```
+
+* Usage triple-quoted strings (`"""`) allow you to use single quotes within the string.
+* Newtonsoft.Json works out of the box with F# record types. It'll automatically
+map JSON fields to F# record fields, as with C# class properties.
 
 ### Working with NuGet with F# scripts
 
 1. Add the NuGet package to the project.
 
-2. In Solution Explorer get properties of the NuGet DLL, copy the entire path into the clipboard.
+2. Create or open script file *.fsx.
 
-3. Code in script:
+3. In Solution Explorer get properties of the NuGet DLL, copy the entire path into the clipboard.
+`#r` directive using to reference NuGet package.
+
+4. Code in script:
 
 ```fsharp
 #r @"<path to Humanizer.dll>"   // Referencing an assembly by using #r
@@ -37,30 +63,68 @@ Library1.getPerson()
 #r @"Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll"
 ```
 
-### Paket
+### NuGet and project references
+
+Для более новой версии F# для загрузки NuGet пакетов в скрипты можно использовать команду
+`#nuget`.
+
+```fsharp
+// If a version is not specified, the highest available non-preview package is taken.
+#r "nuget: Newtonsoft.Json"
+open Newtonsoft.Json
+
+let data = {| Name = "Don Syme"; Occupation = "F# Creator" |}
+JsonConvert.SerializeObject(data)
+```
+
+```fsharp
+// To reference a specific version, introduce the version via a comma.
+#r "nuget: DiffSharp-lite, 1.0.0-preview-328097867"
+open DiffSharp
+// ...
+```
+
+### Specifying a package source
+
+This will tell the resolution engine under the covers to also take into account the remote
+and/or local sources added to a script.
+
+```fsharp
+#i "nuget: https://my-remote-package-source/index.json"
+#i """nuget: C:\path\to\my\local\source"""
+```
+
+## Paket
 
 *Paket* - open source, flexible, and powerful dependency management client for .NET.
 It's backward-compatible with the NuGet service.
 
-#### Issues with the NuGet
+Paket is fully compatible with C#, VB .NET, and F# projects and solutions.
 
-* Invalid references across projects
+### Issues with the NuGet
 
-* Updates project file on upgrade
+* Invalid references across projects (можно добавить в два разных проекта NuGet пакет разных
+версий).
 
-* Hard to reference from scripts
+* Updates project file on upgrade.
 
-* Difficulty managing (on large solutions or multiple solution-sharing projects)
+* Hard to reference from scripts (обновление пакета приведет к неработоспособности скрипта).
 
-#### Benefits of Paket
+* Difficulty managing (on large solutions or multiple solution-sharing projects).
 
-* Dependency resolver
+### Benefits of Paket
 
-* Easy to reason about
+* *Dependency resolver* - Paket understands your dependencies across all projects in
+your solution (or repository), and will keep all your dependencies stable across
+all projects.
 
-* Source code dependencies
+* *Easy to reason about* - Paket управляет дочерними зависимостями.
 
-* Fast, Lightweight
+* *Source code dependencies* - You can have a dependency on, for example, a specific
+commit of a GitHub file.
+
+* *Fast*, *Lightweight* - Paket is a command-line-first tool, the configuration files are plain
+text.
 
 ### Get Started with Paket
 
