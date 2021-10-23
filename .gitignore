@@ -8,6 +8,7 @@
 **/venv
 **/packages
 **/seq-data
+**/*.DotSettings.*
 
 #Exclude SQLite DB
 /CompleteGuideToEFCore/src/efdemo/efdemo/*.db
