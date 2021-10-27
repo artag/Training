@@ -10,6 +10,39 @@
 
 ## Lesson 32. Parallel Invoke/For/ForEach
 
+### Введение. Parallel Loops
+
+* `Parallel.Xxx` are blocking calls
+  * Wait until all threads completed *or* an exception occured
+* Can check the state of the loop as it is executing in
+`ParallelLoopState`
+* Can check result of execution in `ParallelLoopResult`
+* `ParallelLoopOptions` let us customize execution with
+  * Max. degree of parallelism
+  * Cancellation Token
+
+### Введение. Parallel.For/ForEach
+
+* `Parallel.For`
+  * Uses as index [start; finish]
+  * Cannot provide a step
+    * Create an `IEnumerable<int>` and use `Parallel.ForEach`
+  * Partitions data into different tasks
+  * Executes provided delegate with counter value argument
+    * Might be inefficient
+* `Parallel.ForEach`
+  * Like `Parallel.For` but
+  * Takes an `IEnumerable<T>` instead
+
+### Введение. Parallel.Invoke
+
+* Runs several provided functions concurrently
+* Is equivalent to
+  * Creating a task for each lambda
+  * Doing a `Task.WaitAll()` on all the tasks
+
+### Введение
+
 Класс `Parallel` имеет три метода:
 
 * `For`
@@ -208,3 +241,146 @@ static void Main(string[] args)
     }
 }
 ```
+
+## Lesson 34. Thread Local Storage
+
+* Writing to a shared variable from many tasks is inefficient
+* Can store partially evaluated results for each task
+* Can specify a function to integrate partial results into final
+results
+
+Есть код - необходимо параллельно просуммировать числа. Переменная `sum` является общей:
+
+```csharp
+var sum = 0;
+Parallel.For(1, 1001, x =>
+{
+    Interlocked.Add(ref sum, x);
+});
+```
+
+Такой код довольно тормозной. Так как каждый поток пытается сделать lock для `sum`.
+
+Одним из оптимизаций является использование Thread Local Storage - некоторое состояние (переменная
+и т.п.), которое для каждого потока свое и не требует lock. В этой переменной запоминается
+partial sum, которые потом суммируются. Это гораздо эффективнее первого подхода.
+
+```csharp
+var sum = 0;
+
+Parallel.For(fromInclusive: 1, toExclusive: 1001,
+localInit: () => 0,
+body: (x, state, tls) =>
+{
+    tls += x;
+    return tls;
+},
+localFinally: partialSum =>
+{
+    Interlocked.Add(ref sum, partialSum);
+});
+```
+
+* `fromInclusive` - начальный индекс, включительно.
+* `toExclusive` - конечный индекс, не включительно.
+* `localInit` (`Func<TLocal>`) - делегат функции, который возвращает начальное состояние
+локальных данных для каждой задачи.
+* `body` (`Func<Int32,ParallelLoopState,TLocal,TLocal>` - делегат, который вызывается один раз
+за итерацию.
+  * `x` - входное значение
+  * `state` (`ParallelLoopState`) - позволяет итерациям параллельных циклов взаимодействовать
+  с другими итерациями.
+  * `tls` - thread local storage (в данном примере - частичная сумма).
+* `localFinally` (`Action<TLocal>`) - делегат, который выполняет финальное действие с
+локальным состоянием каждой задачи. В данном примере `partialSum` - вычисленная частичная сумма
+(локальное состояние каждой из параллельных задач), которые параллельно суммируются через lock
+в переменную `sum`.
+
+## Lesson 35. Partitioning
+
+* Data is split into chunks by a partitioner
+* Can create your own
+* Goal: improve performance
+  * E.g., void costly delegate creation calls
+
+Для оценки производительности установим пакет `BenchmarkDotNet`:
+
+```text
+dotnet add package BenchmarkDotNet --version 0.13.1
+```
+
+Сам код:
+
+```csharp
+[Benchmark]
+public void SquareEachValue()
+{
+    const int count = 100000;
+    var values = Enumerable.Range(0, count);
+    var results = new int[count];
+    Parallel.ForEach(values, x => results[x] = (int)Math.Pow(x, 2));
+}
+
+static void Main(string[] args)
+{
+    var summary = BenchmarkRunner.Run<Program>();
+    Console.WriteLine(summary);
+}
+```
+
+Такой код не очень эффективен, т.к. параллельно создается очень много делегатов и каждый
+делегат выполняет простую операцию возведения в квадрат.
+
+Запустив программы на выполнение в Release режиме, получаем следующий результат:
+
+```text
+|          Method |     Mean |     Error |    StdDev |
+|---------------- |---------:|----------:|----------:|
+| SquareEachValue | 8.462 ms | 0.0896 ms | 0.0748 ms |
+```
+
+Теперь то же самое, только используя поддиапазоны чисел.
+
+```csharp
+[Benchmark]
+public void SquareEachValueChunked()
+{
+    const int count = 100000;
+    var values = Enumerable.Range(0, count);
+    var results = new int[count];
+
+    var part = Partitioner.Create(fromInclusive: 0, toExclusive: count, rangeSize: 10000);
+    Parallel.ForEach(source: part, body: range =>
+    {
+        for (int i = range.Item1; i < range.Item2; i++)
+        {
+            results[i] = (int)Math.Pow(i, 2);
+        }
+    });
+}
+```
+
+`Partitioner` - компонент, который определяет каким образом брать диапазон и как его разделить
+на отдельные части.
+
+`Partitioner.Create` - создает модуль разделения.
+
+* `fromInclusive` - нижняя граница диапазона (включительно).
+* `toExclusive` - верхняя граница диапазона (не включительно).
+* `rangeSize` - размер каждого поддиапазона.
+
+`Parallel.ForEach` - выполняет параллельно итерации.
+
+* `source` (`Partitioner<TSource>`) - разделитель, содержащий исходный источник данных.
+* `body` (`Action<TSource,ParallelLoopState>`) - делегат, который вызывается один раз за итерацию.
+
+Запустив программы на выполнение в Release режиме, получаем следующий результат:
+
+```text
+|                 Method |     Mean |     Error |    StdDev |
+|----------------------- |---------:|----------:|----------:|
+|        SquareEachValue | 8.548 ms | 0.0669 ms | 0.0523 ms |
+| SquareEachValueChunked | 3.355 ms | 0.0316 ms | 0.0296 ms |
+```
+
+(На видео была видна шестикратная разница).
