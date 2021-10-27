@@ -110,6 +110,7 @@ Here's the `compareTwoStrings` function, but now with the `ILogger` dependency a
 parameter:
 
 ```fsharp
+// 'a -> 'a -> ILogger -> ComparisonResult
 let compareTwoStrings str1 str2 (logger:ILogger) =
   logger.Debug "compareTwoStrings: Starting"
 
@@ -124,6 +125,7 @@ And here's *exactly* the same function, reinterpreted such that the return value
 `ILogger -> ComparisonResult` function.
 
 ```fsharp
+// 'a -> 'a -> ILogger -> ComparisonResult
 let compareTwoStrings str1 str2 =
   fun (logger:ILogger) ->
     logger.Debug "compareTwoStrings: Starting"
@@ -159,6 +161,7 @@ If we tweak our code to wrap the returned function in the `Reader` type, then ou
 implementation looks like this:
 
 ```fsharp
+// 'a -> 'a -> Reader<ILogger,ComparisonResult>
 let compareTwoStrings str1 str2 :Reader<ILogger,ComparisonResult> =
   fun (logger:ILogger) ->
     logger.Debug "compareTwoStrings: Starting"
@@ -188,17 +191,22 @@ Here's a module with some useful `Reader` functions:
 ```fsharp
 module Reader =
   /// Run a Reader with a given environment
+  // action : ('env -> 'a)
+  // 'env -> Reader<'env,'a> -> 'a
   let run env (Reader action)  =
     action env  // simply call the inner function
 
   /// Create a Reader which returns the environment itself
+  // Reader<'env,'env>
   let ask = Reader id
 
   /// Map a function over a Reader
+  // ('a -> 'b) -> Reader<'env,'a> -> Reader<'env,'b>
   let map f reader =
     Reader (fun env -> f (run env reader))
 
   /// flatMap a function over a Reader
+  // ('a -> Reader<'env,'b>) -> Reader<'env,'a> -> Reader<'env,'b>
   let bind f reader =
     let newAction env =
       let x = run env reader
@@ -213,12 +221,17 @@ Here's how we can define a basic computation expression for `Reader`.
 
 ```fsharp
 type ReaderBuilder() =
+  // 'a -> Reader<'env,'a>
   member __.Return(x) = Reader (fun _ -> x)
+
+  // Reader<'env,'a> * ('a -> Reader<'env,'b>) -> Reader<'env,'b>
   member __.Bind(x,f) = Reader.bind f x
+
+  // unit -> Reader<'env,unit>
   member __.Zero() = Reader (fun _ -> ())
 
 // the builder instance
-let reader = ReaderBuilder()
+let reader = ReaderBuilder()        // ReaderBuilder
 ```
 
 We don't *have* to use `reader` computation expressions, but it will often make our life easier
@@ -233,6 +246,7 @@ and printing the output.
 Here's `compareTwoStrings` rewritten to use a `reader` computation expression:
 
 ```fsharp
+// 'a -> 'a -> Reader<ILogger,ComparisonResult>
 let compareTwoStrings str1 str2  =
   reader {
     let! (logger:ILogger) = Reader.ask
@@ -460,6 +474,7 @@ I'll call this `withEnv`:
 
 ```fsharp
 /// Transform a Reader's environment from subtype to supertype.
+// ('superEnv->'subEnv) -> Reader<'subEnv,'a> -> Reader<'superEnv,'a>
 let withEnv (f:'superEnv->'subEnv) reader =
   Reader (fun superEnv -> (run (f superEnv) reader))
   // The new Reader environment is now "superEnv"
@@ -475,6 +490,7 @@ Now we can take the Reader that each function returns and transform its environm
 `Reader.withEnv`, as shown below:
 
 ```fsharp
+// Reader<Services,unit>
 let program = reader {
   // helper functions to transform the environment
   let getConsole services = services.Console
