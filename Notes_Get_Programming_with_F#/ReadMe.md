@@ -76,6 +76,8 @@
 
 * [Lesson 36. Asynchronous workflows](Lesson_36.md)
 
+* [Lesson 40. Unit testing in F#](Lesson_40.md)
+
 * [Appendix C. Must-visit F# resources](Appendix_C.md)
 
 * [Appendix D. Must-have F# libraries](Appendix_D.md)
