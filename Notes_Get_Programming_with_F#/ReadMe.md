@@ -78,6 +78,8 @@
 
 * [Lesson 40. Unit testing in F#](Lesson_40.md)
 
+* [Lesson 41. Property-based testing in F#](Lesson_41.md)
+
 * [Appendix C. Must-visit F# resources](Appendix_C.md)
 
 * [Appendix D. Must-have F# libraries](Appendix_D.md)
