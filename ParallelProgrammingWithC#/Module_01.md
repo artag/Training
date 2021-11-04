@@ -470,3 +470,71 @@ static void Main(string[] args)
 
 Необработанные исключения из `AggregateException` пробрасываются дальше, в этом же "контейнере"
 `AggregateException`.
+
+## Summary
+
+### Task
+
+* Task is a unit of work that takes a function:
+  * `new Task(function)`, `t.Start()`
+  * `Task.Factory.StartNew(function)`
+
+* Tasks can be passed an object
+
+* Tasks can return values:
+  * `new Task<T>`, `task.Result`
+
+* Tasks can report their state
+  * `task.IsCompleted`, `task.IsFaulted`, etc.
+
+### Cancellation
+
+* Cancellation of tasks is supported via
+  * `CancellationTokenSource`, which returns a
+  * `CancellationToken token = cts.Token`
+
+* The token is passed into the function
+  * E.g., `Task.Factory.StartNew(..., token)`
+
+* To cancel, we call `cts.Cancel()`
+
+* Cancellation is cooperative
+  * Task can check `token.IsCancellationRequested` and "soft fail" or
+  * Throw an exception via `token.ThrowIfCancellationRequested()` - рекомендуемый подход.
+
+### Waiting for Time to Pass
+
+* `Thread.Sleep(msec)`
+
+* `token.WaitHandle.WaitOne(msec)`
+  * Returns a bool indicating whether cancelation was requested in the time period specified
+
+* `Thread.SpinWait()`
+
+* `SpinWait.SpinUntil(function)`
+
+* Spin waiting does not give up the thread's turn
+
+### Waiting for Tasks
+
+* Waiting for single task
+  * `task.Wait(optional timeout)`
+
+* Waiting for several tasks
+  * `Task.WaitAll(t1, t2)`
+  * `Task.WaitAny(t1, t2)`
+
+* `WaitAny`/`WaitAll` will throw on cancellation
+
+### Exception Handling
+
+* An unobserved task exception will not get handled
+
+* `task.Wait()` or `Task.WaitAny()`/`WaitAll()` will catch an...
+  * `AggregateException`
+  * Use `ae.InnerExceptions` to iterate all exceptions caught
+  * Use `ae.Handle(e => {...})` to selectively handle exceptions
+    * Return `true` if handled, `false` otherwise
+
+* Note: there are ways of handling unobserved exceptions
+  * They are tricky and unreliable

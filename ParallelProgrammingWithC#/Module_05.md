@@ -31,7 +31,7 @@
   * Executes provided delegate with counter value argument
     * Might be inefficient
 * `Parallel.ForEach`
-  * Like `Parallel.For` but
+  * Like `Parallel.For()` but
   * Takes an `IEnumerable<T>` instead
 
 ### Введение. Parallel.Invoke
@@ -384,3 +384,50 @@ public void SquareEachValueChunked()
 ```
 
 (На видео была видна шестикратная разница).
+
+## Summary
+
+### Parallel Loops
+
+* `Parallel.Xxx` are blocking calls
+  * Wait until all threads completed *or* an exception occured
+* Can check the state of the loop as it is executing in
+`ParallelLoopState`
+* Can check result of execution in `ParallelLoopResult`
+* `ParallelLoopOptions` let us customize execution with
+  * Max. degree of parallelism
+  * Cancellation Token
+
+### Parallel.Invoke
+
+* Runs several provided functions concurrently
+* Is equivalent to
+  * Creating a task for each lambda
+  * Doing a `Task.WaitAll()` on all the tasks
+
+### Parallel.For/ForEach
+
+* `Parallel.For`
+  * Uses as index [start; finish]
+  * Cannot provide a step
+    * Create an `IEnumerable<int>` and use `Parallel.ForEach`
+  * Partitions data into different tasks
+  * Executes provided delegate with counter value argument
+    * Might be inefficient
+* `Parallel.ForEach`
+  * Like `Parallel.For()` but
+  * Takes an `IEnumerable<T>` instead
+
+### Thread Local Storage
+
+* Writing to a shared variable from many tasks is inefficient
+* Can store partially evaluated results for each task
+* Can specify a function to integrate partial results into final
+results
+
+### Partioning
+
+* Data is split into chunks by a partitioner
+* Can create your own
+* Goal: improve performance
+  * E.g., void costly delegate creation calls

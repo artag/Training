@@ -17,7 +17,7 @@
   * Some ops (e.g., `Count`) can block and make collection slow
 * `ConcurrentBag`/`Queue`/`Stack` all implement `IProducerConsumerCollection`
 * A `BlockingCollection` is a wrapper around one of the `IProducerConsumerCollection` classes
-  * Provider blocjing and bounding capabilities
+  * Provider blocking and bounding capabilities
 
 ## Lesson 17. `ConcurrentDictionary`
 
@@ -368,3 +368,24 @@ private static void RunConsumer()
     }
 }
 ```
+
+## Summary
+
+* `ConcurrentDictionary`
+* Producer-consumer collections
+  * `ConcurrentQueue`
+  * `ConcurrentStack`
+  * `ConcurrentBag`
+* Producer-consumer pattern
+  * `BlockingCollection`
+
+---
+
+* Concurrent collections:
+  * Use `TryXxx()` methods
+  * Return a `bool` indicating success
+* Optimized for multithreaded use
+  * Some ops (e.g., `Count`) can block and make collection slow
+* `ConcurrentBag`/`Queue`/`Stack` all implement `IProducerConsumerCollection`
+* A `BlockingCollection` is a wrapper around one of the `IProducerConsumerCollection` classes
+  * Provider blocking and bounding capabilities
