@@ -132,3 +132,117 @@ catch (OperationCanceledException)
 * Прерывание через `cts.Cancel()`.
 * При прерывании выбрасывается исключение `OperationCanceledException`, которое необходимо поймать
 и обработать.
+
+## Lesson 40. Merge Options
+
+Есть такой код:
+
+```csharp
+var numbers = Enumerable.Range(1, 20).ToArray();
+
+// Producer
+var results = numbers.AsParallel()
+    .Select(x =>
+    {
+        var result = Math.Log10(x);
+        Console.WriteLine($"Produced {result}");
+        return result;
+    });
+
+// Consumer
+foreach (var result in results)
+{
+    Console.WriteLine($"Consumed {result}");
+}
+```
+
+При работе вначале срабатывает в основном код Producer'а (и только очень редко из Consumer'а).
+После отработки всего код Producer'а, начинает выполняться код Consumer'а.
+
+Опция `WithMergeOptions()` поволяет контролировать как быстро нужно предоставить результаты
+вычислений потребителю. `WithMergeOptions()` имеет следуюзие основные агументы:
+
+* `ParallelMergeOptions.AutoBuffered` (по умолч.) - аккумулирует вычисляемые параллельно результаты
+в буфер перед выдачей потребителю. Размер буфера автоматически выбирается системой.
+* `ParallelMergeOptions.FullyBuffered` - вначале вычисляет параллельно все результаты и только
+потом предоставляет их потребителю.
+* `ParallelMergeOptions.NotBuffered` - выдает результаты потребителю сразу после их вычисления.
+
+```csharp
+var numbers = Enumerable.Range(1, 20).ToArray();
+
+// Producer
+var results = numbers
+    .AsParallel()
+    .WithMergeOptions(ParallelMergeOptions.FullyBuffered)
+    .Select(x =>
+    {
+        var result = Math.Log10(x);
+        Console.WriteLine($"Produced {result}");        // <-- Добавлено
+        return result;
+    });
+
+// Consumer
+foreach (var result in results)
+{
+    Console.WriteLine($"Consumed {result}");
+}
+```
+
+Здесь добавление `WithMergeOptions(ParallelMergeOptions.FullyBuffered)` заставит вначале полностью
+выполнить код в Producer, и только потом начать выполнение в части Consumer.
+
+## Lesson 41. Custom Aggregation
+
+### Последовательная операция Aggregation
+
+`Sum` и `Average` пример частных случаев операции `Aggregate`
+
+```csharp
+var sum = Enumerable.Range(1, 1000).Sum();              // Суммирование
+var average = Enumerable.Range(1, 1000).Average();      // Нахождение среднего значения
+```
+
+Реализация суммирования чисел с использованием `Aggregate`
+
+```csharp
+var sum = Enumerable.Range(1, 1000)
+    .Aggregate(seed: 0, (i, acc) => i + acc);
+```
+
+* `seed` - начальное значение в аккумуляторе
+* `i` - текущее число для суммирования
+* `acc` - аккумулятор
+
+Это все последовательно выполняемые операции.
+
+### Параллельная операция Aggregation
+
+```csharp
+var sum2 = ParallelEnumerable.Range(1, 1000)
+    .Aggregate(
+        seed: 0,
+        (partialSum, i) => partialSum += i,
+        (total, subtotal) => total += subtotal,
+        i => i
+    );
+```
+
+* `seed` - начальное значение в аккумуляторе
+* updateAccumulatorFunc
+* combineAccumulatorFunc
+* resultSelector
+
+## Summary
+
+* Turn a LINQ query parallel by
+  * Calling `AsParallel()` on an `IEnumerable`
+  * Use a `ParallelEnumerable`
+* Use `WithCancellation()` to provide a cancellation token
+* Catch
+  * `AggragateException`
+  * `OperationCanceledException` if expecting to cancel
+* `WithMergeOptions(ParallelMergeOptions.Xxx)` determine how soon
+produces results can be consumed
+* Parallel version of `Aggregate()` provides a syntax for custom
+per-task aggregation options
