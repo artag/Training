@@ -130,3 +130,88 @@ If `SynchronizationContext.Current == null`, continuation scheduled using curren
 This behavior can be customized right on the call.
 
 * Coerces (можно перевести как "достает") the result of the asynchronous operation.
+
+## Lesson 44. Using Async and Await
+
+Блокировка при нажатии на кнопку в WinForms приложении. Во время "вычисления" значения
+в течении 5 секунд приложение становится неотзывчивым. После возврата значения "вычисления"
+основной UI поток изменяет text лейбла `LblResult` на форме.
+
+```csharp
+public int CalculateValue()
+{
+    Thread.Sleep(5000);
+    return 123;
+}
+
+private void BtnCalculate_Click(object sender, EventArgs e)
+{
+    var n = CalculateValue();
+    LblResult.Text = n.ToString();
+}
+```
+
+Этот же пример, только "вычисление" производится в отдельном `Task` и используется
+`TaskContinuation` в основном потоке. В это случае блокировки приложения не происходит.
+
+```csharp
+public Task<int> CalculateValueAsync()
+{
+    return Task.Factory.StartNew(() =>
+    {
+        Thread.Sleep(5000);
+        return 123;
+    });
+}
+
+private void BtnCalculate_Click(object sender, EventArgs e)
+{
+    var calculation = CalculateValueAsync();
+    calculation.ContinueWith(t =>
+    {
+        LblResult.Text = t.Result.ToString();
+    },
+    TaskScheduler.FromCurrentSynchronizationContext());
+}
+```
+
+Теперь, тоже самое, но с использованием `await`:
+
+```csharp
+public async Task<int> CalculateValueAsync()
+{
+    await Task.Delay(5000);
+    return 123;
+}
+
+private async void BtnCalculate_Click(object sender, EventArgs e)
+{
+    int value = await CalculateValueAsync();
+    LblResult.Text = value.ToString();
+}
+```
+
+Еще пример. Используется `await` с WebClient:
+
+```csharp
+public async Task<int> CalculateValueAsync()
+{
+    await Task.Delay(5000);
+    return 123;
+}
+
+private async void BtnCalculate_Click(object sender, EventArgs e)
+{
+    int value = await CalculateValueAsync();
+    LblResult.Text = value.ToString();
+
+    await Task.Delay(5000);
+
+    using (var wc = new WebClient())
+    {
+        var data = await wc.DownloadStringTaskAsync("http://google.com/robots.txt");
+        // Берется первая строка из полученного string
+        LblResult.Text = data.Split('\n')[0].Trim();
+    }
+}
+```
