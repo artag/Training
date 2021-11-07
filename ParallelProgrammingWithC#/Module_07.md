@@ -215,3 +215,127 @@ private async void BtnCalculate_Click(object sender, EventArgs e)
     }
 }
 ```
+
+## Lesson 46. `Task.Run`
+
+`Task.Run` - utility method in `Task` class.
+
+* Вызов `Task.Run` эквивалентен вызову следующего метода:
+
+```csharp
+Task.Factory.StartNew(
+    something,
+    CancellationToken.None,
+    TaskCreationOptions.DenyChildAttach,
+    TaskScheduler.Deafult);
+```
+
+* Provides 8 overloads to support combinations of
+  * `Task` vs `Task<T>`
+  * Cancelable vs non-cancelable
+  * Synchronous vs asynchronous delegate
+
+### Work with asynchronous delegate. `Unwrap`
+
+Пример. `Task`, который создает и запускает еще один `Task`:
+
+```csharp
+var t = Task.Factory.StartNew(() =>
+{
+    Task inner = Task.Factory.StartNew(() => {});
+    return inner;
+});
+```
+
+Возвращается `Task<Task>`.
+
+Если изменить inner task на `() => 123`, то результатом будет `Task<Task<int>>`.
+
+Пример. Передача в новый `Task` asynchronous delegate:
+
+```csharp
+var t = Task.Factory.StartNew(async () =>
+{
+    await Task.Delay(5000);
+    return 123;
+});
+```
+
+By marking the lambda as `async`:
+
+* Compiler will map this delegate to be a `Func<Task<int>>`.
+* Thus, the type of `t` is going to be `Task<Task<int>>`.
+
+.NET 4 introduces `Unwrap()`:
+
+```csharp
+var t = Task.Factory.StartNew(async () =>
+{
+    await Task.Delay(5000);
+    return 123;
+}).Unwrap();
+```
+
+Causes the `t` variable to become `Task<int>`.
+
+### Work with asynchronous delegate. `Task.Run()`
+
+`Task.Run` is a shortcut that
+
+* Calls `Task.Factory.StartNew()`.
+* `Unwrap()`s the result.
+
+It works correctly with either regular methods or async methods:
+
+```csharp
+int result = await Task.Run(async delegate
+{
+    await Task.Delay(1000);
+    return 42;
+});
+```
+
+The type of result is an `int` just as you would expect.
+
+### Work with asynchronous delegate. `await`
+
+`await` can be used as the language equivalent of `Unwrap()`.
+
+```csharp
+int result = await await Task.Factory.StartNew(async delegate
+{
+    await Task.Delay(1000);
+    return 42;
+},
+CancellationToken.None,
+TaskCreationOptions.DenyChildAttach,
+TaskScheduler.Default);
+```
+
+Double `await`! We make a `Task<Task<int>>`, first await a `Task<int>`, second await coerces
+it to an `int`.
+
+## Lesson 47. Task Utility Combinators
+
+Это utility методы которые:
+
+* Kind of like `Task.WaitAll`/`WaitAny`.
+* Create brand new tasks (useful for async/await!)
+* `Task.WhenAny()`
+* `Task.WhenAll()`
+
+### `Task.WhenAny()`
+
+Creates a task that will complete when *any* of the supplied tasks has completed.
+
+```csharp
+await Task.WhenAny(downloadFromHttp, downloadFromFtp);
+```
+
+### `Task.WhenAll()`
+
+Creates a task that will complete when *all* of the supplied tasks has completed.
+
+```csharp
+await Task.WhenAll(measureTemperature, measurePressure);
+```
