@@ -557,3 +557,138 @@ Use value 3 = 3
 ```text
 dotnet add package Nito.AsyncEx --version 5.1.2
 ```
+
+## Lesson 51. `ValueTask`
+
+A lightweight alternative to `Task<T>`.
+
+### Chronology
+
+1. .NET Framework 4 introduced Task
+2. `Task` and `Task<T>` used extensively with C# 5 `async`/`await` paradigm.
+3. `ValueTask` and `ValueTask<T>` introduced to help improve asynchronous performance with decreased
+allocation overhead.
+
+### What is a Task?
+
+* A task is "promise" of eventual (возможное) completion of some operation.
+* Initiate an operation, get a `Task` for it.
+* `Task` will complete when the operation completes.
+  * Synchronously as part of initiating operation (getting data that's already available).
+  * Asynchronously, will complete at some point after you're holding a Task object.
+* Since operations might complete asynchronously, you can:
+  * Block and wait on the results (defeats the purpose (разрушает смысл) of asyncrony).
+  * Supply a callback (`ContinueWith`).
+
+Пример:
+
+```csharp
+SomeAsyncOp().ContinueWith(task =>
+{
+    try
+    {
+        var result = task.Result;
+        UseResult(result);
+    }
+    catch (Exception e)
+    {
+        ...
+    }
+});
+```
+
+Не очень очевидный механизм ожидания завершения задачи. Поэтому, начиная с C# 5 ввели `await`.
+
+### Task Mechanics
+
+* In .NET Framework 4.5/C# 5, Tasks can simply be awaited:
+
+```csharp
+var result = await SomeAsyncOp();
+UseResult(result);
+```
+
+* Easier to consume: correctly handles both sync and async completion.
+* `Task` is very flexible:
+  * You can await it multiple times, by any number of consumers concurrently.
+  * Store it in a dictionary for consumers to await in the future.
+  * Block waiting for one to complete.
+  * Task combinators (e.g., "when any").
+
+This flexibility is not needed for the most common case (invoking operation and awaiting
+resulting task).
+
+### Task Overload (нагрузка)
+
+In the simplest case, we don't need any extra features (multiple awaits, concurrent awaits, sync blocking, combinators).
+
+Just need to await on the promise of an async operation.
+
+When many tasks are created, we get additional GC pressure because `Task` is class.
+
+Runtime tries to mitigate (смягчить) some cases via caching
+(`Task.CompletedTask` singleton), but it doesn't always work.
+
+### Introducing `ValueTask<T>`
+
+.NET Core 2.0 introduced new type: `ValueTask<TResult>`.
+
+A `struct` (!) capable of wrapping either a `TResult` or `Task<TResult>`.
+
+If returned from an `async` method, and the method completes synchronously and
+successfully, *nothing* is allocated.
+
+If method completes asynchronously, `Task<TResult>` is allocated, wrapped by
+`ValueTask<TResult>`.
+
+Exception information held in `Task`; no extra field needed.
+
+Пример:
+
+```csharp
+// MemoryStream.ReadAsync (.NET Core 2.1)
+public override ValueTask<int> ReadAsync(byte[] buffer, int offset, int count)
+{
+    try
+    {
+        int bytesRead = Read(buffer, offset, count);
+        return new ValueTask<int>(bytesRead);
+    }
+    catch (Exception e)
+    {
+        return new ValueTask<int>(Task.FromException<int>(e));
+    }
+}
+```
+
+### Usage Guidelines
+
+* Should every new async API return `ValueTask`? *No*.
+* Default choice should still be `Task`/`Task<T>`.
+* Easier to use correctly.
+* Cached tasks (method returns `Task` or `Task<bool>`) are faster to await than `ValueTask`s.
+
+`ValueTask`/`ValueTask<T>` are good choices when:
+
+* You expect Api consumers to only await them directly; and
+* You want to avoid allocation-related overhead; and
+* Either you expect sync completion to be a common case or you're able to
+effectively pool objects for the use of asynchronous completion.
+
+## Lesson 52. Summary
+
+* Asynchronous programming is enabled with the `async` and `await` keyword.
+* Methods that `await` must be decorated with `async`.
+* When you `await`, you abandon (оставляете) current thread, fire up a new one and then do a context-preserving (сохранение контекста) continuation of the code that's left (из кода, который остался).
+* You can call `async` method synchronously.
+* .NET 4.5 gives us awaitable `Task.Delay` and combinators.
+
+## Course Summary
+
+* Use `Task<T>` is fundamental building block.
+* Locks, mutexes and other structures control concurrent data access; or
+* Use concurrent collections.
+  * `BlockingCollection` for the producer-consumer pattern.
+* Plenty (много) of data structures for task coordination.
+* Parallelize a loop with `Parallel.For`/`ForEach()`.
+* Parallelize a LINQ query with `AsParallel()`.
