@@ -14,7 +14,23 @@ Common side effects include:
 
 *Pure functions* depend only on their arguments and don't have any side effects.
 
-## Actions, calculations, and data
+### Основные действия при рефакторинге кода. Что изучается в книге
+
+* Distinguishing actions, calculations, and data.
+* Organizing code by "rate of change".
+(A first glimpse of stratified design - первый взгляд на многослойный дизайн).
+* First-class abstractions.
+* Timelines visualize distributed systems.
+  * Multiple timelines can execute in different orderings.
+
+### Hard-won lessons about distributed systems
+
+1. Timelines are uncoordinated by default.
+2. You cannot rely on (полагаться) the duration of actions.
+3. Bad timing, however rare, can happen in production.
+4. The timeline diagram reveals (показывают) problems in the system.
+
+### Actions, calculations, and data
 
 Functional programmers distinguish between actions, calculations, and data (ACD).
 
@@ -80,8 +96,20 @@ timeline diagrams in chapter 15.
 guarantee that they perform their actions in the proper order. We'll see exactly how to
 cut timelines in chapter 17 in a very similar scenario to the pizza kitchen.
 
-
 ## Chapter 3. Distinguishing actions, calculations, and data
+
+1. Actions, calculations, and data can be apply to any situation.
+2. Actions can hide actions, calculations, and data.
+3. Calculations can be composed of smaller calculations and data.
+4. Data can only be composed of more data.
+5. Calculations often happen "in our heads".
+6. Actions spread (распространяются) through code.
+7. Actions can take many forms
+   * Function calls
+   * Method calls
+   * Constructors
+   * Expressions
+   * Statements
 
 ### Deep dive: Data
 
@@ -270,6 +298,52 @@ for making actions a little less difficult to work with. These techniques includ
 making actions less dependent on when they happen and how many times they
 are run.
 
+### Actions can take many forms
+
+* Function calls
+
+```js
+// making this little pop-up appear is an action
+alert("Hello world!");
+```
+
+* Method calls
+
+```js
+// prints to the console
+console.log("hello");
+```
+
+* Constructors
+
+```js
+// makes a different value depending on when you call it.
+new Date()
+```
+
+* Expressions
+
+```js
+// if y is a shared, mutable variable, reading it can be different at different times
+y                   // variable access
+
+// if user is a shared, mutable object, reading first_name could be different each time
+user.first_name     // property access
+
+// if stack is a shared, mutable array, the first element could be different each time
+stack[0]            // array access
+```
+
+* Statements
+
+```js
+// writing to a shared, mutable variable is an action because it can affect other parts of the code
+z = 3;                     // assigment
+
+// deleting a property can affect other parts of the code, so this is an action
+delete user.first_name;    // property deletion
+```
+
 ### Summary
 
 * Functional programmers distinguish three categories: actions, calculations, and data.
@@ -285,6 +359,11 @@ actions.
 answer for a given input.
 
 ## Chapter 4. Extracting calculations from actions
+
+* Extract calculations from actions
+* Copy-on-write
+* Aligning design with business requirements
+  * Choosing a better level of abstraction that matches usage
 
 The *document object model* (DOM) is the in-memory representation of an HTML page in a browser.
 
@@ -305,8 +384,33 @@ They are not the main effect of the function (which is to calculate a return val
 
 *Implicit outputs* - Any other output
 
+Assigning a global variable is an *output* because data is leaving the function.
+
+Reading a global variable is an *input* because data is entering the function.
+
+```js
+function calc_total() {
+    shopping_cart_total = 0;                            // output
+    for(var i = 0; i < shopping_cart.length; i++) {     // input
+        var item = shopping_cart[i];
+        shopping_cart_total += item.price;              // output
+    }
+}
+```
+
 Copying a mutable value before you modify it is a way to implement immutability.
 It's called *copy-on-write*. We'll get into the details in chapter 6.
+
+```js
+function add_item(cart, name, price) {
+    var new_cart = cart.slice();    // make a copy and assign it to local variable
+    new_cart.push({                 // modify copy
+        name: name,
+        price: price
+    });
+    return new_cart;                // return copy
+}
+```
 
 ### Step-by-step: Extracting a calculation
 
@@ -355,12 +459,24 @@ calculations shifting toward calculations.
 
 A *code smell* is a characteristic of a piece of code that might be a symptom of deeper problems.
 
-### Principles: Minimize implicit inputs and outputs
+### Principles
 
-* Reducing implicit inputs and outputs
+* Minimize (reducing) implicit inputs and outputs
 
 * Categorizing our calculations. (By grouping our calculations, we learn something about layers
 of meaning)
+
+* Giving the code a once-over (беглый осмотр)
+
+* Categorizing our calculations
+  * By grouping our calculations, we learn something about layers of meaning
+
+* Design is about pulling things apart
+  * Easier to reuse
+  * Easier to maintain
+  * Easier to test
+
+* Smaller functions and more calculations
 
 ### Principle: Design is about pulling things apart (разделение сущностей на части)
 
