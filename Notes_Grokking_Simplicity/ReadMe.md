@@ -452,7 +452,7 @@ to enforce it. For now, let's just assume we don't change them.
 * Shared variables (such as globals) are common implicit inputs and outputs.
 * Implicit inputs can often be replaced by arguments.
 * Implicit outputs can often be replaced by return values.
-* As we apply functional principles, we’ll find the ratio of code in actions to code in
+* As we apply functional principles, we'll find the ratio of code in actions to code in
 calculations shifting toward calculations.
 
 ## Chapter 5. Improving the design of actions
@@ -504,3 +504,147 @@ arguments and return values.
 * Design is about pulling things apart. They can always be put back together.
 * As we pull things apart, and as functions have single responsibilities, we will find that
 they are easy to organize around concepts.
+
+## Chapter 6. Staying immutable in a mutable language
+
+* Categorizing operations into reads, writes, or both
+  * **Reads**
+    * Get information out of data
+    * Do not modify the data
+  * **Writes**
+    * Modify the data
+
+* The three steps of the copy-on-write discipline
+  1. Make a copy.
+  2. Modify the copy (as much as you want!).
+  3. Return the copy.
+
+```js
+function add_element_last(array, elem) {    // we want to modify array
+    var new_array = array.slice();          // 1. make a copy
+    new_array.push(elem);                   // 2. modify the copy
+    return new_array;                       // 3. return the copy
+}
+
+function remove_item_by_name(cart, name) {
+    var new_cart = cart.slice();    // 1. make a copy
+    var idx = null;
+    for(var i = 0; i < new_cart.length; i++) {
+        if(cart[i].name === name)
+            idx = i;
+    }
+    if(idx !== null)
+        new_cart.splice(idx, 1);    // 2. modify the copy
+    return new_cart;                // 3. return the copy
+}
+```
+
+* Copy-on-write converts writes into reads.
+
+* These copy-on-write operations are generalizable
+
+### What to do if an operation is a read and a write
+
+Two approaches:
+
+1. Split function (Splitting the operation into read and write).
+2. Return two values.
+
+Example. Remove from the front `.shift` This mutates the array by dropping the first element
+(index 0) and returns the value that was dropped.
+
+```js
+> var array = [1, 2, 3, 4];
+> array.shift()
+1
+> array
+[2, 3, 4]
+```
+
+#### Splitting the operation into read and write
+
+```js
+// just a function that returns the first element (or undefined if the list is empty).
+// it's a calculation
+function first_element(array) {
+    return array[0];
+}
+
+// perform the shift but drop the return value
+// Copy-on-write
+function drop_first(array) {
+    var array_copy = array.slice();
+    array_copy.shift();
+    return array_copy;
+}
+```
+
+We can use them separately or together.
+
+#### Returning two values from one function
+
+```js
+function shift(array) {
+    var array_copy = array.slice();
+    var first = array_copy.shift();
+    return {    // we use an object to return two separate values
+        first : first,
+        array : array_copy
+    };
+}
+```
+
+или так (реализация с помощью функций из предыдущего раздела)
+
+```js
+function shift(array) {
+    return {
+        first : first_element(array),
+        array : drop_first(array)
+    };
+}
+```
+
+### Reads to immutable data structures are calculations
+
+* **Reads to mutable data are actions**
+
+  If we read from a mutable value, we could get a different answer each time we read it,
+  so reading mutable data is an action.
+
+* **Writes make a given piece of data mutable**
+
+  Writes modify data, so they are what make the data mutable.
+
+* **If there are no writes to a piece of data, it is immutable**
+
+  If we get rid of all of the writes by converting them to reads, the data won't ever change after
+  it is created. That means it's immutable.
+
+* **Reads to immutable data structures are calculations**
+
+  Once we do make the data immutable, all of those reads become calculations.
+
+* **Converting writes to reads makes more code calculations**
+
+  The more data structures we treat as immutable, the more code we have in calculations and
+  the less we have in actions.
+
+### Immutable data structures are fast enough
+
+* We can always optimize later
+* Garbage collectors are really fast
+* We're not copying as much as you might think at first
+  * shallow copy (just copy the top level of a data structure)
+  * structural sharing (copies share a lot of references to the same objects in memory)
+* Functional programming languages have fast implementations
+
+### Nested data
+
+We say data is *nested* when there are data structures within data structures, like an array
+full of objects. The objects are *nested* in the array. Think of ­*nesting* as in Russian
+nesting dolls - dolls within dolls within dolls.
+
+We say data is *deeply nested* when the nesting goes on for a while (продолжается некоторое время).
+It's a relative term, but an example might be objects within objects within arrays within objects
+within objects... The nesting can go on a long time.
