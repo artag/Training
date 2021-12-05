@@ -507,17 +507,32 @@ they are easy to organize around concepts.
 
 ## Chapter 6. Staying immutable in a mutable language
 
-* Categorizing operations into reads, writes, or both
-  * **Reads**
-    * Get information out of data
-    * Do not modify the data
-  * **Writes**
-    * Modify the data
+### Vocab
 
-* The three steps of the copy-on-write discipline
-  1. Make a copy.
-  2. Modify the copy (as much as you want!).
-  3. Return the copy.
+*Nested data*: Data structures inside data structures; we can talk about the inner data
+structure and the top-level data structure.
+
+*Shallow copy*: Copying only the top-level data structure in nested data.
+
+*Structural sharing*: Two nested data structures referencing the same inner data structure
+
+We say data is *deeply nested* when the nesting goes on for a while (продолжается некоторое время).
+It's a relative term, but an example might be objects within objects within arrays within objects
+within objects... The nesting can go on a long time.
+
+### Categorizing operations into reads, writes, or both
+
+* **Reads**
+  * Get information out of data
+  * Do not modify the data
+* **Writes**
+  * Modify the data
+
+### The three steps of the copy-on-write discipline
+
+1. Make a copy.
+2. Modify the copy (as much as you want!).
+3. Return the copy.
 
 ```js
 function add_element_last(array, elem) {    // we want to modify array
@@ -639,12 +654,54 @@ function shift(array) {
   * structural sharing (copies share a lot of references to the same objects in memory)
 * Functional programming languages have fast implementations
 
-### Nested data
+### Copy-on-write operations on objects
 
-We say data is *nested* when there are data structures within data structures, like an array
-full of objects. The objects are *nested* in the array. Think of ­*nesting* as in Russian
-nesting dolls - dolls within dolls within dolls.
+1. Make a copy.
+2. Modify the copy.
+3. Return the copy.
 
-We say data is *deeply nested* when the nesting goes on for a while (продолжается некоторое время).
-It's a relative term, but an example might be objects within objects within arrays within objects
-within objects... The nesting can go on a long time.
+```js
+// Original
+function setPrice(item, new_price) {
+    item.price = new_price;
+}
+
+// Copy-on-write
+function setPrice(item, new_price) {
+    var item_copy = Object.assign({}, item);
+    item_copy.price = new_price;
+    return item_copy;
+}
+```
+
+Еще:
+
+```js
+o["price"] = 37;    // objectSet - copy-on-write version of this
+
+function objectSet(object, key, value) {
+    var copy = Object.assign({}, object);
+    copy[key] = value;
+    return copy;
+}
+
+var a = {x : 1};
+delete a["x"];    // objectDelete - copy-on-write version of this
+
+function objectDelete(object, key) {
+    var copy = Object.assign({}, object);
+    delete copy[key];
+    return copy;
+}
+```
+
+### Summary
+
+* In functional programming, we want to use immutable data. It is impossible to write
+calculations on mutable data.
+* Copy-on-write is a discipline for ensuring our data is immutable. It means we make a
+copy and modify it instead of modifying the original.
+* Copy-on-write requires making a shallow copy before modifying the copy, then
+returning it. It is useful for implementing immutability within code that you control.
+* We can implement copy-on-write versions of the basic array and object operations to
+reduce the amount of boilerplate we have to write.
