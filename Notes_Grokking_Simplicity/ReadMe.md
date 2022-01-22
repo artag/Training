@@ -699,9 +699,310 @@ function objectDelete(object, key) {
 
 * In functional programming, we want to use immutable data. It is impossible to write
 calculations on mutable data.
+
 * Copy-on-write is a discipline for ensuring our data is immutable. It means we make a
 copy and modify it instead of modifying the original.
+
 * Copy-on-write requires making a shallow copy before modifying the copy, then
 returning it. It is useful for implementing immutability within code that you control.
+
 * We can implement copy-on-write versions of the basic array and object operations to
 reduce the amount of boilerplate we have to write.
+
+## Chapter 7. Staying immutable with untrusted code
+
+Any data that leaves the safe zone is potentially mutable. It could be modified by the
+untrusted code. Likewise, any data that enters the safe zone from untrusted code
+is potentially mutable.
+
+The copy-on-write pattern won’t quite help us here.
+We can use *defensive copies* to protect data and maintain immutability.
+
+### Vocab
+
+*Deep copies* duplicate all levels of nested data structures, from the top all the way
+to the bottom.
+
+### The rules of defensive copying
+
+Note that these rules could be applied in any order.
+
+#### Rule 1: Copy as data leaves your code
+
+1. Make a deep copy of the immutable data.
+2. Pass the copy to the untrusted code.
+
+#### Rule 2: Copy as data enters your code
+
+1. Immediately make a deep copy of the mutable data passed to your code.
+2. Use the copy in your code.
+
+### Example
+
+```js
+// Original
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart = add_item(shopping_cart, item);
+    var total = calc_total(shopping_cart);
+    set_cart_total_dom(total);
+    update_shipping_icons(shopping_cart);
+    update_tax_dom(total);
+    black_friday_promotion(cart_copy);          // untrusted code
+}
+```
+
+```js
+// With defensive copying
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart = add_item(shopping_cart, item);
+    var total = calc_total(shopping_cart);
+    set_cart_total_dom(total);
+    update_shipping_icons(shopping_cart);
+    update_tax_dom(total);
+    var cart_copy = deepCopy(shopping_cart);    // Copy before sharing data
+    black_friday_promotion(cart_copy);          // untrusted code
+    shopping_cart = deepCopy(cart_copy);        // Copy after sharing data
+}
+```
+
+```js
+// Extracted safe version
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart = add_item(shopping_cart, item);
+    var total = calc_total(shopping_cart);
+    set_cart_total_dom(total);
+    update_shipping_icons(shopping_cart);
+    update_tax_dom(total);
+    shopping_cart = black_friday_promotion_safe(shopping_cart);     // call extracted code
+}
+
+function black_friday_promotion_safe(cart) {     // extracted code
+    var cart_copy = deepCopy(cart);
+    black_friday_promotion(cart_copy);
+    return deepCopy(cart_copy);
+}
+```
+
+### Copy-on-write and defensive copying compared
+
+#### Copy-on-write
+
+**When to use it**
+
+Use copy-on-write when you need to modify data you control.
+
+**Where to use it**
+
+You should use copy-on-write everywhere inside the safe zone. In fact, the
+copy-on-write defines your immutability safe zone.
+
+**Type of copy**
+
+Shallow copy - relatively cheap
+
+**The rules**
+
+1. Make a shallow copy of the thing to modify.
+2. Modify the copy.
+3. Return the copy.
+
+#### Defensive copying
+
+**When to use it**
+
+Use defensive copying when exchanging data with untrusted code.
+
+**Where to use it**
+
+Use copy-on-write at the borders of your safe zone for data that has to cross in or out.
+
+**Type of copy**
+
+Deep copy - relatively expensive
+
+**The rules**
+
+1. Make a deep copy of data as it enters the safe zone.
+2. Make a deep copy of data as it leaves the safe zone.
+
+### Implementing deep copy in JavaScript is difficult
+
+Recommended to using the implementation from the Lodash library (lodash.com).
+
+Пример реализации глубокого копирования.
+
+```js
+// (1) - recursively make copies of all of the elements
+// (2) - strings, numbers, booleans, and functions are immutable so they don’t need to be copied
+function deepCopy(thing) {
+    if(Array.isArray(thing)) {
+        var copy = [];
+        for(var i = 0; i < thing.length; i++)
+            copy.push(deepCopy(thing[i]));          // (1)
+        return copy;
+    } else if (thing === null) {
+        return null;
+    } else if (typeof thing === "object") {
+        var copy = {};
+        var keys = Object.keys(thing);
+        for(var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            copy[key] = deepCopy(thing[key]);       // (1)
+        }
+        return copy;
+    } else {
+        return thing;       // (2)
+    }
+}
+```
+
+### Summary
+
+*Defensive copying is a discipline for implementing immutability. It makes copies as
+data leaves or enters your code.
+
+* Defensive copying makes deep copies, so it is more expensive than copy-on-write.
+
+* Unlike copy-on-write, defensive copying can protect your data from code that does not
+implement an immutability discipline.
+
+* We often prefer copy-on-write because it does not require as many copies and we use
+defensive copying only when we need to interact with untrusted code.
+
+* Deep copies copy an entire nested structure from top to bottom. Shallow copies only
+copy the bare minimum.
+
+## Chapter 8. Stratified design: Part 1
+
+### Vocab
+
+*Stratified design* is a design technique that builds software in layers.
+Each layer defines new functions in terms of the functions in the layers below it.
+
+### Пример уровней
+
+1. (Верхний) business rules
+
+  * `gets_free_shipping()`
+  * `cartTax()`
+
+2. cart operations
+
+  * `remove_item_by_name()`
+  * `calc_total()`
+  * `add_item()`
+  * `setPriceByName()`
+
+3. copy-on-write
+
+  * `removeItems()`
+  * `add_element_last()`
+
+4. (Нижний) array built-ins
+
+  * `.slice()`
+
+### Developing our design sense
+
+#### Характеристики, которые могут использоваться в качестве критериев для дизайна
+
+**Function bodies**
+
+* Length
+* Complexity
+* Levels of detail
+* Functions called
+* Language features used
+
+**Layer structure**
+
+* Arrow length
+* Cohesion
+* Level of detail
+
+**Function signatures**
+
+* Function name
+* Argument names
+* Argument values
+* Return value
+
+#### Решения, принимаемые при проектировании дизайна
+
+**Organization**
+
+* Decide where a new function goes.
+* Move functions around.
+
+**Implementation**
+
+* Change an implementation.
+* Extract a function.
+* Change a data structure.
+
+**Changes**
+
+* Choose where new code is written.
+* Decide what level of detail is appropriate.
+
+### Patterns of stratified design
+
+* Pattern 1: Straightforward (простая/несложная) implementation
+
+  The layer structure of stratified design should help us build straightforward implementations.
+  When we read a function with a straightforward implementation, the problem the function
+  signature presents should be solved at the right level of detail in the body. Too much detail
+  is a code smell.
+
+* Pattern 2: Abstraction barrier
+
+  Some layers in the graph provide an interface that lets us hide an important implementation
+  detail. These layers help us write code at a higher level and free our limited mental capacity
+  to think at a higher level.
+
+* Pattern 3: Minimal interface
+
+  As our system evolves, we want the interfaces to important business concepts to converge to
+  a small, powerful set of operations. Every other operation should be defined in terms of those,
+  either directly or indirectly.
+
+* Pattern 4: Comfortable layers
+
+  The patterns and practices of stratified design should serve our needs as programmers, who are
+  in turn serving the business. We should invest time in the layers that will help us deliver
+  software faster and with higher quality. We don’t want to add layers for sport. The code and
+  its layers of abstraction should feel comfortable to work in.
+
+### Pattern 1: Straightforward implementations
+
+1. Выделить desired (нужные) shopping cart operations
+
+* Add an item.
+* Remove an item.
+* Check if an item is in the cart.
+* Sum the total.
+* Clear the cart.
+* Set the price of an item by name.
+* Calculate the tax.
+* Check if it gets free shipping.
+
+2. Visualizing our function calls with a call graph
+
+Пример диаграммы:
+
+```text
+    ------------- freeTieClip() --------------
+    |             |           |              |
+    |             |           v              v
+    |             |      make_item()    add_item()
+    v             v
+array_index    for loop
+```
+
+* Arrows represent function calls.
+* `array index`, `for loop` - language features.
+* `make_item()`, `add_item()` - function calls.
+* Functions and built-in language features могут быть расположены на разных уровнях
