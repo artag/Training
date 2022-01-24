@@ -1006,3 +1006,78 @@ array_index    for loop
 * `array index`, `for loop` - language features.
 * `make_item()`, `add_item()` - function calls.
 * Functions and built-in language features могут быть расположены на разных уровнях
+
+Замечания по приведенной диаграмме:
+
+* `freeTieClip()` обращается к разным уровням (стрелки указывают на разные уровни)
+* The difference in layers makes the implementation less obvious and hard to read.
+
+3.Straightforward (простые/несложные) implementations call functions from similar layers of
+abstraction.
+
+In a straightforward implementation, all arrows would be about the same length.
+
+Если из одного слоя идет обращение к разным слоям, то можно ввести промежуточные функции
+для "выравнивания" (чтобы обращения были только к функциям одного нижележащего слоя).
+
+4. Стрелки между функциями из разных слоев должны быть как можно короче.
+
+5. All functions in a layer should serve (выполнять) the same pupose (функцию/работу).
+
+Пример таких слоев:
+
+* business rules about carts (самый верхний)
+  * `freeTieClip()`, `gets_free_shipping()`, `cartTax()`
+* business rules (general)
+  * `calc_tax()`
+* basic cart operations
+  * `add_item()`, `setPriceByName()`, `isInCart()`, `calc_total()`, `remove_item_by_name()`
+* basic item operations
+  * `make_item()`, `setPrice()`
+* copy-on-write operations
+  * `add_element_last()`, `removeItems()`
+* JavaScript language features (самый нижний)
+  * `object literal`, `.slice()`, `for loop`, `array index`
+
+### Three different zoom levels
+
+1. Global zoom level
+
+  At the global zoom level, we see the entire call graph.
+
+2. Layer zoom level
+
+  At the layer zoom level, we start with the level of interest and draw everything it
+  points to below it.
+
+3. Function zoom level
+
+  At the function zoom level, we start with one function of interest and draw everything it
+  points to below it.
+
+### Summary
+
+* Stratified design organizes code into layers of abstraction. Each layer helps us ignore
+different details.
+
+* When implementing a new function, we need to identify what details are important to solving
+the problem. This will tell you what layer the function should be in.
+
+* There are many clues (подсказок) that can help us locate functions in layers. We can look at
+the name, the body, and the call graph.
+
+* The name tells us the intent (смысл/цель) of the function. We can group it with other functions
+with related (похожими) intents.
+
+* The body can tell us the details that are important to a function. These are clues as to
+where in the layer structure it goes.
+
+* The call graph can show us that an implementation is not straightforward. If the arrows
+coming from it are of varying lengths, it’s a good sign the implementation is not
+straightforward.
+
+* We can improve the layer structure by extracting out more general functions. More
+general functions are on lower layers and are more reusable.
+
+* The pattern of straightforward implementation guides us to build layers such that our
+functions are implemented in a clear and elegant way.
