@@ -1081,3 +1081,49 @@ general functions are on lower layers and are more reusable.
 
 * The pattern of straightforward implementation guides us to build layers such that our
 functions are implemented in a clear and elegant way.
+
+## Chapter 9. Stratified design: Part 2
+
+An *abstraction barrier* is a layer of functions that hide the implementation.
+
+**Важно**: на диаграмме нет стрелок, которые пересекают abstraction barrier.
+
+### Abstraction barrier. Abstraction barriers hide implementations
+
+Functional programmers strategically employ (используют) abstraction barriers because they
+let them think about a problem at a higher level.
+
+The abstraction barrier in this case means the functions above that layer don't need to
+know what the data structure is.
+
+Также правильный выбор abstraction barrier позволяет нижним слоям успешно игнорировать
+функции из более верхних слоев.
+
+#### When to use (and when *not* to use!) abstraction barriers
+
+1. To facilitate (для облегчения) changes of implementation
+
+  * Abstraction barrier позволяет потом изменять нижележащие слои.
+
+  * This property might be useful if you are prototyping something and you still don't
+  know how best to implement it.
+
+  * You know something will change; you're just not ready to do it yet.
+
+2. To make code easier to write and read
+
+  * An abstraction barrier that lets you ignore lower code details will make your code
+  easier to write.
+
+3. To reduce coordination between teams
+
+  * The abstraction barrier allows teams on either (обеих) side to ignore the details the
+  other team handles.
+
+4. To mentally focus on the problem at hand
+
+### Pattern 3: Minimal interface
+
+By keeping our interfaces minimal, we avoid bloating our lower layers with unnecessary
+features.
+
