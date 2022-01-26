@@ -715,7 +715,7 @@ Any data that leaves the safe zone is potentially mutable. It could be modified 
 untrusted code. Likewise, any data that enters the safe zone from untrusted code
 is potentially mutable.
 
-The copy-on-write pattern won’t quite help us here.
+The copy-on-write pattern won't quite help us here.
 We can use *defensive copies* to protect data and maintain immutability.
 
 ### Vocab
@@ -836,7 +836,7 @@ Recommended to using the implementation from the Lodash library (lodash.com).
 
 ```js
 // (1) - recursively make copies of all of the elements
-// (2) - strings, numbers, booleans, and functions are immutable so they don’t need to be copied
+// (2) - strings, numbers, booleans, and functions are immutable so they don't need to be copied
 function deepCopy(thing) {
     if(Array.isArray(thing)) {
         var copy = [];
@@ -973,7 +973,7 @@ Each layer defines new functions in terms of the functions in the layers below i
 
   The patterns and practices of stratified design should serve our needs as programmers, who are
   in turn serving the business. We should invest time in the layers that will help us deliver
-  software faster and with higher quality. We don’t want to add layers for sport. The code and
+  software faster and with higher quality. We don't want to add layers for sport. The code and
   its layers of abstraction should feel comfortable to work in.
 
 ### Pattern 1: Straightforward implementations
@@ -1073,7 +1073,7 @@ with related (похожими) intents.
 where in the layer structure it goes.
 
 * The call graph can show us that an implementation is not straightforward. If the arrows
-coming from it are of varying lengths, it’s a good sign the implementation is not
+coming from it are of varying lengths, it's a good sign the implementation is not
 straightforward.
 
 * We can improve the layer structure by extracting out more general functions. More
@@ -1101,7 +1101,7 @@ know what the data structure is.
 
 #### When to use (and when *not* to use!) abstraction barriers
 
-1. To facilitate (для облегчения) changes of implementation
+1. To facilitate (для облегчения) changes of implementation.
 
   * Abstraction barrier позволяет потом изменять нижележащие слои.
 
@@ -1110,20 +1110,124 @@ know what the data structure is.
 
   * You know something will change; you're just not ready to do it yet.
 
-2. To make code easier to write and read
+2. To make code easier to write and read.
 
   * An abstraction barrier that lets you ignore lower code details will make your code
   easier to write.
 
-3. To reduce coordination between teams
+3. To reduce coordination between teams.
 
   * The abstraction barrier allows teams on either (обеих) side to ignore the details the
   other team handles.
 
-4. To mentally focus on the problem at hand
+4. To mentally focus on the problem at hand.
+
+#### Не следует делать абстрактный барьер на слишком низком слое иерархии
+
+1. Code in the barrier is lower level, so it's more likely to contain bugs.
+
+2. Low-level code is harder to understand.
 
 ### Pattern 3: Minimal interface
 
 By keeping our interfaces minimal, we avoid bloating our lower layers with unnecessary
 features.
 
+In stratified design, we find a dynamic tension between the completeness of the abstraction
+barrier and the pattern to keep it minimal.
+
+There are many reasons to keep the abstraction barrier minimal:
+
+1. If we add more code to the barrier, we have more to change when we change the
+implementation.
+
+2. More functions in an abstraction barrier mean more coordination between teams.
+
+3. A larger interface to our abstraction barrier is harder to keep in your head.
+
+The minimal interface pattern guides us to solve problems at higher levels and avoid
+modifying lower levels.
+
+The pattern can be applied to all layers, not just abstraction barriers.
+
+#### Идеальный layer, к которому следует стремиться
+
+1. Layer should have as many functions as necessary, but no more.
+
+2. The functions should not have to change, nor should you need to add functions later.
+
+3. The set should be complete, minimal, and timeless.
+
+### Pattern 4: Comfortable layers
+
+Не надо делать слишком "высокие" башни абстракций. Не надо добавлять слои только ради
+спорта. We should invest time in the layers that will help us deliver software
+faster and with higher quality. Если нам комфортно работать с текущими уровнями, значит,
+скорее всего, они не нуждаются в дополнительных улучшениях.
+
+### What does the graph show us about our code?
+
+*Nonfunctional requirements* (**NFR**s) are things like how testable, maintainable, or
+reusable the code is.
+
+Рассматриваются три NFRs:
+
+1. *Maintainability* - What code is easiest to change when requirements change?
+2. *Testability* - What is most important to test?
+3. *Reusability* - What functions are easier to reuse?
+
+### Code at the top of the graph is easier to change
+
+```text
+    A
+   / \
+  v   v
+  B   C
+```
+
+`A` - легче изменить, чем `B` или `C`.
+
+The longer the path from the top to a function, the more expensive that function will be to
+change.
+
+If we put code that changes frequently near or at the top, our jobs will be easier. Build
+less on top of things that change.
+
+### Testing code at the bottom is more important
+
+If we're doing it right, code at the top changes more frequently than code at the bottom.
+
+Тесты функций на верхних слоях иерархии имеют меньший вес/значение, т.к. данный функционал
+может меняться очень часто.
+
+Наоборот, тесты функций на нижних слоях иерархии имеют больший вес, т.к. здесь изменения
+происходят гораздо реже.
+
+### Code at the bottom is more reusable (более многократно используется)
+
+Чем выше функция в иерархии, тем меньше она пригодна для повторного использования.
+
+### Summary: What the graph shows us about our code
+
+```text
+--- A ---       Легче менять. Тесты менее ценны. Меньшая переиспользуемость.
+|       |
+v       v
+B       C       Сложнее менять. Тесты более ценны. Большая переиспользуемость.
+```
+
+### Summary
+
+* The pattern of abstraction barrier lets us think at a higher level. Abstraction barriers
+let us completely hide details.
+
+* The pattern of minimal interface has us build layers that will converge (стремиться) on
+a final form. The interfaces for important business concepts should not grow or change
+once they have matured. (Интерфейсы для устоявшегося "взрослого" функционала не должны меняться).
+
+* The pattern of comfort helps us apply the other patterns to serve our needs. It is easy to
+over-abstract when applying these patterns. We should apply them with purpose.
+(Короче, не следует бесцельно создавать слишком много слоев абстракций).
+
+* Properties emerge (являются следствием) from the structure of the call graph. Those properties
+tell us where to put code to maximize our testability, maintainability, and reusability.
