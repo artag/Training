@@ -457,3 +457,324 @@ make the argument first-class instead of an inaccessible part of the function na
 * We can apply the refactoring called replace body with callback to abstract over behavior. It
 creates a first-class function argument that represents the behavioral difference between
 two functions.
+
+## Chapter 11. First-class functions: Part 2
+
+### One code smell and two refactorings (from previous chapter)
+
+Code smell: *Implicit argument in function name*
+
+1. There are very similar function implementations.
+2. The name of the function indicates the difference in implementation.
+
+Refactoring 1: *Express implicit argument*
+
+1. Identify the implicit argument in the name of the function.
+2. Add explicit argument.
+3. Use new argument in body in place of hard-coded value.
+4. Update the calling code.
+
+Refactoring 2: *Replace body with callback*
+
+1. Identify the before, body, and after sections.
+2. Extract the whole thing into a function.
+3. Extract the body section into a function passed as an argument to that function.
+
+### Refactoring copy-on-write
+
+Steps of copy-on-write:
+
+1. Make a copy.         // before
+2. Modify the copy.     // body
+3. Return the copy.     // after
+
+#### Example. Refactoring copy-on-write for arrays
+
+Шаг 1. Identify before, body, after.
+
+```js
+function arraySet(array, idx, value) {      function arraySet(array, idx, value) {
+    var copy = array.slice();                   var copy = array.slice();           // before
+    copy[idx] = value;                          copy.push(elem);                    // body
+    return copy;                                return copy;                        // after
+}                                           }
+
+function drop_last(array) {                 function drop_first(array) {
+    var array_copy = array.slice();             var array_copy = array.slice();     // before
+    array_copy.pop();                           array_copy.shift();                 // body
+    return array_copy;                          return array_copy;                  // after
+}                                           }
+```
+
+Шаг 2. Extract function.
+
+Original:
+
+```js
+function arraySet(array, idx, value) {
+    var copy = array.slice();               // extract to a function
+    copy[idx] = value;
+    return copy;
+}
+```
+
+After function extraction:
+
+```js
+function arraySet(array, idx, value) {
+    return withArrayCopy(array);
+}
+
+function withArrayCopy(array) {
+    var copy = array.slice();
+    copy[idx] = value;          // idx - not defined in this scope
+    return copy;
+}
+```
+
+Шаг 3. Extract extract out the body into a callback.
+
+Current:
+
+```js
+function arraySet(array, idx, value) {
+    return withArrayCopy(array);
+}
+
+function withArrayCopy(array) {
+    var copy = array.slice();
+    copy[idx] = value;          // make the body an argument and pass it in
+    return copy;
+}
+```
+
+After extracting callback:
+
+```js
+function arraySet(array, idx, value) {
+    return withArrayCopy(array, function(copy) {
+        copy[idx] = value;
+    });
+}
+
+function withArrayCopy(array, modify) {         // modify - callback
+    var copy = array.slice();
+    modify(copy);
+    return copy;
+}
+```
+
+Done. Comparing:
+
+```js
+// Before refactoring                       // After refactoring
+function arraySet(array, idx, value) {      function arraySet(array, idx, value) {
+    var copy = array.slice();                   return withArrayCopy(array, function(copy) {
+    copy[idx] = value;                              copy[idx] = value;
+    return copy;                                });
+}                                           }
+
+                                            // Reusable function
+                                            function withArrayCopy(array, modify) {
+                                                var copy = array.slice();
+                                                modify(copy);
+                                                return copy;
+                                            }
+```
+
+Example of using our reusable function in sorting:
+
+```js
+var sortedArray = withArrayCopy(array, function(copy) {
+    SuperSorter.sort(copy);
+});
+```
+
+### Reusable functions examples
+
+1. Copy-on-write discipline for arrays.
+
+```js
+function withArrayCopy(array, modify) {
+    var copy = array.slice();
+    modify(copy);
+    return copy;
+}
+```
+
+2. Copy-on-write discipline for objects.
+
+```js
+function withObjectCopy(object, modify) {
+    var copy = Object.assign({}, object);
+    modify(copy);
+    return copy;
+}
+
+// Usage 1
+function objectSet(object, key, value) {
+    return withObjectCopy(object, function(copy) {
+        copy[key] = value;
+    });
+}
+
+// Usage 2
+function objectDelete(object, key) {
+    return withObjectCopy(object, function(copy) {
+        delete copy[key];
+    });
+}
+```
+
+3. Try/catch
+
+```js
+function tryCatch(f, errorHandler) {
+    try {
+        return f();
+    } catch(error) {
+        return errorHandler(error);
+    }
+}
+```
+
+4. When
+
+```js
+function when(test, then) {
+    if(test)
+        return then();
+}
+```
+
+5. If
+
+```js
+function IF(test, then, ELSE) {
+    if(test)
+        return then();
+    else
+        return ELSE();
+}
+```
+
+### Returning functions from functions
+
+Есть похожие функции:
+
+```js
+function saveUserDataWithLogging(user) {
+    try {
+        saveUserDataNoLogging(user);
+    } catch (error) {
+        logToSnapErrors(error);
+    }
+}
+
+function fetchProductWithLogging(productId) {
+    try {
+        fetchProductNoLogging(productId);
+    } catch (error) {
+        logToSnapErrors(error);
+    }
+}
+```
+
+Remove the names and make them anonymous:
+
+```js
+function(arg) {                         // before
+    try {
+        saveUserDataNoLogging(arg);     // body
+    } catch (error) {                   // after
+        logToSnapErrors(error);
+    }
+}
+```
+
+Refactoring - replace body with callback:
+
+```js
+// Было
+function(arg) {
+    try {
+        saveUserDataNoLogging(arg);
+    } catch (error) {
+        logToSnapErrors(error);
+    }
+}
+
+// Стало
+function wrapLogging(f) {               // takes function as argument
+    return function(arg) {              // returns a function
+        try {
+            f(arg);
+        } catch (error) {
+            logToSnapErrors(error);
+        }
+    }
+}
+
+// Call wrapLogging() with the function we want to transform
+var saveUserDataWithLogging = wrapLogging(saveUserDataNoLogging);
+var fetchProductWithLogging = wrapLogging(fetchProductNoLogging);
+```
+
+Готово. Сравнение использования:
+
+```js
+// Начальный вариант            // Конечный вариант
+try {                           saveUserDataWithLogging(user)
+    saveUserData(user);
+} catch (error) {
+    logToSnapErrors(error);
+}
+```
+
+Для конечного варианта "за кадром" используется:
+
+```js
+function wrapLogging(f) {
+    return function(arg) {
+        try {
+            f(arg);
+        } catch (error) {
+            logToSnapErrors(error);
+        }
+    }
+}
+
+var saveUserDataWithLogging = wrapLogging(saveUserData);
+```
+
+Еще **пример**. Функция, которая создает функцию, которая прибавляет число к другому числу:
+
+```js
+function makeAdder(n) {
+    return function(x) {
+        return n + x;
+    };
+}
+```
+
+Использвание:
+
+```js
+var increment = makeAdder(1);
+var plus10 = makeAdder(10);
+
+increment(10)    // 11
+plus10(12)       // 22
+```
+
+### Summary
+
+* Higher-order functions can codify patterns and disciplines that otherwise we would have
+to maintain manually. Because they are defined once, we can get them right once and
+can use them many times.
+
+* We can make functions by returning them from higher-order functions. The functions
+can be used just like normal by assigning them to a variable to give them a name.
+
+* Higher-order functions come with a set of tradeoffs. They can remove a lot of
+duplication, but sometimes they cost readability. Learn them well and use them wisely.
