@@ -294,17 +294,133 @@ forEach(dishes, clean);        // operateOnArray -> forEach
 
 Функция `forEach()` - это *higher-order function* (см. Vocab).
 
-
-
-Остановился тут, на странице 259
-
 ### Refactoring: Replace body with callback
 
 1. Identify the before, body, and after sections.
 2. Extract the whole thing into a function.
 3. Extract the body section into a function passed as an argument to that function.
 
-#### Examples of non-first-class things in JavaScript
+Пример:
+
+Шаг 0. Начальное состояние. Same catch everywhere
+
+```js
+try {
+    saveUserData(user);
+} catch (error) {
+    logToSnapErrors(error);
+}
+
+try {
+    fetchProduct(productId);
+} catch (error) {
+    logToSnapErrors(error);
+}
+```
+
+Шаг 1. Identify the before, body, and after sections.
+
+```js
+try {                           // before
+    saveUserData(user);         // body
+} catch (error) {               // after
+    logToSnapErrors(error);
+}
+
+try {                           // before
+    fetchProduct(productId);    // body
+} catch (error) {               // after
+    logToSnapErrors(error);
+}
+```
+
+Шаг 2. Extract the whole thing into a function.
+
+```js
+try {                           // Original
+    saveUserData(user);
+} catch (error) {
+    logToSnapErrors(error);
+}
+
+function withLogging() {        // After function extraction
+    try {
+        saveUserData(user);
+    } catch (error) {
+        logToSnapErrors(error);
+    }
+}
+
+withLogging();      // Call withLogging() after we define it
+```
+
+Шаг 3. Extract the body section into a function passed as an argument to that function.
+
+Current:
+
+```js
+function withLogging() {
+    try {
+        saveUserData(user);     // we can pull out this part into a callback
+    } catch (error) {
+        logToSnapErrors(error);
+    }
+}
+
+withLogging();
+```
+
+After extracting callback:
+
+```js
+function withLogging(f) {       // f indicates a function
+    try {
+        f();                    // we call the function in place of the old body
+    } catch (error) {
+        logToSnapErrors(error);
+    }
+}
+
+withLogging(function() {        // we have to pass in the body now
+    saveUserData(user);         // one-line anonymous function
+});
+```
+
+### What is this syntax?
+
+#### 1. Globally defined
+
+```js
+function saveCurrentUserData() {        // define the function globally
+    saveUserData(user);
+}
+
+withLogging(saveCurrentUserData);       // pass the function by name
+```
+
+#### 2. Locally defined
+
+Функция видна и доступна только внутри scope, где она определена.
+
+```js
+function someFunction() {
+    var saveCurrentUserData = function() {      // local function
+        saveUserData(user);
+    };
+    withLogging(saveCurrentUserData);           // pass the function by name
+}
+```
+
+#### 3. Defined inline
+
+This function has no name (*anonymous function*). *Inline* means we defined it where it was
+used.
+
+```js
+withLogging(function() { saveUserData(user); });
+```
+
+### Examples of non-first-class things in JavaScript
 
 *(Примеры сущностей/конструкций, которые нельзя использовать для передачи в качестве входных и выходных параметров в функциях)*
 
@@ -313,7 +429,7 @@ forEach(dishes, clean);        // operateOnArray -> forEach
 3. If statements
 4. Try/catch blocks
 
-#### Examples of things you can do with a first-class value
+### Examples of things you can do with a first-class value
 
 1. Assign it to a variable.
 2. Pass it as an argument to a function.
