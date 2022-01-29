@@ -778,3 +778,379 @@ can be used just like normal by assigning them to a variable to give them a name
 
 * Higher-order functions come with a set of tradeoffs. They can remove a lot of
 duplication, but sometimes they cost readability. Learn them well and use them wisely.
+
+## Chapter 12. Functional iteration
+
+### Vocab
+
+An *inline function* is a function that is defined where it is used instead of named and
+referred to later.
+
+An *anonymous function* is a function without a name. That usually happens when we define the
+function inline.
+
+*Predicates* are functions that return true or false. They are useful for passing to
+`filter()` and other higher-order functions.
+
+### Deriving (получение) `map()` from examples
+
+Original:
+
+```js
+function emailsForCustomers(customers, goods, bests) {
+    var emails = [];
+    forEach(customers, function(customer) {      // extract the forEach() into map()
+        var email = emailForCustomer(customer, goods, bests);
+        emails.push(email);
+    });
+    return emails;
+}
+```
+
+Replaced with callback:
+
+```js
+function emailsForCustomers(customers, goods, bests) {
+    return map(customers, function(customer) {              // body is now passed as callback
+        return emailForCustomer(customer, goods, bests);
+    });
+}
+
+function map(array, f) {                        // callback argument
+    var newArray = [];
+        forEach(array, function(element) {
+            newArray.push(f(element));          // call callback here
+    });
+    return newArray;
+}
+```
+
+### Functional tool: `map()`
+
+One of three "functional tools":
+
+```js
+// (1) - calls f() to create a new element based on the element from original array
+// (2) - push. Adds the new element for each element in the original array
+function map(array, f) {                    // takes array and function
+    var newArray = [];                      // creates a new empty array
+    forEach(array, function(element) {
+        newArray.push(f(element));          // (1) and (2)
+    });
+    return newArray;        // returns the new array
+}
+```
+
+#### Examples. Using `map()`
+
+**Example 1**
+
+We have: Array of customers
+
+We want: Array of their email addresses
+
+Function: Takes one customer and returns their email address
+
+```js
+map(customers, function(customer) {
+    return customer.email;
+});
+```
+
+**Example 2**
+
+We want: Array of customers: first name, last name, address.
+
+```js
+map(customers, function(customer) {
+    return {
+        firstName : customer.firstName,     // create and return new object
+        lastName : customer.lastName,
+        address : customer.address
+    };
+});
+```
+
+### Deriving (получение) `filter()` from examples
+
+Original:
+
+```js
+function selectBestCustomers(customers) {
+    var newArray = [];
+    forEach(customers, function(customer) {     // extract the forEach() into filter()
+        if(customer.purchases.length >= 3)
+            newArray.push(customer);
+    });
+    return newArray;
+}
+```
+
+Replaced with callback:
+
+```js
+function selectBestCustomers(customers) {
+    return filter(customers, function(customer) {
+        return customer.purchases.length >= 3;    // wrap the expression in a function
+    });                                           // and pass it as argument
+}
+
+function filter(array, f) {
+    var newArray = [];
+    forEach(array, function(element) {
+        if(f(element))                      // test expression now contained in callback
+            newArray.push(element);
+    });
+    return newArray;
+}
+```
+
+### Functional tool: `filter()`
+
+`reduce()` can be also known as: `fold()`, `Aggregate()`, etc.
+There are sometimes variations like `foldLeft()` and `foldRight()`, which indicate the
+direction in which you process the list.
+
+Second of three "functional tools":
+
+```js
+// (1) - calls f() to check if the element should go in the new array
+// (2) - push. Adds the original element if it passes the check
+function filter(array, f) {                 // takes array and function
+    var newArray = [];                      // creates a new empty array
+    forEach(array, function(element) {
+        if(f(element))                      // (1) and (2)
+            newArray.push(element);
+    });
+    return newArray;        // returns the new array
+}
+```
+
+#### Examples. Using `filter()`
+
+**Example 1**
+
+We have: Array of customers
+
+We want: Array customers who have zero purchases
+
+Function: Takes one customer and returns true if they have zero purchases
+
+```js
+filter(customers, function(customer) {
+    return customer.purchases.length === 0;
+});
+```
+
+**Example 2**
+
+We want: Array of customers with email. Exclude customers without email.
+
+```js
+var emailsWithoutNulls = filter(emailsWithNulls, function(email) {
+    return email !== null;
+});
+```
+
+**Example 3**
+
+We want: Array of customers, взять каждого третьего для тестовой группы.
+
+```js
+var testGroup = filter(customers, function(customer) {
+    return customer.id % 3 === 0;
+});
+```
+
+### Deriving (получение) `reduce()` from examples
+
+Original:
+
+```js
+function countAllPurchases(customers) {
+    var total = 0;
+    forEach(customers, function(customer) {     // extract the forEach() into reduce()
+        total = total + customer.purchases.length;
+    });
+    return total;
+}
+```
+
+Replaced with callback:
+
+```js
+// (1) - 0. Initial value
+// (2) - function. Callback function
+function countAllPurchases(customers) {
+    return reduce(
+        customers, 0, function(total, customer) {       // (1) and (2)
+            return total + customer.purchase.length;
+        }
+    );
+}
+
+function reduce(array, init, f) {           // init - initial value
+    var accum = init;
+    forEach(array, function(element) {
+        accum = f(accum, element);          // two arguments to callback
+    });
+    return accum;
+}
+```
+
+### Functional tool: `reduce()`
+
+Third of three "functional tools":
+
+```js
+// (1) - takes array, an initial accumulator value, and function
+// (2) - initializes the accumulator
+// (3) - calls f( ) to calculate the next value of the accumulator,
+//       based on current value and current element
+// (4) - returns the accumulated value
+function reduce(array, init, f) {           // (1)
+    var accum = init;                       // (2)
+    forEach(array, function(element) {
+        accum = f(accum, element);          // (3)
+    });
+    return accum;                           // (4)
+}
+```
+
+#### Examples. Using `reduce()`
+
+**Example 1**
+
+We have: Array of strings
+
+We want: One string that is the original strings concatenated
+
+Function: Takes an accumulated string and the current string from the array to concatenate
+
+```js
+// strings - the array of strings to reduce
+// "" - initial value is empty string
+// function - pass in a function that does the concatenation
+reduce(strings, "" , function(accum, string) {
+    return accum + string;
+});
+```
+
+**Examples 2, 3, 4**
+
+```js
+// add up all numbers in the array
+function sum(numbers) {
+    return reduce(numbers, 0, function(total, num) {
+        return total + num;
+    });
+}
+```
+
+```js
+// multiply all numbers in the array
+function product(numbers) {
+    return reduce(numbers, 1, function(total, num) {
+        return total * num;
+    });
+}
+```
+
+Find smallest and largest numbers in an array.
+
+`Number.MIN_VALUE` and `Number.MAX_VALUE` - smallest and largest numbers possible in
+JavaScript.
+
+```js
+// return the smallest number in the array
+// (or Number.MAX_VALUE if the array is empty)
+function min(numbers) {
+    return reduce(numbers, Number.MAX_VALUE, function(m, n) {
+        if(m < n) return m;
+        else return n;
+    });
+}
+```
+
+```js
+// return the largest number in the array
+// (or Number.MIN_VALUE if the array is empty)
+function max(numbers) {
+    return reduce(numbers, Number.MIN_VALUE, function(m, n) {
+        if(m > n) return m;
+        else return n;
+    });
+}
+```
+
+### Things you can do with `reduce()`
+
+* *Undo/redo*. Current state is a list of user interactions, undo just means removing the
+last interaction from the list.
+
+* *Replaying user interaction for testing*. Initial value is the initial state of the
+system, and your array is a sequence of user interactions.
+
+* *Time-traveling debugger*. Examine the state at any point in time, fix the problem,
+then play it forward with the new code.
+
+* *Audit trails*. Get the state of the system at a certain point in time.
+
+### Implementation of `map()` and `filter()` using `reduce()`
+
+`map()` implemetations:
+
+```js
+// using only non-mutating operations (inefficient)
+function map(array, f) {
+    return reduce(array, [], function(ret, item) {
+        return ret.concat(f([item]));
+    });
+}
+
+// using mutating operations (more efficient)
+function map(array, f) {
+    return reduce(array, [], function(ret, item) {
+        ret.push(f(item));
+        return ret;
+    });
+}
+```
+
+`filter()` implemetations:
+
+```js
+// using only non-mutating operations (inefficient)
+function filter(array, f) {
+    return reduce(array, [], function(ret, item) {
+        if (f(item)) return ret.concat([item]);
+        else return ret;
+    });
+}
+
+// using mutating operations (more efficient)
+function filter(array, f) {
+    return reduce(array, [], function(ret, item) {
+        if(f(item))
+            ret.push(item);
+        return ret;
+    });
+}
+```
+
+### Summary
+
+* The three most common functional tools are `map()`, `filter()`, and `reduce()`. Nearly
+every functional programmer uses them often.
+
+* `map()`, `filter()`, and `reduce()` are essentially specialized for loops over arrays. They
+can replace those for loops and add clarity because they are special-purpose.
+
+* `map()` transforms an array into a new array. Each element is transformed with the
+callback you specify.
+
+* `filter()` selects a subset of elements from one array into a new array. You choose which
+elements are selected by passing in a predicate.
+
+* `reduce()` combines elements of an array, along with an initial value, into a single value.
+It is used to summarize data or to build a value from a sequence.
