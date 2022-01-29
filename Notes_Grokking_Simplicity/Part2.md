@@ -592,7 +592,7 @@ var sortedArray = withArrayCopy(array, function(copy) {
 
 ### Reusable functions examples
 
-1. Copy-on-write discipline for arrays.
+**1.** Copy-on-write for arrays.
 
 ```js
 function withArrayCopy(array, modify) {
@@ -602,7 +602,39 @@ function withArrayCopy(array, modify) {
 }
 ```
 
-2. Copy-on-write discipline for objects.
+Использование. (Данные функции являются pure):
+
+```js
+// Usage 1. Устанавливает значение в массиве по определенному индексу.
+function arraySet(array, idx, value) {
+    return withArrayCopy(array, function(copy) {
+        copy[idx] = value;
+    });
+}
+
+// Usage 2. Добавляет элемент в конец массива.
+function push(array, elem) {
+    return withArrayCopy(array, function(copy) {
+        copy.push(elem);
+    });
+}
+
+// Usage 3. Получает элемент из конца массива вместе с его удалением.
+function drop_last(array) {
+    return withArrayCopy(array, function(copy) {
+        copy.pop();
+    });
+}
+
+// Usage 4. Удаляет элемент из начала массива (без его получения).
+function drop_first(array) {
+    return withArrayCopy(array, function(copy) {
+        copy.shift();
+    });
+}
+```
+
+**2.** Copy-on-write for objects.
 
 ```js
 function withObjectCopy(object, modify) {
@@ -610,15 +642,19 @@ function withObjectCopy(object, modify) {
     modify(copy);
     return copy;
 }
+```
 
-// Usage 1
+Использование. (Данные функции являются pure):
+
+```js
+// Usage 1.
 function objectSet(object, key, value) {
     return withObjectCopy(object, function(copy) {
         copy[key] = value;
     });
 }
 
-// Usage 2
+// Usage 2.
 function objectDelete(object, key) {
     return withObjectCopy(object, function(copy) {
         delete copy[key];
@@ -626,7 +662,7 @@ function objectDelete(object, key) {
 }
 ```
 
-3. Try/catch
+**3.** Try/catch
 
 ```js
 function tryCatch(f, errorHandler) {
@@ -638,7 +674,20 @@ function tryCatch(f, errorHandler) {
 }
 ```
 
-4. When
+Использование:
+
+```js
+tryCatch(sendEmail, logToSnapErrors)
+
+// Вместо
+try {
+    sendEmail();
+} catch(error) {
+    logToSnapErrors(error);
+}
+```
+
+**4.** When (*мое примечание: применение сомнительно, только как демонстрация*)
 
 ```js
 function when(test, then) {
@@ -647,7 +696,20 @@ function when(test, then) {
 }
 ```
 
-5. If
+Использование:
+
+```js
+when(array.length === 0, function() {
+    console.log("Array is empty");
+});
+
+// Вместо
+if(array.length === 0) {
+    console.log("Array is empty");
+}
+```
+
+**5.** If (*мое примечание: применение сомнительно, только как демонстрация*)
 
 ```js
 function IF(test, then, ELSE) {
@@ -656,6 +718,22 @@ function IF(test, then, ELSE) {
     else
         return ELSE();
 }
+```
+
+Использование:
+
+```js
+IF(array.length === 0, function() {
+    console.log("Array is empty");
+}, function() {
+    console.log("Array has something in it.");
+});
+
+// Вместо
+if (array.length === 0)
+    console.log("Array is empty");
+else
+    console.log("Array has something in it.");
 ```
 
 ### Returning functions from functions
@@ -745,6 +823,20 @@ function wrapLogging(f) {
 }
 
 var saveUserDataWithLogging = wrapLogging(saveUserData);
+```
+
+**Пример**. Функция, которая создает функцию с игнорированием ошибок:
+
+```js
+function wrapIgnoreErrors(f) {
+    return function(a1, a2, a3) {
+        try {
+            return f(a1, a2, a3);
+        } catch(error) { // error is ignored
+            return null;
+        }
+    };
+}
 ```
 
 Еще **пример**. Функция, которая создает функцию, которая прибавляет число к другому числу:
