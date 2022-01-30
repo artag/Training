@@ -1246,3 +1246,259 @@ elements are selected by passing in a predicate.
 
 * `reduce()` combines elements of an array, along with an initial value, into a single value.
 It is used to summarize data or to build a value from a sequence.
+
+## Chapter 13. Chaining functional tools
+
+### Vocab
+
+The *identity function* is a function that returns its argument unchanged. It appears to do
+nothing, but it is useful for indicating just that: Nothing should be done.
+
+### Функция `maxKey()`
+
+Finds the largest value from an array. It uses a function to determine what part of the
+value you should compare.
+
+```js
+// (1) - function. Pass in callback sayng how to compare values.
+function maxKey(array, init, f) {
+    return reduce(array, init, function(biggestSoFar, element) {    // (1)
+        if(f(biggestSoFar) > f(element)) {
+            return biggestSoFar;
+        else
+            return element;
+    });
+}
+```
+
+Использование:
+
+```js
+maxKey(customer.purchases, {total: 0},
+    function(purchase) { return purchase.total; }
+);
+```
+
+Функция `max()`, для поиска максимального значения, с использованием `>` (была ранее):
+
+```js
+function max(numbers) {
+    return reduce(numbers, Number.MIN_VALUE, function(m, n) {
+        if(m > n) return m;
+        else return n;
+    });
+}
+```
+
+Можно выразить `max()` через `maxKey()`:
+
+```js
+// (1) - function. Tell maxKey() to compare the whole value unchanged
+// (2) - a function that returns uts argument unchanged is called "identity"
+function max(array, init) {
+    return maxKey(array, init, function(x) {    // (1)
+        return x;                               // (2)
+    });
+}
+```
+
+### Clarifying chains, method 1: Name the steps
+
+Original:
+
+```js
+function biggestPurchasesBestCustomers(customers) {
+    var bestCustomers = filter(customers, function(customer) {          // step 1
+        return customer.purchases.length >= 3;
+    });
+
+    var biggestPurchases = map(bestCustomers, function(customer) {      // step 2
+        return maxKey(customer.purchases, {total: 0}, function(purchase) {
+            return purchase.total;
+        });
+    });
+
+    return biggestPurchases;
+}
+```
+
+Refactoring. Extracted a function for each higher-order function and named it:
+
+```js
+// steps are shorter and dense with meaning (короткие и ясночитаемые).
+function biggestPurchasesBestCustomers(customers) {
+    var bestCustomers = selectBestCustomers(customers);         // step 1
+    var biggestPurchases = getBiggestPurchases(bestCustomers);  // step 2
+    return biggestPurchases;
+}
+
+// (1) higher-order functions are called in named functions to add context.
+function selectBestCustomers(customers) {               // (1)
+    return filter(customers, function(customer) {
+        return customer.purchases.length >= 3;
+    });
+}
+
+// (2) getBiggestPurchase. We can extract this higher-order function as well.
+function getBiggestPurchases(customers) {               // (1)
+    return map(customers, getBiggestPurchase);          // (2)
+}
+
+function getBiggestPurchase(customer) {                 // (2)
+    return maxKey(customer.purchases, {total: 0}, function(purchase) {
+        return purchase.total;
+    });
+}
+```
+
+### Clarifying chains, method 2: Naming the callbacks
+
+Original:
+
+```js
+function biggestPurchasesBestCustomers(customers) {
+    var bestCustomers = filter(customers, function(customer) {                  // step 1
+        return customer.purchases.length >= 3;
+    });
+
+    var biggestPurchases = map(bestCustomers, function(customer) {              // step 2
+        return maxKey(customer.purchases, {total: 0}, function(purchase) {
+            return purchase.total;
+        });
+    });
+
+    return biggestPurchases;
+}
+```
+
+Refactoring. Extract and name the callbacks:
+
+```js
+// steps are still short and meaningful
+// (1) - callbacks are named
+function biggestPurchasesBestCustomers(customers) {
+    var bestCustomers = filter(customers, isGoodCustomer);              // step 1, (1)
+    var biggestPurchases = map(bestCustomers, getBiggestPurchase);      // step 2, (1)
+    return biggestPurchases;
+}
+
+function isGoodCustomer(customer) {             // (1)
+    return customer.purchases.length >= 3;
+}
+
+function getBiggestPurchase(customer) {         // (1)
+    return maxKey(customer.purchases, {total: 0}, getPurchaseTotal);
+}
+
+function getPurchaseTotal(purchase) {
+    return purchase.total;
+}
+```
+
+### Оптимизация вызовов chains (stream fusion)
+
+#### Two `map()` steps in a row
+
+Original:
+
+```js
+var names = map(customers, getFullName);
+var nameLengths = map(names, stringLength);
+```
+
+Optimized:
+
+```js
+var nameLengths = map(customers, function(customer) {
+    return stringLength(getFullName(customer));
+});
+```
+
+#### Two `filter()` steps in a row
+
+Original:
+
+```js
+var goodCustomers = filter(customers, isGoodCustomer);
+var withAddresses = filter(goodCustomers, hasAddress);
+```
+
+Optimized:
+
+```js
+var withAddresses = filter(customers, function(customer) {
+    return isGoodCustomer(customer) && hasAddress(customer);
+});
+```
+
+#### `map()` step followed by `reduce()` step
+
+Original:
+
+```js
+var purchaseTotals = map(purchases, getPurchaseTotal);
+var purchaseSum = reduce(purchaseTotals, 0, plus);
+```
+
+Optimized:
+
+```js
+var purchaseSum = reduce(purchases, 0, function(total, purchase) {
+    return total + getPurchaseTotal(purchase);
+});
+```
+
+### Chaining tips
+
+#### Make data
+
+The functional tools work best when they work over an entire array of data.
+If you find the for loop is working over a subset of the data, try to break that data out
+into its own array. Then `map()`, `filter()`, and `reduce()` can make short work of it
+(помогут быстро обработать эти отдельные массивы).
+
+#### Operate on the whole array
+
+Стараться обрабатывать массивы в одно действие.
+`map()` transforms every element.
+`filter()` keeps or removes every element.
+`reduce()` combines every element. Make a bold move and process the whole thing.
+
+#### Many small steps
+
+Для сложных алгоритмов их разбиение на более мелькие шаги часто помогает облегчить
+понимание их работы и читаемость.
+
+#### Ещё tips
+
+* Replace conditionals with `filter()`
+
+* Извлекайте множество вспомогательных функций таких как `map()`, `filter()` и `reduce()`.
+
+* Experiment to improve
+
+### Debugging tips for chaining
+
+* Стараться использовать понятные имена в функциях, параметрах, переменных.
+* Выводить (на экран, консоль, логи, ...) промежуточные результаты.
+* Отслеживать используемые типы данных
+  * `map()` возвращает массив с элементами того же (редко) или нового типов.
+  * `filter()` возвращает массив с элементами того же типа.
+  * `reduce()` возвращает значение того же типа, что и initial.
+
+### Summary
+
+* We can combine functional tools into multi-tep chains. Their combination allows us to
+express very complex computations over data in small, clear steps.
+
+* One perspective of chaining is that the functional tools form a query language, much like
+SQL. Chaining functional tools lets you express complex queries over arrays of data.
+
+* We often have to make new data or augment existing data to make subsequent steps
+possible. Look for ways of representing implicit information as explicit data.
+
+* There are many functional tools. You will find them as you refactor your code. You can
+also find inspiration for them in other languages.
+
+* Functional tools are making their way into languages that are traditionally not
+considered functional, like Java. Use them where they are appropriate (подходят).

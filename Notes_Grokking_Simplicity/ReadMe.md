@@ -320,7 +320,7 @@ function wrapIgnoreErrors(f) {
 }
 ```
 
-2. Функция, которая создает "сумматор":
+2. Функция, которая создает функцию, которая прибавляет число к другому числу:
 
 ```js
 function makeAdder(n) {
@@ -437,3 +437,216 @@ function filter(array, f) {
     });
 }
 ```
+
+## Chapter 13. Chaining functional tools
+
+### Функция `maxKey()`
+
+Finds the largest value from an array. It uses a function to determine what part of the
+value you should compare.
+
+```js
+// (1) - function. Pass in callback sayng how to compare values.
+function maxKey(array, init, f) {
+    return reduce(array, init, function(biggestSoFar, element) {    // (1)
+        if(f(biggestSoFar) > f(element)) {
+            return biggestSoFar;
+        else
+            return element;
+    });
+}
+```
+
+Использование:
+
+```js
+maxKey(customer.purchases, {total: 0},
+    function(purchase) { return purchase.total; }
+);
+```
+
+Можно выразить `max()` через `maxKey()`:
+
+```js
+// (1) - function. Tell maxKey() to compare the whole value unchanged
+// (2) - a function that returns uts argument unchanged is called "identity"
+function max(array, init) {
+    return maxKey(array, init, function(x) {    // (1)
+        return x;                               // (2)
+    });
+}
+```
+
+### Clarifying chains, method 1: Name the steps
+
+Пример функции, которая сложна для понимания. Original:
+
+```js
+function biggestPurchasesBestCustomers(customers) {
+    var bestCustomers = filter(customers, function(customer) {          // step 1
+        return customer.purchases.length >= 3;
+    });
+
+    var biggestPurchases = map(bestCustomers, function(customer) {      // step 2
+        return maxKey(customer.purchases, {total: 0}, function(purchase) {
+            return purchase.total;
+        });
+    });
+
+    return biggestPurchases;
+}
+```
+
+Refactoring. Extracted a function for each higher-order function and named it:
+
+```js
+// steps are shorter and dense with meaning (короткие и ясночитаемые).
+function biggestPurchasesBestCustomers(customers) {
+    var bestCustomers = selectBestCustomers(customers);         // step 1
+    var biggestPurchases = getBiggestPurchases(bestCustomers);  // step 2
+    return biggestPurchases;
+}
+
+function selectBestCustomers(customers) {
+    return filter(...);
+}
+
+function getBiggestPurchases(customers) {
+    return map(...);
+}
+```
+
+### Clarifying chains, method 2: Naming the callbacks
+
+Пример функции, которая сложна для понимания. Original:
+
+```js
+function biggestPurchasesBestCustomers(customers) {
+    var bestCustomers = filter(customers, function(customer) {                  // step 1
+        return customer.purchases.length >= 3;
+    });
+
+    var biggestPurchases = map(bestCustomers, function(customer) {              // step 2
+        return maxKey(customer.purchases, {total: 0}, function(purchase) {
+            return purchase.total;
+        });
+    });
+
+    return biggestPurchases;
+}
+```
+
+Refactoring. Extract and name the callbacks:
+
+```js
+// steps are still short and meaningful
+// (1) - callbacks are named
+function biggestPurchasesBestCustomers(customers) {
+    var bestCustomers = filter(customers, isGoodCustomer);              // step 1, (1)
+    var biggestPurchases = map(bestCustomers, getBiggestPurchase);      // step 2, (1)
+    return biggestPurchases;
+}
+
+function isGoodCustomer(customer) {             // (1)
+    return customer.purchases.length >= 3;
+}
+
+function getBiggestPurchase(customer) {         // (1)
+    return maxKey(customer.purchases, {total: 0}, getPurchaseTotal);
+}
+
+function getPurchaseTotal(purchase) {
+    return purchase.total;
+}
+```
+
+### Оптимизация вызовов chains (stream fusion)
+
+#### Two `map()` steps in a row
+
+Original:
+
+```js
+var names = map(customers, getFullName);
+var nameLengths = map(names, stringLength);
+```
+
+Optimized:
+
+```js
+var nameLengths = map(customers, function(customer) {
+    return stringLength(getFullName(customer));
+});
+```
+
+#### Two `filter()` steps in a row
+
+Original:
+
+```js
+var goodCustomers = filter(customers, isGoodCustomer);
+var withAddresses = filter(goodCustomers, hasAddress);
+```
+
+Optimized:
+
+```js
+var withAddresses = filter(customers, function(customer) {
+    return isGoodCustomer(customer) && hasAddress(customer);
+});
+```
+
+#### `map()` step followed by `reduce()` step
+
+Original:
+
+```js
+var purchaseTotals = map(purchases, getPurchaseTotal);
+var purchaseSum = reduce(purchaseTotals, 0, plus);
+```
+
+Optimized:
+
+```js
+var purchaseSum = reduce(purchases, 0, function(total, purchase) {
+    return total + getPurchaseTotal(purchase);
+});
+```
+
+### Chaining tips
+
+#### Make data
+
+The functional tools work best when they work over an entire array of data.
+If you find the for loop is working over a subset of the data, try to break that data out
+into its own array. Then `map()`, `filter()`, and `reduce()` can make short work of it
+(помогут быстро обработать эти отдельные массивы).
+
+#### Operate on the whole array
+
+Стараться обрабатывать массивы в одно действие.
+`map()` transforms every element.
+`filter()` keeps or removes every element.
+`reduce()` combines every element. Make a bold move and process the whole thing.
+
+#### Many small steps
+
+Для сложных алгоритмов их разбиение на более мелькие шаги часто помогает облегчить
+понимание их работы и читаемость.
+
+#### Ещё tips
+
+* Replace conditionals with `filter()`
+
+* Извлекайте множество вспомогательных функций таких как `map()`, `filter()` и `reduce()`.
+
+* Experiment to improve
+
+### Debugging tips for chaining
+
+* Стараться использовать понятные имена в функциях, параметрах, переменных.
+* Выводить (на экран, консоль, логи, ...) промежуточные результаты.
+* Отслеживать используемые типы данных
+  * `map()` возвращает массив с элементами того же (редко) или нового типов.
+  * `filter()` возвращает массив с элементами того же типа.
+  * `reduce()` возвращает значение того же типа, что и initial.
