@@ -759,3 +759,63 @@ var groups = groupBy(range(0, 10), isEven);
     false: [1, 3, 5, 7, 9]
 }
 ```
+
+## Chapter 14. Functional tools for nested data
+
+### Functional tool: `update()`
+
+`update()` let's us take a function that operates on a single value
+and apply it in place inside of an object (treated as hash maps):
+
+```js
+// (1) - takes the object to modify
+//       the location of the value (key)
+//       the modify operation - function to call
+// (2) - returns the modified object (copy-on-write)
+function update(item, field, modify) {                  // (1)
+    var value = item[field];                            // get
+    var newValue = modify(value);                       // modify
+    var newItem = objectSet(item, field, newValue);     // set
+    return newItem;                                     // (2)
+}
+```
+
+### Steps for replace get, modify, set with `update()`
+
+1. Identify get, modify, and set.
+
+2. Replace with `update()`, passing modify as callback.
+
+### Functional tool: `update2()`, `update3()`, `update4()`, `update5`
+
+`update2` - the 2 means nested twice. Modify a value nested twice within objects.
+
+```js
+function update2(object, key1, key2, modify) {
+    return update(object, key1, function(value1) {
+        return update(value1, key2, modify);
+    });
+}
+```
+
+Остальные виды update:
+
+```js
+function update3(object, key1, key2, key3, modify) {
+    return update(object, key1, function(object2) {
+        return update2(object2, key2, key3, modify);
+    });
+}
+
+function update4(object, k1, k2, k3, k4, modify) {
+    return update(object, k1, function(object2) {
+        return update3(object2, k2, k3, k4, modify);
+    });
+}
+
+function update5(object, k1, k2, k3, k4, k5, modify) {
+    return update(object, k1, function(object2) {
+        return update4(object2, k2, k3, k4, k5, modify);
+    });
+}
+```
