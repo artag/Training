@@ -2,7 +2,9 @@
 
 * [Part 1: Actions, calculations, and data](Part1.md)
 
-* [Part 2: First-class abstractions](Part2.md)
+* Part 2: First-class abstractions
+
+  * [Chapters: 10-13](Part2.md)
 
 ## Chapter 10. First-class functions: Part 1
 
@@ -650,3 +652,110 @@ into its own array. Then `map()`, `filter()`, and `reduce()` can make short work
   * `map()` возвращает массив с элементами того же (редко) или нового типов.
   * `filter()` возвращает массив с элементами того же типа.
   * `reduce()` возвращает значение того же типа, что и initial.
+
+### Some other functional tools
+
+#### `pluck()`
+
+Удобная функция-замена `map()` для более удобного получения поля объекта.
+
+```js
+function pluck(array, field) {
+    return map(array, function(object) {
+        return object[field];
+    });
+}
+```
+
+Usage and variation:
+
+```js
+// Usage
+var prices = pluck(products, ‘price’);
+
+// Variation
+function invokeMap(array, method) {
+    return map(array, function(object) {
+        return object[method]();
+    });
+}
+```
+
+#### `concat()`
+
+Удаляет один уровень вложенности у массива:
+
+```js
+function concat(arrays) {
+    var ret = [];
+    forEach(arrays, function(array) {
+        forEach(array, function(element) {
+            ret.push(element);
+        });
+    });
+    return ret;
+}
+```
+
+Usage and variation:
+
+```js
+// Usage
+var purchaseArrays = pluck(customers, "purchases");
+var allPurchases = concat(purchaseArrays);
+
+// Variation. Also called mapcat() or flatMap() in some languages
+function concatMap(array, f) {
+    return concat(map(array, f));
+}
+```
+
+#### `frequenciesBy()` and `groupBy()`
+
+Подсчет количества и группировка. Данные функции возвращают объекты (хэш-карты):
+
+```js
+function frequenciesBy(array, f) {
+    var ret = {};
+    forEach(array, function(element) {
+        var key = f(element);
+        if(ret[key]) ret[key] += 1;
+        else ret[key] = 1;
+    });
+    return ret;
+}
+
+function groupBy(array, f) {
+    var ret = {};
+    forEach(array, function(element) {
+        var key = f(element);
+        if(ret[key]) ret[key].push(element);
+        else ret[key] = [element];
+    });
+    return ret;
+}
+```
+
+Usage:
+
+```js
+var howMany = frequenciesBy(products, function(p) {
+    return p.type;
+});
+```
+
+```text
+> console.log(howMany[‘ties’])      // 4
+```
+
+```js
+var groups = groupBy(range(0, 10), isEven);
+```
+
+```text
+> console.log(groups)
+{
+    true: [0, 2, 4, 6, 8],
+    false: [1, 3, 5, 7, 9]
+}
+```

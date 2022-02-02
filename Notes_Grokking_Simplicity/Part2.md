@@ -1486,6 +1486,217 @@ into its own array. Then `map()`, `filter()`, and `reduce()` can make short work
   * `filter()` возвращает массив с элементами того же типа.
   * `reduce()` возвращает значение того же типа, что и initial.
 
+### Some other functional tools
+
+#### `pluck()`
+
+Удобная функция-замена `map()` для более удобного получения поля объекта.
+
+```js
+function pluck(array, field) {
+    return map(array, function(object) {
+        return object[field];
+    });
+}
+```
+
+Usage and variation:
+
+```js
+// Usage
+var prices = pluck(products, ‘price’);
+
+// Variation
+function invokeMap(array, method) {
+    return map(array, function(object) {
+        return object[method]();
+    });
+}
+```
+
+#### `concat()`
+
+Удаляет один уровень вложенности у массива:
+
+```js
+function concat(arrays) {
+    var ret = [];
+    forEach(arrays, function(array) {
+        forEach(array, function(element) {
+            ret.push(element);
+        });
+    });
+    return ret;
+}
+```
+
+Usage and variation:
+
+```js
+// Usage
+var purchaseArrays = pluck(customers, "purchases");
+var allPurchases = concat(purchaseArrays);
+
+// Variation. Also called mapcat() or flatMap() in some languages
+function concatMap(array, f) {
+    return concat(map(array, f));
+}
+```
+
+#### `frequenciesBy()` and `groupBy()`
+
+Подсчет количества и группировка. Данные функции возвращают объекты (хэш-карты):
+
+```js
+function frequenciesBy(array, f) {
+    var ret = {};
+    forEach(array, function(element) {
+        var key = f(element);
+        if(ret[key]) ret[key] += 1;
+        else ret[key] = 1;
+    });
+    return ret;
+}
+
+function groupBy(array, f) {
+    var ret = {};
+    forEach(array, function(element) {
+        var key = f(element);
+        if(ret[key]) ret[key].push(element);
+        else ret[key] = [element];
+    });
+    return ret;
+}
+```
+
+Usage:
+
+```js
+var howMany = frequenciesBy(products, function(p) {
+    return p.type;
+});
+```
+
+```text
+> console.log(howMany[‘ties’])      // 4
+```
+
+```js
+var groups = groupBy(range(0, 10), isEven);
+```
+
+```text
+> console.log(groups)
+{
+    true: [0, 2, 4, 6, 8],
+    false: [1, 3, 5, 7, 9]
+}
+```
+
+### Where to find functional tools
+
+* Lodash: Functional tools for JavaScript
+
+    [Lodash documentation (https://lodash.com/docs)](https://lodash.com/docs)
+
+* Laravel Collections • Functional tools for PHP
+
+    [Laravel collections documentation: (https://laravel.com/docs/collections#available-methods)](https://laravel.com/docs/collections#available-methods)
+
+* Clojure standard library
+
+    [ClojureDocs quick reference: (https://clojuredocs.org/quickref#sequences)](https://clojuredocs.org/quickref#sequences)
+
+    [Official docs: (https://clojure.github.io/clojure/clojure.core-api.html)](https://clojure.github.io/clojure/clojure.core-api.html)
+
+* Haskell Prelude
+
+    [Haskell Prelude: (http://www.cse.chalmers.se/edu/course/TDA555/tourofprelude.html)](http://www.cse.chalmers.se/edu/course/TDA555/tourofprelude.html)
+
+### JavaScript conveniences (удобства)
+
+В JavaScript уже есть встроенные функции наподобие `map()`, `filter()` и `reduce()`:
+
+```js
+// В этой книге
+var customerNames = map(customers, function(c) {
+    return c.firstName + " " + c.lastName;
+});
+
+// Встроенная в JavaScript
+var customerNames = customers.map(function(c) {
+    return c.firstName + " " + c.lastName;
+});
+```
+
+В JavaScript есть облегченный синтакс для inline функций ('=>'):
+
+```js
+var window = 5;
+var answer =
+    range(0, array.length)
+        .map(i => array.slice(i, i + window))
+        .map(average);
+```
+
+А еще в JavaScript можно сделать так:
+
+```js
+var window = 5;
+var average = array => array.reduce((sum, e) => sum + e, 0) / array.length;
+var answer = array.map((e, i) => array.slice(i, i + window)).map(average);
+```
+
+### Примеры functional tool chaining для разных языков программирования
+
+ES6:
+
+```js
+function movingAverage(numbers) {
+    return numbers
+        .map((_e, i) => numbers.slice(i, i + window))
+        .map(average);
+}
+```
+
+Classic JavaScript with Lodash:
+
+```js
+function movingAverage(numbers) {
+    return _.chain(numbers)
+        .map(function(_e, i) { return numbers.slice(i, i + window); })
+        .map(average)
+        .value();
+}
+```
+
+Java 8 Streams:
+
+```java
+public static double average(List<Double> numbers) {
+    return numbers
+        .stream()
+        .reduce(0.0, Double::sum) / numbers.size();
+}
+
+public static List<Double> movingAverage(List<Double> numbers) {
+    return IntStream
+        .range(0, numbers.size())
+        .mapToObj(i -> numbers.subList(i, Math.min(i + 3, numbers.size())))
+        .map(Utils::average)
+        .collect(Collectors.toList());
+}
+```
+
+```csharp
+public static IEnumerable<Double> movingAverage(IEnumerable<Double> numbers) {
+    return Enumerable
+        .Range(0, numbers.Count())
+        .Select(i => numbers.ToList().GetRange(i, Math.Min(3, numbers.Count() - i)))
+        .Select(l => l.Average());
+}
+```
+
 ### Summary
 
 * We can combine functional tools into multi-tep chains. Their combination allows us to
