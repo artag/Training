@@ -239,3 +239,200 @@ data, you often have to remember all of the data structures and their keys along
 
 * You can apply abstraction barriers to key data structures so that you don't have as much
 to remember. This can make working with deep structures easier.
+
+## Chapter 15. Isolating timelines
+
+### Vocab
+
+A *timeline* is a sequence of actions over time. There can be multiple timelines
+running at the same time in your system.
+
+Multiple timelines can run in different ways, depending on timing. The ways that
+timelines can run are known as *possible orderings*. A single timeline has one
+possible ordering.
+
+Actions on different timelines may *interleave* if they can occur between each
+other. This happens when multiple threads run at the same time.
+
+### The two fundamentals of timeline diagrams
+
+0. **Only actions** need to be in timelines. **Calculations can be left out**
+because they don't depend on when they are run.
+
+1. If two actions occur in order, put them in the same timeline.
+
+2. If two actions can happen at the same time or out of order (не по порядку),
+they belong (находятся) in separate timelines.
+
+### Two tricky details about the order of actions
+
+1. `++` and `+=` are really three steps
+
+```js
+total++;
+```
+
+This single operator does three steps:
+
+```js
+var temp = total;       // read (action)
+temp = temp + 1;        // addition (calculation)
+total = temp;           // write (action)
+```
+
+Timeline:
+
+```text
+Read total
+    |
+Write total
+```
+
+2. Arguments are executed before the function is called
+
+```js
+console.log(total);
+```
+
+Equivalent code:
+
+```js
+var temp = total;
+console.log(temp);
+```
+
+Timeline:
+
+```text
+Read total
+    |
+console.log()
+```
+
+### Step 1. Drawing timeline
+
+1. Identify the actions. Ignore calculations.
+2. Draw each action, whether sequential or parallel.
+3. Simplify using platform-specific knowledge.
+
+### Asynchronous calls require new timelines
+
+For any kind of input/output you use an asynchronous model. This means that you give
+it a callback that will be called with the result of the input/output operation.
+
+Because the input/output operation can take an unknown amount of time, the callback
+will be called at some uncontrollable, unknown time in the future.
+That's why doing an asynchronous call creates a new timeline.
+
+### Different languages, different threading models
+
+* Single-threaded, synchronous. (example: PHP)
+  * Everything happens in order.
+  * When you do any kind of input/output, your whole program blocks while waiting for it
+  to complete.
+  * You can still have other timelines if you contact a different computer, like you
+    would with an API. Those timelines can't share memory, so you eliminate a huge class
+    of shared resources.
+
+* Single-threaded, asynchronous. (example: JavaScript)
+  * One thread.
+  * Synchronous actions, like modifying a global variable, cannot be interleaved between
+  timelines.
+  * For any kind of input/output you can use an asynchronous model.
+  * Asynchronous means that you give it a callback.
+  * The callback  will be called at some uncontrollable, unknown time in the future:
+  an asynchronous call creates a new timeline.
+
+* Multi-threaded. (example: Java, Python, Ruby, C, C#)
+  * Is the most difficult to program.
+  * Every new thread creates a new timeline.
+  * You need to use constructs like locks.
+
+* Message-passing processes. (example: Erlang, Elixir)
+  * Many different processes can be run simultaneously.
+  * Each process is a separate timeline.
+  * Unique thing - that processes choose which message they will process next.
+  * The actions of individual timelines do interleave, but because they don’t share any
+  memory, they usually don’t share resources. You don’t have to worry about the large
+  number of possible orderings.
+
+### Timeline diagrams capture the two kinds of sequential code
+
+1. Code that can be interleaved (чередоваться/меняться местами).
+
+Any amount of time can pass between two actions.
+
+```text
+action 1
+   |
+action 2
+```
+
+2. Code that cannot be interleaved
+
+Two actions run one after the other. Порядок их выполнения не может быть изменен.
+
+```text
+action 1
+action 2
+```
+
+### Principles of working with timelines
+
+1. Fewer (меньшее количество) timelines are easier.
+
+Formula for number of possible orderings:
+
+```text
+     (t*a)!
+o = -------
+     (a!)^t
+```
+
+`o` - possible orederings
+
+`t` - # of timelines
+
+`a` - # of actions per timeline
+
+`!` - is factorial
+
+2. Shorter timelines are easier.
+
+3. Sharing fewer (меньшее число) resources is easier.
+
+4. Coordinate when resources are shared.
+
+Иногда от общих ресурсов невозможно избавиться. Поэтому необходима координация их использования
+между различными timeline'ами.
+
+5. Manipulate time as a first-class concept (создание повторно используемых объектов
+для манипуляций с timeline).
+
+The ordering and proper timing of actions is difficult. We can make this easier by
+creating reusable objects that manipulate the timeline.
+
+### Summary
+
+* Timelines are sequences of actions that can run simultaneously. They capture what code
+runs in sequence and what runs in parallel.
+
+* Modern software often runs with multiple timelines. Each computer, thread, process, or
+asynchronous callback adds a timeline.
+
+* Because actions on timelines can interleave in ways we can't control, multiple timelines
+result in many different possible orderings. The more orderings, the harder it is to
+understand whether your code will always lead to the right result.
+
+* Timeline diagrams can show how our code runs sequentially and in parallel. We use the
+timeline diagrams to understand where they can interfere with each other.
+
+* It's important to understand your language's and platform's threading model. For
+distributed systems, understanding how things run sequentially and in parallel in your
+system is key.
+
+* Shared resources are a source of bugs. By identifying and removing resources, we make
+our code work better.
+
+* Timelines that don't share resources can be understood and executed in isolation.
+Это упрощает понимание, написание и поддержку кода.

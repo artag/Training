@@ -835,3 +835,113 @@ function nestedUpdate(object, keys, modify) {
 1. Base case
 2. Recursive case
 3. Progress toward (по направлению к) the base case
+
+## Chapter 15. Isolating timelines
+
+### The two fundamentals of timeline diagrams
+
+0. **Only actions** need to be in timelines. **Calculations can be left out**
+because they don't depend on when they are run.
+
+1. If two actions occur in order, put them in the same timeline.
+
+2. If two actions can happen at the same time or out of order (не по порядку),
+they belong (находятся) in separate timelines.
+
+### Two tricky details about the order of actions
+
+1. `++` and `+=` are really three steps
+
+```js
+total++;
+```
+
+This single operator does three steps:
+
+```js
+var temp = total;       // read (action)
+temp = temp + 1;        // addition (calculation)
+total = temp;           // write (action)
+```
+
+Timeline:
+
+```text
+Read total
+    |
+Write total
+```
+
+2. Arguments are executed before the function is called
+
+```js
+console.log(total);
+```
+
+Equivalent code:
+
+```js
+var temp = total;
+console.log(temp);
+```
+
+Timeline:
+
+```text
+Read total
+    |
+console.log()
+```
+
+### Step 1. Drawing timeline
+
+1. Identify the actions. Ignore calculations.
+2. Draw each action, whether sequential or parallel.
+3. Simplify using platform-specific knowledge.
+
+### Asynchronous calls require new timelines
+
+### Different languages, different threading models
+
+* Single-threaded, synchronous. (example: PHP)
+
+* Single-threaded, asynchronous. (example: JavaScript)
+
+* Multi-threaded. (example: Java, Python, Ruby, C, C#)
+
+* Message-passing processes. (example: Erlang, Elixir)
+
+### Timeline diagrams capture the two kinds of sequential code
+
+1. Code that can be interleaved (чередоваться/меняться местами).
+
+Any amount of time can pass between two actions.
+
+```text
+action 1
+   |
+action 2
+```
+
+2. Code that cannot be interleaved
+
+Two actions run one after the other. Порядок их выполнения не может быть изменен.
+
+```text
+action 1
+action 2
+```
+
+### Principles of working with timelines
+
+1. Fewer (меньшее количество) timelines are easier.
+
+2. Shorter timelines are easier.
+
+3. Sharing fewer (меньшее число) resources is easier.
+
+4. Coordinate when resources are shared. (Необходима координация использования общих
+ресурсов между различными timeline'ами.)
+
+5. Manipulate time as a first-class concept. (создание повторно используемых объектов
+для манипуляций с timeline).
