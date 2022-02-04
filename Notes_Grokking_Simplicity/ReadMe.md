@@ -786,7 +786,7 @@ function update(item, field, modify) {                  // (1)
 
 2. Replace with `update()`, passing modify as callback.
 
-### Functional tool: `update2()`, `update3()`, `update4()`, `update5`
+### Functional tool: `update2()`, `update3()`, etc
 
 `update2` - the 2 means nested twice. Modify a value nested twice within objects.
 
@@ -798,7 +798,8 @@ function update2(object, key1, key2, modify) {
 }
 ```
 
-Остальные виды update:
+Похожим образом получаются остальные функции `update3()`, `update4()`, ...
+`update3()`:
 
 ```js
 function update3(object, key1, key2, key3, modify) {
@@ -806,16 +807,31 @@ function update3(object, key1, key2, key3, modify) {
         return update2(object2, key2, key3, modify);
     });
 }
+```
 
-function update4(object, k1, k2, k3, k4, modify) {
-    return update(object, k1, function(object2) {
-        return update3(object2, k2, k3, k4, modify);
-    });
-}
+### Functional tool: `nestedUpdate()`
 
-function update5(object, k1, k2, k3, k4, k5, modify) {
-    return update(object, k1, function(object2) {
-        return update4(object2, k2, k3, k4, k5, modify);
+It takes an object, a path of keys to follow into the nesting of the objects, and a
+function to call on the value once it is found.
+`nestedUpdate()` works on paths of any length, including zero. It is *recursive*.
+
+```js
+// (1) - base case (path of zero length)
+// (2) - make progress toward (по направлению к) base case (by dropping one path element)
+// (3) - recursive case
+function nestedUpdate(object, keys, modify) {
+    if(keys.length === 0)
+        return modify(object);                              // (2)
+    var key1 = keys[0];
+    var restOfKeys = drop_first(keys);                      // (2)
+    return update(object, key1, function(value1) {
+        return nestedUpdate(value1, restOfKeys, modify);    // (3)
     });
 }
 ```
+
+### The anatomy of safe recursion
+
+1. Base case
+2. Recursive case
+3. Progress toward (по направлению к) the base case

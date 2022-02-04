@@ -9,6 +9,12 @@
 The sequence of keys for locating a value in nested objects is called a *path*. The
 path has one key for each level of nesting.
 
+A *recursive function* is a function that is defined in terms of itself. A recursive
+function will have a recursive call where the function calls itself.
+
+A *base case* in recursion is a case with no recursive call that stops the recursion.
+Each recursive call should make progress toward (в направлении) the base case.
+
 ### Deriving (получение) `update()`
 
 Original function with smell:
@@ -165,7 +171,7 @@ function update2(object, key1, key2, modify) {
 
 Похожим образом получаются остальные функции `update3()`, `update4()`, ...
 
-### Functional tool: `update3()`, `update4()`, `update5`
+### Functional tool: `update3()`
 
 ```js
 function update3(object, key1, key2, key3, modify) {
@@ -187,6 +193,32 @@ function update5(object, k1, k2, k3, k4, k5, modify) {
 }
 ```
 
+### Functional tool: `nestedUpdate()`
+
+It takes an object, a path of keys to follow into the nesting of the objects, and a
+function to call on the value once it is found.
+`nestedUpdate()` works on paths of any length, including zero. It is *recursive*.
+
+```js
+// (1) - base case (path of zero length)
+// (2) - make progress toward (по направлению к) base case (by dropping one path element)
+// (3) - recursive case
+function nestedUpdate(object, keys, modify) {
+    if(keys.length === 0)
+        return modify(object);                              // (2)
+    var key1 = keys[0];
+    var restOfKeys = drop_first(keys);                      // (2)
+    return update(object, key1, function(value1) {
+        return nestedUpdate(value1, restOfKeys, modify);    // (3)
+    });
+}
+```
+
+### The anatomy of safe recursion
+
+1. Base case
+2. Recursive case
+3. Progress toward (по направлению к) the base case
 
 ### Summary
 
