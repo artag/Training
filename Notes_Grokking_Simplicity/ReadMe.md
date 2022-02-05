@@ -967,3 +967,68 @@ We can remove problems by not sharing resources
 1. Identify the implicit (неявный) input.
 
 2. Replace the implicit (неявный) input with an argument.
+
+## Chapter 16. Sharing resources between timelines
+
+*Мое примечание: аццкий ад с этими callback.*
+
+A *concurrency primitive* is a piece of reusable functionality that helps share
+resources across timelines.
+
+Using **Queue** as concurrency primitive:
+
+```js
+// (1) - Queue() is very generic, so the variable names are generic as well
+// (2) - we allow done() to accept an argument.
+// (3) - set up asynchronous call to item.callback.
+function Queue(worker) {                // (1)
+    var queue_items = [];               // (1)
+    var working = false;
+
+    function runNext() {
+        if(working)
+            return;
+        if(queue_items.length === 0)
+            return;
+        working = true;
+        var item = queue_items.shift();
+        worker(item.data, function(val) {       // (2)
+            working = false;
+            setTimeout(item.callback, 0, val);  // (3)
+            runNext();
+        });
+    }
+
+    return function(data, callback) {
+        queue_items.push({
+            data: data,
+            callback: callback || function(){}
+        });
+        setTimeout(runNext, 0);
+    };
+}
+```
+
+Usage:
+
+```js
+// (1) - cart will get the item data; we call done() when we're done.
+// (2) - here we know the specifics of what we're doing, so we use specific variable names.
+function calc_cart_worker(cart, done) {         // (1)
+    calc_cart_total(cart, function(total) {     // (2)
+        update_total_dom(total);
+        done(total);
+    });
+}
+
+var update_total_queue = Queue(calc_cart_worker);
+```
+
+### Principle: Use real-world sharing as inspiration (источники для вдохновения)
+
+Examples:
+
+* *Locks on bathroom* doors enable a one-person-at-a-time discipline.
+* *Public libraries* (book pools) allow a community to share many books.
+* *Blackboards* allow one teacher (one writer) to share information with an entire class
+(many readers).

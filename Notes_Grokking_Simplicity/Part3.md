@@ -371,8 +371,8 @@ That's why doing an asynchronous call creates a new timeline.
   * Many different processes can be run simultaneously.
   * Each process is a separate timeline.
   * Unique thing - that processes choose which message they will process next.
-  * The actions of individual timelines do interleave, but because they don’t share any
-  memory, they usually don’t share resources. You don’t have to worry about the large
+  * The actions of individual timelines do interleave, but because they don't share any
+  memory, they usually don't share resources. You don't have to worry about the large
   number of possible orderings.
 
 ### Timeline diagrams capture the two kinds of sequential code
@@ -546,3 +546,337 @@ our code work better.
 * Timelines that don't share resources can be understood and executed in isolation.
 Это упрощает понимание, написание и поддержку кода.
 
+## Chapter 16. Sharing resources between timelines
+
+### Vocab
+
+A *queue* is a data structure where items are removed in the same order they are added.
+
+A *concurrency primitive* is a piece of reusable functionality that helps share resources
+across timelines.
+
+### Building a queue in JavaScript
+
+A queue is a data structure. We can use it to coordinate timelines. We call it a
+*concurrency primitive*. It's a small piece of reusable functionality that helps share
+resources.
+
+**Step 1**. Create simple queue.
+
+```js
+var queue_items = [];       // array to store items
+
+function update_total_queue(cart) {
+    queue_items.push(cart);
+}
+```
+
+**Step 2**. Do the work on the first item in the queue.
+
+```js
+var queue_items = [];
+
+function runNext() {
+    var cart = queue_items.shift();             // pull the first item off the array
+    calc_cart_total(cart, update_total_dom);
+}
+function update_total_queue(cart) {
+    queue_items.push(cart);
+    setTimeout(runNext, 0);         // adds a job to the JavaScript event loop
+}
+```
+
+**Step 3**. Prevent a second timeline from running at the same time as the first.
+
+```js
+var queue_items = [];
+var working = false;        // busy flag
+
+function runNext() {
+    if(working)             // prevent two from running at the same time
+        return;
+    working = true;
+    var cart = queue_items.shift();
+    calc_cart_total(cart, update_total_dom);
+}
+function update_total_queue(cart) {
+    queue_items.push(cart);
+    setTimeout(runNext, 0);
+}
+```
+
+**Step 4**. Modify the callback to `calc_cart_total()` to start the next item.
+
+```js
+var queue_items = [];
+var working = false;
+
+function runNext() {
+    if(working)
+        return;
+    working = true;
+    var cart = queue_items.shift();
+    calc_cart_total(cart, function(total) {     // done working and start the next item
+        update_total_dom(total);
+        working = false;
+        runNext();
+    });
+}
+function update_total_queue(cart) {
+    queue_items.push(cart);
+    setTimeout(runNext, 0);
+}
+```
+
+**Step 5**. Stop going through items when there are no more
+
+```js
+var queue_items = [];
+var working = false;
+
+function runNext() {
+    if(working)
+        return;
+    if(queue_items.length === 0)            // stop if we have no items left
+        return;
+    working = true;
+    var cart = queue_items.shift();
+    calc_cart_total(cart, function(total) {
+        update_total_dom(total);
+        working = false;
+        runNext();
+    });
+}
+function update_total_queue(cart) {
+    queue_items.push(cart);
+    setTimeout(runNext, 0);
+}
+```
+
+**Step 6**. Wrap the variables and functions in a function scope.
+
+```js
+function Queue() {
+    var queue_items = [];
+    var working = false;
+
+    function runNext() {
+        if(working)
+            return;
+        if(queue_items.length === 0)
+            return;
+        working = true;
+        var cart = queue_items.shift();
+        calc_cart_total(cart, function(total) {
+            update_total_dom(total);
+            working = false;
+            runNext();
+        });
+    }
+    return function(cart) {     // Queue() returns the function, which adds to the queue
+        queue_items.push(cart);
+        setTimeout(runNext, 0);
+    };
+}
+```
+
+We can run the returned function just like before:
+
+```js
+var update_total_queue = Queue();
+```
+
+**Step 7**. Making the queue reusable. Extracting the `done()` function.
+
+`done()` is a callback that continues the work of the queue timeline. It sets working to
+`false` so that the next time through, it won't return early. Then it calls `runNext()` to
+initiate the next iteration.
+
+```js
+function Queue() {
+    var queue_items = [];
+    var working = false;
+
+    function runNext() {
+        if(working)
+            return;
+        if(queue_items.length === 0)
+            return;
+        working = true;
+        var cart = queue_items.shift();
+        function worker(cart, done) {   // extract cart local to argument as well
+            calc_cart_total(cart, function(total) {
+                update_total_dom(total);
+                done(total);            // done is the name of the callback
+            });
+        }
+        worker(cart, function() {       // extract two lines into a new function
+            working = false;
+            runNext();
+        });
+    }
+
+    return function(cart) {
+        queue_items.push(cart);
+        setTimeout(runNext, 0);
+    };
+}
+
+var update_total_queue = Queue(calc_cart_worker);
+```
+
+**Step 8**. Extracting the custom worker behavior. Generic `Queue`.
+
+```js
+function Queue(worker) {    // add a new argument, the function that does the work
+    var queue_items = [];
+    var working = false;
+
+    function runNext() {
+        if(working)
+            return;
+        if(queue_items.length === 0)
+            return;
+        working = true;
+        var cart = queue_items.shift();
+
+        worker(cart, function() {
+            working = false;
+            runNext();
+        });
+    }
+
+    return function(cart) {
+        queue_items.push(cart);
+        setTimeout(runNext, 0);
+    };
+}
+
+function calc_cart_worker(cart, done) {         // extracted function
+    calc_cart_total(cart, function(total) {
+        update_total_dom(total);
+        done(total);
+    });
+}
+
+var update_total_queue = Queue(calc_cart_worker);
+```
+
+**Step 9**. Accepting a callback for when the task is complete.
+
+Add one more feature, which is the ability to pass in a callback that will be called
+when our task is done.
+
+```js
+// store both the data for the task and the callback in a small object.
+// (1) - item.data. Pass the worker just the data.
+// (2) - push both the data and the callback onto the array.
+function Queue(worker) {
+    var queue_items = [];
+    var working = false;
+
+    function runNext() {
+        if(working)
+            return;
+        if(queue_items.length === 0)
+            return;
+        working = true;
+        var item = queue_items.shift();
+        worker(item.data, function() {              // (1)
+            working = false;
+            runNext();
+        });
+    }
+
+    return function(data, callback) {               // (2)
+        queue_items.push({
+            data: data,                             // (2)
+            callback: callback || function(){}      // (2)
+        });                                         // (2)
+        setTimeout(runNext, 0);
+    };
+}
+
+function calc_cart_worker(cart, done) {
+    calc_cart_total(cart, function(total) {
+        update_total_dom(total);
+        done(total);
+    });
+}
+
+var update_total_queue = Queue(calc_cart_worker);
+```
+
+`callback || function(){}` - if callback is undefined, use a function that does
+nothing instead.
+
+**Step 10**. Calling the callback when the task is complete.
+
+```js
+// (1) - Queue() is very generic, so the variable names are generic as well
+// (2) - we allow done() to accept an argument.
+// (3) - set up asynchronous call to item.callback.
+// (4) - cart will get the item data; we call done() when we're done.
+// (5) - here we know the specifics of what we're doing, so we use specific variable names.
+function Queue(worker) {                // (1)
+    var queue_items = [];               // (1)
+    var working = false;
+
+    function runNext() {
+        if(working)
+            return;
+        if(queue_items.length === 0)
+            return;
+        working = true;
+        var item = queue_items.shift();
+        worker(item.data, function(val) {       // (2)
+            working = false;
+            setTimeout(item.callback, 0, val);  // (3)
+            runNext();
+        });
+    }
+
+    return function(data, callback) {
+        queue_items.push({
+            data: data,
+            callback: callback || function(){}
+        });
+        setTimeout(runNext, 0);
+    };
+}
+
+function calc_cart_worker(cart, done) {         // (4)
+    calc_cart_total(cart, function(total) {     // (5)
+        update_total_dom(total);
+        done(total);
+    });
+}
+
+var update_total_queue = Queue(calc_cart_worker);
+```
+
+### Principle: Use real-world sharing as inspiration (источники для вдохновения)
+
+Examples:
+
+* *Locks on bathroom* doors enable a one-person-at-a-time discipline.
+* *Public libraries* (book pools) allow a community to share many books.
+* *Blackboards* allow one teacher (one writer) to share information with an entire class
+(many readers).
+
+### Summary
+
+* Timing issues are hard to reproduce and often pass our tests. Use timeline diagrams to
+analyze and diagnose timing issues.
+
+* When you have a resource-sharing bug, look to the real world for inspiration for how to
+solve it. People share stuff all the time, very often with no problems. Learn from people.
+
+* Build reusable tools that help you share resources. They are called
+*concurrency primitives*, and they make your code clearer and simpler.
+
+* Concurrency primitives often take the form of higher-order functions on actions. Those
+higher-order functions give the actions superpowers.
+
+* Concurrency primitives don't have to be difficult to write yourself. Take small steps and
+refactor and you can build your own.
