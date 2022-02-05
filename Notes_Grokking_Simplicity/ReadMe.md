@@ -975,7 +975,7 @@ We can remove problems by not sharing resources
 A *concurrency primitive* is a piece of reusable functionality that helps share
 resources across timelines.
 
-Using **Queue** as concurrency primitive:
+### Using `Queue` as concurrency primitive
 
 ```js
 // (1) - Queue() is very generic, so the variable names are generic as well
@@ -1022,6 +1022,61 @@ function calc_cart_worker(cart, done) {         // (1)
 }
 
 var update_total_queue = Queue(calc_cart_worker);
+```
+
+### Using `DroppingQueue` as concurrency primitive
+
+Выполняет только ограниченное число/(последний) action из всех action в очереди.
+
+По сути, в `DroppingQueue` небольшое улучшение по сравнению с предыдущим `Queue`.
+
+*Мое примечание: DroppingQueue - программный аналог бездребезговой кнопки.*
+
+```js
+// max - pass the max of tasks to keep. 1 - будет выполнен только 1 task.
+// (1) - keep dropping items from the front until we are under or at max.
+function DroppingQueue(max, worker) {
+    var queue_items = [];
+    var working = false;
+
+    function runNext() {
+        if(working)
+            return;
+        if(queue_items.length === 0)
+            return;
+        working = true;
+        var item = queue_items.shift();
+        worker(item.data, function(val) {
+            working = false;
+            setTimeout(item.callback, 0, val);
+            runNext();
+        });
+    }
+
+    return function(data, callback) {
+        queue_items.push({
+            data: data,
+            callback: callback || function(){}
+        });
+        while(queue_items.length > max)      // (1)
+            queue_items.shift();             // (1)
+        setTimeout(runNext, 0);
+    };
+}
+```
+
+Usage:
+
+```js
+function calc_cart_worker(cart, done) {
+    calc_cart_total(cart, function(total) {
+        update_total_dom(total);
+        done(total);
+    });
+}
+
+// 1 - drop all but one (будет вызван только послений worker)
+var update_total_queue = DroppingQueue(1, calc_cart_worker);
 ```
 
 ### Principle: Use real-world sharing as inspiration (источники для вдохновения)
