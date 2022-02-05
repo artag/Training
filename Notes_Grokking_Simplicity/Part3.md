@@ -242,6 +242,25 @@ to remember. This can make working with deep structures easier.
 
 ## Chapter 15. Isolating timelines
 
+* Identify actions
+* Draw actions
+  * Actions that execute in sequence - one after the other
+  * Actions that execute in parallel - simultaneous, left first, or right first
+    * Asynchronous callbacks
+    * Multiple threads
+    * Multiple processes
+    * Multiple machines
+* Simplify the timeline
+  * If two actions cannot be interleaved, combine them into a single box.
+  * If one timeline ends and starts another, consolidate them into a single timeline.
+  * Add dotted lines when order is constrained.
+* Reading timelines
+  * Actions in different timelines can occur in orders:
+    * simultaneous
+    * left first
+    * right first
+  * Evaluate (оцените) the orders as impossible, desirable, or undesirable (нежелательный).
+
 ### Vocab
 
 A *timeline* is a sequence of actions over time. There can be multiple timelines
@@ -412,6 +431,96 @@ o = -------
 The ordering and proper timing of actions is difficult. We can make this easier by
 creating reusable objects that manipulate the timeline.
 
+### Simplifying the timeline
+
+1. Consolidate all actions on a single timeline.
+
+2. Consolidate timelines that end by creating one new timeline.
+
+### Timelines that share resources can cause problems
+
+We can remove problems by not sharing resources
+
+#### Converting a global variable to a local one
+
+1. Identify the global variable we would like to make local.
+
+2. Replace the global variable with a local variable.
+
+Example:
+
+```js
+// Identify the global variable we would like to make local
+function calc_cart_total() {
+    total = 0;                          // total - global variable
+    cost_ajax(cart, function(cost) {
+        total += cost;                  // read - modify - write global variable
+        shipping_ajax(cart, function(shipping) {
+            total += shipping;
+            update_total_dom(total);
+        });
+    });
+}
+```
+
+```js
+// Replace the global variable with a local variable
+function calc_cart_total() {
+    var total = 0;                      // use a local variable instead
+    cost_ajax(cart, function(cost) {
+        total += cost;
+        shipping_ajax(cart, function(shipping) {
+            total += shipping;
+            update_total_dom(total);
+        });
+    });
+}
+```
+
+#### Converting a global variable to an argument
+
+1. Identify the implicit (неявный) input.
+
+2. Replace the implicit (неявный) input with an argument.
+
+Example:
+
+```js
+// Identify the implicit input
+function add_item_to_cart(name, price, quantity) {
+    cart = add_item(cart, name, price, quantity);
+    calc_cart_total();
+}
+function calc_cart_total() {
+    var total = 0;
+    cost_ajax(cart, function(cost) {                // cart can be changed between reads
+        total += cost;
+        shipping_ajax(cart, function(shipping) {    // cart can be changed between reads
+            total += shipping;
+            update_total_dom(total);
+        });
+    });
+}
+```
+
+```js
+// Replace the implicit input with an argument
+function add_item_to_cart(name, price, quantity) {
+    cart = add_item(cart, name, price, quantity);
+    calc_cart_total(cart);                          // add the cart as an argument
+}
+function calc_cart_total(cart) {                    // add the cart as an argument
+    var total = 0;
+    cost_ajax(cart, function(cost) {                // read is not to global variable anymore
+        total += cost;
+        shipping_ajax(cart, function(shipping) {    // read is not to global variable anymore
+            total += shipping;
+            update_total_dom(total);
+        });
+    });
+}
+```
+
 ### Summary
 
 * Timelines are sequences of actions that can run simultaneously. They capture what code
@@ -436,3 +545,4 @@ our code work better.
 
 * Timelines that don't share resources can be understood and executed in isolation.
 Это упрощает понимание, написание и поддержку кода.
+

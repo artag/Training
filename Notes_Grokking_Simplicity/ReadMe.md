@@ -945,3 +945,25 @@ action 2
 
 5. Manipulate time as a first-class concept. (создание повторно используемых объектов
 для манипуляций с timeline).
+
+### Simplifying the timeline
+
+1. Consolidate all actions on a single timeline.
+
+2. Consolidate timelines that end by creating one new timeline.
+
+### Timelines that share resources can cause problems
+
+We can remove problems by not sharing resources
+
+#### Converting a global variable to a local one
+
+1. Identify the global variable we would like to make local.
+
+2. Replace the global variable with a local variable.
+
+#### Converting a global variable to an argument
+
+1. Identify the implicit (неявный) input.
+
+2. Replace the implicit (неявный) input with an argument.
