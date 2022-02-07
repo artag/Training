@@ -965,7 +965,7 @@ Write total         Write total
         update_total_dom()
 ```
 
-### A concurrency primitive for cutting timelines
+### A concurrency primitive for cutting timelines. `Cut()`
 
 In JavaScript (as single thread): Every timeline will call that function when it's done.
 Every time the function is called, we increment the number of times it has been called.
