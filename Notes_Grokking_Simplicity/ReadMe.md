@@ -1,6 +1,8 @@
 # Grokking Simplicity
 
-* [Part 1: Actions, calculations, and data](Part1.md)
+* Part 1: Actions, calculations, and data
+  * [Chapters 01 - 05](Part1_1.md)
+  * [Chapters 06 - 09](Part1_2.md)
 
 * Part 2: First-class abstractions
 
