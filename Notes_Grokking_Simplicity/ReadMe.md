@@ -1087,3 +1087,40 @@ Examples:
 * *Public libraries* (book pools) allow a community to share many books.
 * *Blackboards* allow one teacher (one writer) to share information with an entire class
 (many readers).
+
+## Chapter 17. Coordinating timelines
+
+### A concurrency primitive for cutting timelines. `Cut()`
+
+In JavaScript (as single thread): Every timeline will call that function when it's done.
+Every time the function is called, we increment the number of times it has been called.
+Then, when the last function calls it, it will call a callback:
+
+```js
+// num - number of timelines to wait for
+// callback - the callback to execute when they are all done
+function Cut(num, callback) {
+    var num_finished = 0;            // initialize the count to zero
+    return function() {          // the returned function is called at the end of each timeline
+        num_finished += 1;       // each time function is called, we increment the count
+        if(num_finished === num)
+            callback();          // when the last timeline finishes, we call the callback
+    };
+}
+```
+
+### A primitive to call something just once. `JustOnce()`
+
+Functionality thats perform an action just once, no matter how many times the code may call
+that action.
+
+```js
+function JustOnce(action) {         // pass in an action
+    var alreadyCalled = false;      // remember if we've called it already
+    return function(a, b, c) {
+        if(alreadyCalled) return;   // exit early if we've called it before
+        alreadyCalled = true;       // we're about to call it, so remember
+        return action(a, b, c);     // call the action, passing through the arguments
+    };
+}
+```
