@@ -638,3 +638,200 @@ affect the main partition.
 его плагинов.
 
 ### Paradigms
+
+На текущий момент активно используются следующие парадигмы:
+
+* Functional Programming
+* Structured Programming
+* Object-Oriented Programming
+
+### Functional Programming
+
+* Нет операции присваивания.
+
+Вместо присванивания значения переменной мы передаем ее в функцию вместо аргумента.
+*(Мое примечание: не досказано до конца)*
+
+Вместо циклов используется рекурсия. *(Мое примечание: не совсем так)*
+
+* В функциональном программировании чистые функции.  *(Мое примечание: не все такие)*
+
+#### Side Effect. Temporal Coupling (связь по времени)
+
+* Функции обладают свойством Temporal Coupling - некоторые из них требуется вызывать в определенной
+последовательности.
+
+* Особенно часто temporal coupling можно наблюдать у парных функций: (`open`/`close`, `new`/`free`,
+`lock`/`unlock`, `set`/`get`, etc.
+
+* Contain side effect code so you don't forget to close, free, unlock, etc.
+
+* Temporal Coupling (особенно неявные/скрытые) часто является причиной ошибок.
+
+Пример. Работа с файлом:
+
+```java
+// Bad
+open (myFile, new FileCommand()) {            // Файл не был закрыт
+  public void process(File f) {
+    // ... process file here
+  }
+}
+
+// Good
+public void open(File f, FileCommand c) {     // Файл открыт, работа с ним, файл закрыт.
+  f.open();
+  c.process(f);
+  f.close();
+}
+```
+
+#### Command Query Separation (CQS)
+
+Задача не избегать side effect, а стараться сгруппировать их в определенном месте.
+
+Одно из таких решений **CQS**:
+
+* `Command` - меняет состояние системы и ничего не возвращает. В случае ошибки кидает исключение.
+
+* `Query` - не меняет состояние системы. Возвращает результат вычисления или состояние системы.
+
+Пример: Getter - это Query, Setter - это Command.
+
+*Пример*:
+
+```java
+int f();    // Query      -- No side effects
+void g();   // Command    -- Side effect
+```
+
+Плюс разделения: по сигнатуре метода/функции видно, есть ли у нее side effect.
+
+*Пример* неопределнной функции с точки зрения CQS:
+
+```java
+User u = authorizer.login(username, password);
+```
+
+Почему `login` возвращает пользователя? Может переделать функционал `authorizer` и сделать
+как-то так?:
+
+```java
+User u = authorizer.getUser(username);
+```
+
+Может быть `User` возвращается как признак удачного выполнения Command, а `null` если Command'а
+не была выполнена. Но лучше вместо возврата ошибки кидать исключение (будет далее).
+
+Команда должна возвращать `void`.
+
+Этот же пример более наглядно:
+
+```python
+# Плохо
+class Auth():
+    def login(username, pass):
+        # Call code that returns if login was possible here
+        login_successful = True
+        if login_successful:
+            return User(username)
+        else:
+            return None
+
+authorize = Auth()
+user = authorize.login(username, password)
+
+# Хорошо
+class Auth():
+    def login(username, pass):
+        # Call code that returns if login was possible here
+        login_successful = True
+        if not login_successful:
+            raise Exception
+
+authorize = Auth()
+authorize.login(username, password)
+user = authorize.get_user(username)
+```
+
+*Пример* *(Мое примечание: не очень внятный)*. Иногда при multithreading требуется читать
+предыдущее состояние вместе с установкой нового. И эту операцию невозможно разделить
+на две отдельные:
+
+```java
+oldBlah = setBlah(newBlah);
+...
+setBlah(oldBlah);
+```
+
+Решение - passing a block:
+
+```java
+withBlah(newBlah, someBlahCommand)
+```
+
+#### Tell Don't Ask
+
+* Экстремальный случай: avoid queries all together. Говорить объектам что делать, но не спрашивать
+ничего об их состоянии.
+
+```java
+if (user.isLoggedIn())
+  user.execute(command)
+else
+  annunciator.promtLogin();
+```
+
+Будет ли он лучше, если переписать его с исключениями?
+
+```java
+try
+  user.execute(command);
+catch (User.NotLoggedIn e)
+  annunciator.promptLogin();
+```
+
+А еще лучше, пускай объект `user` целиком заботится о том, что вызывать:
+
+```java
+user.execute(command, annunciator);
+```
+
+* Множество Query функций могут выйти и под контроля.
+
+*Пример*. Также известно как "Train wrecks" (крушение позездов):
+
+```java
+o.getX()
+  .getY()
+    .getZ()
+      .doSomething();
+```
+
+Это прямое нарушение принципа "Tell Don't Ask".
+
+Лучше:
+
+```java
+o.DoSomething();
+```
+
+Цепочки queries (Train wrecks) нарушают закон Деметры (The Law of Demeter).
+
+#### The Law of Demeter (закон Деметры)
+
+*The Law of Demeter* - плохо, когда функция знает о всей структуре системы. Функция должна
+иметь ограниченную область видимости/"знания".
+
+Правила.
+
+* Вы *можете* вызывать методы объекта если:
+  * Объект был переданы в метод как аргумент.
+  * Был создан в методе локально.
+  * Находится внутри того же самого объекта, что и метод.
+  * Глобальный объект.
+
+* Вы *не можете* вызывать методы объекта если:
+  * Объект возвращаются из предыдущего вызова метода. (например как: `o.getx().gety().do()`).
+
+### Structured Programming
