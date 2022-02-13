@@ -2,11 +2,32 @@
 
 * Part 1: Actions, calculations, and data
   * [Chapters 01 - 05](Part1_1.md)
+    * 01 Welcome to Grokking Simplicity
+    * 02 Functional thinking in action
+    * 03 Distinguishing actions, calculations, and data
+    * 04 Extracting calculations from actions
+    * 05 Improving the design of actions
   * [Chapters 06 - 09](Part1_2.md)
+    * 06 Staying immutable in a mutable language
+    * 07 Staying immutable with untrusted code
+    * 08 Stratified design: Part 1
+    * 09 Stratified design: Part 2
 
 * Part 2: First-class abstractions
 
-  * [Chapters: 10-13](Part2.md)
+  * [Chapters: 10-13](Part2_1.md)
+    * 10 First-class functions: Part 1
+    * 11 First-class functions: Part 2
+    * 12 Functional iteration
+    * 13 Chaining functional tools
+  * [Chapters: 14-16](Part2_2.md)
+    * 14 Functional tools for nested data
+    * 15 Isolating timelines
+    * 16 Sharing resources between timelines
+  * [Chapters: 17-19](Part2_3.md)
+    * 17 Coordinating timelines
+    * 18 Reactive and onion architectures
+    * 19 The functional journey ahead
 
 ## Chapter 10. First-class functions: Part 1
 
