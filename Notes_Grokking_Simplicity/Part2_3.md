@@ -181,3 +181,214 @@ time.
 
 * Cutting timelines is one way to coordinate between timelines. Cutting allows multiple
 timelines to wait for all timelines to finish before one continues.
+
+## Chapter 18. Reactive and onion architectures
+
+* *Reactive architecture* is used at the level of individual sequences of actions.
+
+It helps decouple cause from effect, which can untangle (распутать) some confusing
+parts of our code.
+
+* *Onion architecture* operates at the level of an entire service.
+
+Gives a structure to services that must interact with the outside world.
+
+<img src="images/ch18_two_architectures.jpg" alt="Reactive and Onion architectural patterns"/>
+
+### Vocab
+
+The name `ValueCell` is inspired by spreadsheets, which also implement a reactive
+architecture. When you update one spreadsheet cell, formulas are recalculated in
+response.
+
+There's more than one name for the *watcher* concept:
+
+* Watchers
+* Listeners
+* Callbacks
+* Observers
+* Event handlers
+
+The equivalent to `ValueCells` in other functional languages and frameworks:
+
+* In Clojure: *Atoms*
+* In React: *Redux store* and *Recoil atoms*
+* In Elixir: *Agents*
+* In Haskell: *TVars*
+
+### What is reactive architecture?
+
+Reactive architecture specify what happens in response to events. It is very useful
+in web services and UIs.
+
+<img src="images/ch18_event_handlers.jpg" alt="Examples of event handlers"/>
+
+Event handlers let you say, "When X happens, do Y, Z, A, B, and C." In the reactive
+architecture, we break up the typical step-by-step handler function into a series of
+handlers that respond (откликаются/срабатывают) to the previous one.
+
+<img src="images/ch18_reactive_handler.jpg" alt="Reactive architecture"/>
+
+### Tradeoffs of the reactive architecture
+
+1. Decouples effects from their causes
+
+Separating the causes from their effects can sometimes make code less readable.
+However, it can also be very freeing and let you express things much more
+precisely.
+
+2. Treats a series of steps as pipelines
+
+Composing pipelines of data transformation steps (using chaining functional tools
+together) - a great way to compose calculations into more sophisticated operations.
+Reactive architecture lets you do a similar composition with actions and calculations
+together.
+
+3. Creates flexibility in your timeline
+
+When you reverse the expression of ordering, you gain flexibility in your timeline.
+
+### Cells are first-class state. `ValueCell`
+
+`ValueCell` simply wrap a variable with two simple operations.
+One reads the current value `(val())`. The other updates the current value `(update())`.
+
+```js
+// (1) - hold one immutable value (can be a collection)
+// (2) - get current value
+// (3) - modify value by applying a function to current value (swapping pattern)
+function ValueCell(initialValue) {
+    var currentValue = initialValue;        // (1)
+    return {
+        val: function() {                   // (2)
+            return currentValue;
+        },
+        update: function(f) {               // (3)
+            var oldValue = currentValue;
+            var newValue = f(oldValue);
+            currentValue = newValue;
+        }
+    };
+}
+```
+
+Usage:
+
+```js
+// Before
+var shopping_cart = {};
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart = add_item(shopping_cart, item);      // update
+    var total = calc_total(shopping_cart);              // read
+    set_cart_total_dom(total);
+    update_shipping_icons(shopping_cart);               // read
+    update_tax_dom(total);
+}
+
+// After
+var shopping_cart = ValueCell({});
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart.update(function(cart) {               // update
+        return add_item(cart, item);
+    });
+    var total = calc_total(shopping_cart.val());        // read
+    set_cart_total_dom(total);
+    update_shipping_icons(shopping_cart.val());         // read
+    update_tax_dom(total)
+}
+```
+
+### Reactive version of `ValueCell`:
+
+```js
+// (1) - hold one immutable value (can be a collection)
+// (2) - keep a list of watchers
+// (3) - get current value
+// (4) - modify value by applying a function to current value (swapping pattern)
+// (5) - call watchers when value changes
+// (6) - add a new watcher
+function ValueCell(initialValue) {
+    var currentValue = initialValue;                    // (1)
+    var watchers = [];                                  // (2)
+    return {
+        val: function() {                               // (3)
+            return currentValue;
+        },
+        update: function(f) {                           // (4)
+            var oldValue = currentValue;
+            var newValue = f(oldValue);
+            if(oldValue !== newValue) {
+                currentValue = newValue;
+                forEach(watchers, function(watcher) {   // (5)
+                    watcher(newValue);
+                });
+            }
+        },
+        addWatcher: function(f) {                       // (6)
+            watchers.push(f);
+        }
+    };
+}
+```
+
+Usage:
+
+```js
+// Before
+// (1) - make the event handler simpler by removing downstream actions
+var shopping_cart = ValueCell({});
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart.update(function(cart) {
+        return add_item(cart, item);
+    });
+    var total = calc_total(shopping_cart.val());
+    set_cart_total_dom(total);
+    update_shipping_icons(shopping_cart.val());         // (1)
+    update_tax_dom(total);
+}
+
+// After
+// (1) - we only have to write this code once and it runs after all cart updates
+var shopping_cart = ValueCell({});
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart.update(function(cart) {
+        return add_item(cart, item);
+    });
+    var total = calc_total(shopping_cart.val());
+    set_cart_total_dom(total);
+    update_tax_dom(total);
+}
+
+shopping_cart.addWatcher(update_shipping_icons);        // (1)
+```
+
+### Summary
+
+* Reactive architecture flips the way we sequence actions. It goes from "Do X, do Y"
+to "When X, then do Y."
+
+* Reactive architecture, taken to its extreme, organizes actions and calculations into
+pipelines. The pipelines are compositions of simple actions that happen in sequence.
+
+* We can create first-class mutable state that lets us control the read and write
+operations. One example is the `ValueCell`, which takes inspiration from spreadsheets
+and lets us implement a reactive pipeline.
+
+* The onion architecture, in broad strokes, divides software into three layers:
+interaction, domain, and language.
+
+* The outer interaction layer holds the actions of the software. It orchestrates the
+actions with calls to the domain layer.
+
+* The domain layer contains the domain logic and operations of your software,
+including business rules. This layer is exclusively comprised of calculations.
+
+* The language layer is the language plus utility libraries that your software is
+built with.
+
+* The onion architecture is fractal. It can be found at every level of abstraction in
+your actions.
