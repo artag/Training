@@ -1066,6 +1066,34 @@ sendAddToCartTextOnce("555-555-5555-55");
 JavaScript has one thread. Other languages would need to use locks to share a mutable
 variable.
 
+### Recap. Concurrency primitives
+
+#### `Queue()`
+
+Items added to the queue are processed in a separate, single timeline. Each item is
+handled in order to completion before the next is started:
+
+<img src="images/ch17_queue.jpg" alt="Queue()"/>
+
+#### `Cut()`
+
+Call a callback in a new timeline only after all timelines have completed:
+
+<img src="images/ch17_cut.jpg" alt="Cut()"/>
+
+#### `JustOnce()`
+
+An action wrapped in `JustOnce()` will only be executed once, even if the wrapped
+function is called multiple times:
+
+<img src="images/ch17_just_once.jpg" alt="JustOnce()"/>
+
+#### `DroppingQueue()`
+
+This is like a Queue(), but will skip tasks if they build up quickly:
+
+<img src="images/ch17_dropping_queue.jpg" alt="DroppingQueue()"/>
+
 ### Summary
 
 * Functional programmers build a new model of time on top of the implicit model
@@ -1081,3 +1109,4 @@ time.
 
 * Cutting timelines is one way to coordinate between timelines. Cutting allows multiple
 timelines to wait for all timelines to finish before one continues.
+
