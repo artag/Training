@@ -300,7 +300,9 @@ function add_item_to_cart(name, price) {
 }
 ```
 
-### Reactive version of `ValueCell`:
+### Reactive version of `ValueCell`
+
+*Watchers* are handler functions that get called every time the state changes.
 
 ```js
 // (1) - hold one immutable value (can be a collection)
@@ -365,6 +367,78 @@ function add_item_to_cart(name, price) {
 
 shopping_cart.addWatcher(update_shipping_icons);        // (1)
 ```
+
+### `FormulaCell` calculate derived values
+
+`FormulaCell` watch another cell and recalculate it's value when the upstream cell changes.
+
+```js
+// (1) - reuse the machinery of ValueCell
+// (2) - add a watcher to recompute the current value of this cell
+// (3) - val() and addWatcher() delegate to myCell
+// (4) - FormulaCell has no way to change value directly
+function FormulaCell(upstreamCell, f) {
+    var myCell = ValueCell(f(upstreamCell.val()));          // (1)
+    upstreamCell.addWatcher(function(newUpstreamValue) {    // (2)
+        myCell.update(function(currentValue) {
+            return f(newUpstreamValue);
+        });
+    });
+    return {
+        val: myCell.val,                    // (3)
+        addWatcher: myCell.addWatcher       // (3), (4)
+    };
+}
+```
+
+Usage:
+
+```js
+// Before
+var shopping_cart = ValueCell({});
+
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart.update(function(cart) {
+        return add_item(cart, item);
+    });
+    var total = calc_total(shopping_cart.val());
+    set_cart_total_dom(total);
+    update_tax_dom(total);
+}
+
+shopping_cart.addWatcher(update_shipping_icons);
+
+// After
+// (1) - cart_total will change whenever shopping_cart changes
+// (2) - click handler is now very simple
+// (3) - DOM will update in response to cart_total changing
+var shopping_cart = ValueCell({});
+var cart_total = FormulaCell(shopping_cart, calc_total);    // (1)
+
+function add_item_to_cart(name, price) {
+    var item = make_cart_item(name, price);
+    shopping_cart.update(function(cart) {
+        return add_item(cart, item);                        // (2)
+    });
+}
+
+shopping_cart.addWatcher(update_shipping_icons);
+cart_total.addWatcher(set_cart_total_dom);                  // (3)
+cart_total.addWatcher(update_tax_dom);                      // (3)
+```
+
+### `ValueCell` consistency guidelines (рекомендации для согласованности)
+
+* Initialize with a valid value.
+* Pass a calculation to `update()` (never an action (никогда не использовать action)).
+* That calculation should return a valid value if passed a valid value.
+
+### Mutable state in functional programming
+
+<img src="images/ch18_mutable_state.jpg" alt="Mutable state in functional programming"/>
+
+### How reactive architecture reconfigures systems
 
 ### Summary
 

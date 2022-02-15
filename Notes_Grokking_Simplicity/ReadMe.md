@@ -1175,3 +1175,98 @@ function is called multiple times:
 This is like a Queue(), but will skip tasks if they build up quickly:
 
 <img src="images/ch17_dropping_queue.jpg" alt="DroppingQueue()"/>
+
+## Chapter 18. Reactive and onion architectures
+
+* *Reactive architecture* is used at the level of individual sequences of actions.
+
+It helps decouple cause from effect, which can untangle (распутать) some confusing
+parts of our code.
+
+* *Onion architecture* operates at the level of an entire service.
+
+<img src="images/ch18_two_architectures.jpg" alt="Reactive and Onion architectural patterns"/>
+
+### What is reactive architecture?
+
+Reactive architecture specify what happens in response to events. It is very useful
+in web services and UIs.
+
+<img src="images/ch18_event_handlers.jpg" alt="Examples of event handlers"/>
+
+Event handlers let you say, "When X happens, do Y, Z, A, B, and C." In the reactive
+architecture, we break up the typical step-by-step handler function into a series of
+handlers that respond (откликаются/срабатывают) to the previous one.
+
+<img src="images/ch18_reactive_handler.jpg" alt="Reactive architecture"/>
+
+### `ValueCell`. Reactive version
+
+`ValueCell` simply wrap a variable with two simple operations.
+One reads the current value `(val())`. The other updates the current value `(update())`.
+
+*Watchers* are handler functions that get called every time the state changes.
+
+```js
+// (1) - hold one immutable value (can be a collection)
+// (2) - keep a list of watchers
+// (3) - get current value
+// (4) - modify value by applying a function to current value (swapping pattern)
+// (5) - call watchers when value changes
+// (6) - add a new watcher
+function ValueCell(initialValue) {
+    var currentValue = initialValue;                    // (1)
+    var watchers = [];                                  // (2)
+    return {
+        val: function() {                               // (3)
+            return currentValue;
+        },
+        update: function(f) {                           // (4)
+            var oldValue = currentValue;
+            var newValue = f(oldValue);
+            if(oldValue !== newValue) {
+                currentValue = newValue;
+                forEach(watchers, function(watcher) {   // (5)
+                    watcher(newValue);
+                });
+            }
+        },
+        addWatcher: function(f) {                       // (6)
+            watchers.push(f);
+        }
+    };
+}
+```
+
+### `FormulaCell` calculate derived values
+
+`FormulaCell` watch another cell and recalculate it's value when the upstream cell changes.
+
+```js
+// (1) - reuse the machinery of ValueCell
+// (2) - add a watcher to recompute the current value of this cell
+// (3) - val() and addWatcher() delegate to myCell
+// (4) - FormulaCell has no way to change value directly
+function FormulaCell(upstreamCell, f) {
+    var myCell = ValueCell(f(upstreamCell.val()));          // (1)
+    upstreamCell.addWatcher(function(newUpstreamValue) {    // (2)
+        myCell.update(function(currentValue) {
+            return f(newUpstreamValue);
+        });
+    });
+    return {
+        val: myCell.val,                    // (3)
+        addWatcher: myCell.addWatcher       // (3), (4)
+    };
+}
+```
+
+### `ValueCell` consistency guidelines (рекомендации для согласованности)
+
+* Initialize with a valid value.
+* Pass a calculation to `update()` (never an action (никогда не использовать action)).
+* That calculation should return a valid value if passed a valid value.
+
+### Mutable state in functional programming
+
+<img src="images/ch18_mutable_state.jpg" alt="Mutable state in functional programming"/>
