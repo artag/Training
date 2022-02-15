@@ -274,8 +274,15 @@ function ValueCell(initialValue) {
 
 Usage:
 
+<table>
+<tr>
+<th> Before </th>
+<th> After </th>
+</tr>
+<tr>
+<td>
+
 ```js
-// Before
 var shopping_cart = {};
 function add_item_to_cart(name, price) {
     var item = make_cart_item(name, price);
@@ -285,9 +292,14 @@ function add_item_to_cart(name, price) {
     update_shipping_icons(shopping_cart);               // read
     update_tax_dom(total);
 }
+```
 
-// After
+</td>
+<td>
+
+```js
 var shopping_cart = ValueCell({});
+
 function add_item_to_cart(name, price) {
     var item = make_cart_item(name, price);
     shopping_cart.update(function(cart) {               // update
@@ -299,6 +311,10 @@ function add_item_to_cart(name, price) {
     update_tax_dom(total)
 }
 ```
+
+</td>
+</tr>
+</table>
 
 ### Reactive version of `ValueCell`
 
@@ -337,10 +353,22 @@ function ValueCell(initialValue) {
 
 Usage:
 
+
+
+
+
+<table>
+<tr>
+<th> Before </th>
+<th> After </th>
+</tr>
+<tr>
+<td>
+
 ```js
-// Before
 // (1) - make the event handler simpler by removing downstream actions
 var shopping_cart = ValueCell({});
+
 function add_item_to_cart(name, price) {
     var item = make_cart_item(name, price);
     shopping_cart.update(function(cart) {
@@ -351,10 +379,15 @@ function add_item_to_cart(name, price) {
     update_shipping_icons(shopping_cart.val());         // (1)
     update_tax_dom(total);
 }
+```
 
-// After
+</td>
+<td>
+
+```js
 // (1) - we only have to write this code once and it runs after all cart updates
 var shopping_cart = ValueCell({});
+
 function add_item_to_cart(name, price) {
     var item = make_cart_item(name, price);
     shopping_cart.update(function(cart) {
@@ -367,6 +400,10 @@ function add_item_to_cart(name, price) {
 
 shopping_cart.addWatcher(update_shipping_icons);        // (1)
 ```
+
+</td>
+</tr>
+</table>
 
 ### `FormulaCell` calculate derived values
 
@@ -393,8 +430,15 @@ function FormulaCell(upstreamCell, f) {
 
 Usage:
 
+<table>
+<tr>
+<th> Before </th>
+<th> After </th>
+</tr>
+<tr>
+<td>
+
 ```js
-// Before
 var shopping_cart = ValueCell({});
 
 function add_item_to_cart(name, price) {
@@ -408,7 +452,12 @@ function add_item_to_cart(name, price) {
 }
 
 shopping_cart.addWatcher(update_shipping_icons);
+```
 
+</td>
+<td>
+
+```js
 // After
 // (1) - cart_total will change whenever shopping_cart changes
 // (2) - click handler is now very simple
@@ -428,6 +477,10 @@ cart_total.addWatcher(set_cart_total_dom);                  // (3)
 cart_total.addWatcher(update_tax_dom);                      // (3)
 ```
 
+</td>
+</tr>
+</table>
+
 ### `ValueCell` consistency guidelines (рекомендации для согласованности)
 
 * Initialize with a valid value.
@@ -439,6 +492,33 @@ cart_total.addWatcher(update_tax_dom);                      // (3)
 <img src="images/ch18_mutable_state.jpg" alt="Mutable state in functional programming"/>
 
 ### How reactive architecture reconfigures systems
+
+<img src="images/ch18_typical_vs_reactive.jpg" alt="Typical vs Reactive architecture"/>
+
+Reactive architecture has three major effects on our code:
+
+1. Decouples effects from their causes.
+2. Treats series of steps as pipelines.
+3. Creates flexibility in your timeline.
+
+### 1.Decouples effects from their causes (причины)
+
+<table>
+<tr>
+<td>
+<img src="images/ch18_typical_cause_effect.jpg" alt="Typical architecture"/>
+</td>
+<td>
+<img src="images/ch18_reactive_cause_effect.jpg" alt="Reactive architecture"/>
+</td>
+</tr>
+</table>
+
+* Decoupling manages a center of cause and effect (Расцепление причины и следствияы)
+
+### 2.Treat series of steps as pipelines
+
+### 3.Flexibility in your timeline
 
 ### Summary
 
