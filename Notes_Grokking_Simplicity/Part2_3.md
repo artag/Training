@@ -514,7 +514,7 @@ Reactive architecture has three major effects on our code:
 </tr>
 </table>
 
-* Decoupling manages a center of cause and effect (Расцепление причины и следствияы)
+* Decoupling manages a center of cause and effect (Расцепление/развязка причины и следствия)
 
 ### 2.Treat series of steps as pipelines
 
