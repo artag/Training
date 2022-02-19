@@ -274,15 +274,8 @@ function ValueCell(initialValue) {
 
 Usage:
 
-<table>
-<tr>
-<th> Before </th>
-<th> After </th>
-</tr>
-<tr>
-<td>
-
 ```js
+// Before
 var shopping_cart = {};
 function add_item_to_cart(name, price) {
     var item = make_cart_item(name, price);
@@ -294,10 +287,8 @@ function add_item_to_cart(name, price) {
 }
 ```
 
-</td>
-<td>
-
 ```js
+// After
 var shopping_cart = ValueCell({});
 
 function add_item_to_cart(name, price) {
@@ -311,10 +302,6 @@ function add_item_to_cart(name, price) {
     update_tax_dom(total)
 }
 ```
-
-</td>
-</tr>
-</table>
 
 ### Reactive version of `ValueCell`
 
@@ -353,19 +340,8 @@ function ValueCell(initialValue) {
 
 Usage:
 
-
-
-
-
-<table>
-<tr>
-<th> Before </th>
-<th> After </th>
-</tr>
-<tr>
-<td>
-
 ```js
+// Before
 // (1) - make the event handler simpler by removing downstream actions
 var shopping_cart = ValueCell({});
 
@@ -381,10 +357,8 @@ function add_item_to_cart(name, price) {
 }
 ```
 
-</td>
-<td>
-
 ```js
+// After
 // (1) - we only have to write this code once and it runs after all cart updates
 var shopping_cart = ValueCell({});
 
@@ -400,10 +374,6 @@ function add_item_to_cart(name, price) {
 
 shopping_cart.addWatcher(update_shipping_icons);        // (1)
 ```
-
-</td>
-</tr>
-</table>
 
 ### `FormulaCell` calculate derived values
 
@@ -430,15 +400,8 @@ function FormulaCell(upstreamCell, f) {
 
 Usage:
 
-<table>
-<tr>
-<th> Before </th>
-<th> After </th>
-</tr>
-<tr>
-<td>
-
 ```js
+// Before
 var shopping_cart = ValueCell({});
 
 function add_item_to_cart(name, price) {
@@ -453,9 +416,6 @@ function add_item_to_cart(name, price) {
 
 shopping_cart.addWatcher(update_shipping_icons);
 ```
-
-</td>
-<td>
 
 ```js
 // After
@@ -477,10 +437,6 @@ cart_total.addWatcher(set_cart_total_dom);                  // (3)
 cart_total.addWatcher(update_tax_dom);                      // (3)
 ```
 
-</td>
-</tr>
-</table>
-
 ### `ValueCell` consistency guidelines (рекомендации для согласованности)
 
 * Initialize with a valid value.
@@ -488,6 +444,9 @@ cart_total.addWatcher(update_tax_dom);                      // (3)
 * That calculation should return a valid value if passed a valid value.
 
 ### Mutable state in functional programming
+
+`ValueCell`s can't guarantee the order of updates or reads from different timelines, but they can
+guarantee that any value stored in them is valid.
 
 <img src="images/ch18_mutable_state.jpg" alt="Mutable state in functional programming"/>
 
@@ -497,11 +456,20 @@ cart_total.addWatcher(update_tax_dom);                      // (3)
 
 Reactive architecture has three major effects on our code:
 
-1. Decouples effects from their causes.
+1. Decouples effects from their causes (причины).
 2. Treats series of steps as pipelines.
 3. Creates flexibility in your timeline.
 
 ### 1.Decouples effects from their causes (причины)
+
+В обычной архитектуре надо добавлять одинаковый код для каждого обработчика событий UI:
+
+* click on "add to cart" button -> update the icons.
+* click on "remove from cart" button -> update the icons.
+* click on "empty cart button" -> update the icons.
+
+Reactive architecture lets us decouple the cause and the effect. Instead, we say:
+"Any time the cart changes, regardless of the cause, update the icons.”
 
 <table>
 <tr>
@@ -514,11 +482,104 @@ Reactive architecture has three major effects on our code:
 </tr>
 </table>
 
-* Decoupling manages a center of cause and effect (Расцепление/развязка причины и следствия)
-
 ### 2.Treat series of steps as pipelines
 
+<table>
+<tr>
+<td>
+
+Reactive architecture lets us build complex actions out of simpler actions and calculations.
+The composed actions take the form of pipelines. Data enters in the top and flows from one step
+to the next. The pipeline can be considered an action composed of smaller actions and calculations.
+
+</br>
+
+Есть куча отдельных фреймворков для реализации reactive architecture. Например
+[ReactiveX](https://reactivex.io) для различных ЯП. Для реактивного взаимодействия между
+сервисами можно использовать
+[Kafka](https://kafka.apache.org) или [RabbitMQ](https://www.rabbitmq.com).
+
+</td>
+<td>
+<img src="images/ch18_pipeline_example.jpg" alt="Reactive architecture. Pipeline example."/>
+</td>
+</tr>
+</table>
+
 ### 3.Flexibility in your timeline
+
+Reactive architecture split the timelines into smaller parts:
+
+<table>
+<tr>
+<td>
+<img src="images/ch18_split_timeline.jpg" alt="Split timeline"/>
+</td>
+<td>
+<img src="images/ch18_event_propagation.jpg" alt="Event propagation"/>
+</td>
+</tr>
+</table>
+
+### What is the onion architecture?
+
+<img src="images/ch18_onion_architecture.jpg" alt="Onion architecture"/>
+
+Rules of onion architecture:
+
+1. Interaction with the world is done exclusively in the interaction layer.
+2. Layers call in toward (в направлении) the center.
+3. Layers don't know about layers outside of themselves.
+
+### Traditional layered architecture vs functional architecture
+
+<table>
+<tr>
+<td>
+
+<img src="images/ch18_traditional_vs_functional.jpg" alt="Traditional and functional architecture"/>
+
+The onion architecture makes it *easy to change* the interaction layer. It makes it
+*easy to reuse* the domain layer.
+
+</td>
+<td>
+
+<img src="images/ch18_change_and_reuse.jpg" alt="Change and reuse"/>
+
+</td>
+</tr>
+</table>
+
+The same work with different call graph arrangement:
+
+<img src="images/ch18_traditional_vs_functional2.jpg" alt="Traditional and functional architecture"/>
+
+### Analyze readability and awkwardness
+
+The image of the onion architecture we've seen here is an *idealized* view of a real system.
+
+#### Code readability
+
+* Functional code is usually very readable.
+* But nonfunctional implementation many times clearer.
+* It may be best to adopt the nonfunctional way.
+* Всегда пытайтесь cleanly separate the domain layer calculations from the interaction layer
+actions, usually by extracting calculations.
+
+#### Development speed
+
+Clean up the code later to conform to the architecture:
+
+* extracting calculations
+* converting to chains of functional tools
+* manipulating timelines
+
+#### System performance
+
+* mutable data is faster than immutable data.
+* consider the optimization to be part of the interaction layer.
+* see how the calculations in the domain layer can be reused in a speedier way.
 
 ### Summary
 

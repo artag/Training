@@ -1270,3 +1270,43 @@ function FormulaCell(upstreamCell, f) {
 ### Mutable state in functional programming
 
 <img src="images/ch18_mutable_state.jpg" alt="Mutable state in functional programming"/>
+
+### How reactive architecture reconfigures systems
+
+<img src="images/ch18_typical_vs_reactive.jpg" alt="Typical vs Reactive architecture"/>
+
+Reactive architecture has three major effects on our code:
+
+1. Decouples effects from their causes (причины).
+2. Treats series of steps as pipelines.
+3. Creates flexibility in your timeline.
+
+### What is the onion architecture?
+
+<img src="images/ch18_onion_architecture.jpg" alt="Onion architecture"/>
+
+Rules of onion architecture:
+
+1. Interaction with the world is done exclusively in the interaction layer.
+2. Layers call in toward (в направлении) the center.
+3. Layers don't know about layers outside of themselves.
+
+### Traditional layered architecture vs functional architecture
+
+<img src="images/ch18_traditional_vs_functional.jpg" alt="Traditional and functional architecture"/>
+
+## Links
+
+* [The Reactive Manifesto](https://www.reactivemanifesto.org)
+
+  Information about the reactive architecture.
+
+* [ReactiveX](https://reactivex.io)
+
+  An API for asynchronous programming with observable streams. (Для различных языков).
+
+* [Kafka](https://kafka.apache.org), [RabbitMQ](https://www.rabbitmq.com)
+
+  Streaming services. Implement a reactive architecture at a larger scale in your system between
+  separate services.
+
