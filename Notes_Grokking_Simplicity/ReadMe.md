@@ -1297,6 +1297,22 @@ Rules of onion architecture:
 
 ## Links
 
+* [Erlang](https://www.erlang.org)
+
+* [Elixir](https://elixir-lang.org)
+
+* [Lodash: Functional tools for JavaScript](https://lodash.com/docs)
+
+* [Laravel Collections. Functional tools for PHP](https://laravel.com/docs/collections#available-methods)
+
+* Clojure standard library
+
+  * [ClojureDocs quick reference](https://clojuredocs.org/quickref#sequences)
+
+  * [Official docs](https://clojure.github.io/clojure/clojure.core-api.html)
+
+* [Haskell Prelude](http://www.cse.chalmers.se/edu/course/TDA555/tourofprelude.html)
+
 * [The Reactive Manifesto](https://www.reactivemanifesto.org)
 
   Information about the reactive architecture.

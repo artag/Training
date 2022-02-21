@@ -229,10 +229,14 @@ Note that these rules could be applied in any order.
 1. Make a deep copy of the immutable data.
 2. Pass the copy to the untrusted code.
 
+<img src="images/ch07_data_leaves.jpg" alt="Data leaves the safe zone"/>
+
 #### Rule 2: Copy as data enters your code
 
 1. Immediately make a deep copy of the mutable data passed to your code.
 2. Use the copy in your code.
+
+<img src="images/ch07_data_enters.jpg" alt="Data enters the safe zone from the untrusted code"/>
 
 ### Example
 
@@ -402,6 +406,8 @@ Each layer defines new functions in terms of the functions in the layers below i
 
   * `.slice()`
 
+<img src="images/ch08_stratified_design.jpg" alt="Stratified design"/>
+
 ### Developing our design sense
 
 #### Характеристики, которые могут использоваться в качестве критериев для дизайна
@@ -517,6 +523,10 @@ In a straightforward implementation, all arrows would be about the same length.
 Если из одного слоя идет обращение к разным слоям, то можно ввести промежуточные функции
 для "выравнивания" (чтобы обращения были только к функциям одного нижележащего слоя).
 
+<img src="images/ch08_compare_arrows_before.jpg" alt="Compare arrows before"/>
+
+<img src="images/ch08_compare_arrows_after.jpg" alt="Compare arrows after"/>
+
 4. Стрелки между функциями из разных слоев должны быть как можно короче.
 
 5. All functions in a layer should serve (выполнять) the same pupose (функцию/работу).
@@ -542,10 +552,14 @@ In a straightforward implementation, all arrows would be about the same length.
 
   At the global zoom level, we see the entire call graph.
 
+<img src="images/ch08_global_zoom_level.jpg" alt="Global zoom level"/>
+
 2. Layer zoom level
 
   At the layer zoom level, we start with the level of interest and draw everything it
   points to below it.
+
+<img src="images/ch08_layer_zoom_level.jpg" alt="Layer zoom level"/>
 
 3. Function zoom level
 
