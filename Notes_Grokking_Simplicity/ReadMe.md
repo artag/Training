@@ -386,6 +386,8 @@ function map(array, f) {                    // (1)
 }
 ```
 
+<img src="images/ch12_map.jpg" alt="map()"/>
+
 ### `filter()`
 
 ```js
@@ -404,6 +406,8 @@ function filter(array, f) {                 // (1)
 }
 ```
 
+<img src="images/ch12_filter.jpg" alt="filter()"/>
+
 ### `reduce()`
 
 ```js
@@ -420,6 +424,8 @@ function reduce(array, init, f) {           // (1)
     return accum;                           // (4)
 }
 ```
+
+<img src="images/ch12_reduce.jpg" alt="reduce()"/>
 
 ### Реализация `map()` и `filter()` через `reduce()`
 

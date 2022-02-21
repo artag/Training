@@ -933,6 +933,8 @@ function map(array, f) {                    // takes array and function
 }
 ```
 
+<img src="images/ch12_map.jpg" alt="map()"/>
+
 #### Examples. Using `map()`
 
 **Example 1**
@@ -1017,6 +1019,8 @@ function filter(array, f) {                 // takes array and function
     return newArray;        // returns the new array
 }
 ```
+
+<img src="images/ch12_filter.jpg" alt="filter()"/>
 
 #### Examples. Using `filter()`
 
@@ -1108,6 +1112,8 @@ function reduce(array, init, f) {           // (1)
     return accum;                           // (4)
 }
 ```
+
+<img src="images/ch12_reduce.jpg" alt="reduce()"/>
 
 #### Examples. Using `reduce()`
 
