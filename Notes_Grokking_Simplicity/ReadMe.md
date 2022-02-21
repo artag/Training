@@ -1119,6 +1119,24 @@ Examples:
 
 ## Chapter 17. Coordinating timelines
 
+### Recap. Implicit versus explicit model of time
+
+1. Sequential statements execute in sequential order.
+
+<img src="images/ch17_seq_statements.jpg" alt="Sequential statements"/>
+
+2. Steps in two different timelines can occur in left-first or right-first order.
+
+<img src="images/ch17_steps_timelines.jpg" alt="Steps in two different timelines"/>
+
+3. Asynchronous events are called in new timelines.
+
+<img src="images/ch17_async_events.jpg" alt="Asynchronous events"/>
+
+4. An action is executed as many times as you call it.
+
+<img src="images/ch17_action_exec.jpg" alt="An action is executed as many times as you call it"/>
+
 ### A concurrency primitive for cutting timelines. `Cut()`
 
 In JavaScript (as single thread): Every timeline will call that function when it's done.

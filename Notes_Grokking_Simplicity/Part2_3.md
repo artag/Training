@@ -24,6 +24,24 @@ An action that only has an effect the first time you call it is called idempoten
 * умножение на единицу `x = x * 1`
 * модуль числа: `x = |x|`
 
+### Recap. Implicit versus explicit model of time
+
+1. Sequential statements execute in sequential order.
+
+<img src="images/ch17_seq_statements.jpg" alt="Sequential statements"/>
+
+2. Steps in two different timelines can occur in left-first or right-first order.
+
+<img src="images/ch17_steps_timelines.jpg" alt="Steps in two different timelines"/>
+
+3. Asynchronous events are called in new timelines.
+
+<img src="images/ch17_async_events.jpg" alt="Asynchronous events"/>
+
+4. An action is executed as many times as you call it.
+
+<img src="images/ch17_action_exec.jpg" alt="An action is executed as many times as you call it"/>
+
 ### Waiting for both parallel callbacks
 
 Our goal: We want the ajax responses to come back in parallel, but we want to wait for
