@@ -610,6 +610,8 @@ know what the data structure is.
 Также правильный выбор abstraction barrier позволяет нижним слоям успешно игнорировать
 функции из более верхних слоев.
 
+<img src="images/ch09_abstraction_barrier.jpg" alt="Abstraction barriers hide implementations"/>
+
 #### When to use (and when *not* to use!) abstraction barriers
 
 1. To facilitate (для облегчения) changes of implementation.
@@ -676,6 +678,12 @@ The pattern can be applied to all layers, not just abstraction barriers.
 faster and with higher quality. Если нам комфортно работать с текущими уровнями, значит,
 скорее всего, они не нуждаются в дополнительных улучшениях.
 
+### Spreading rule (правило распространения)
+
+Любая функция, которая вызывает action, сама становится action.
+
+<img src="images/ch08_spreading_rule.jpg" alt="Spreading rule"/>
+
 ### What does the graph show us about our code?
 
 *Nonfunctional requirements* (**NFR**s) are things like how testable, maintainable, or
@@ -704,6 +712,8 @@ change.
 If we put code that changes frequently near or at the top, our jobs will be easier. Build
 less on top of things that change.
 
+<img src="images/ch09_maintainability.jpg" alt="Maintainability"/>
+
 ### Testing code at the bottom is more important
 
 If we're doing it right, code at the top changes more frequently than code at the bottom.
@@ -714,11 +724,15 @@ If we're doing it right, code at the top changes more frequently than code at th
 Наоборот, тесты функций на нижних слоях иерархии имеют больший вес, т.к. здесь изменения
 происходят гораздо реже.
 
+<img src="images/ch09_testability.jpg" alt="Testability"/>
+
 ### Code at the bottom is more reusable (более многократно используется)
 
 Чем выше функция в иерархии, тем меньше она пригодна для повторного использования.
 
-### Summary: What the graph shows us about our code
+<img src="images/ch09_reusability.jpg" alt="Reusability"/>
+
+### Summary: What the graph shows us about our code. Итоговая картинка
 
 ```text
 --- A ---       Легче менять. Тесты менее ценны. Меньшая переиспользуемость.
@@ -726,6 +740,8 @@ If we're doing it right, code at the top changes more frequently than code at th
 v       v
 B       C       Сложнее менять. Тесты более ценны. Большая переиспользуемость.
 ```
+
+<img src="images/ch09_arranging_functions.jpg" alt="Arranging functions"/>
 
 ### Summary
 
