@@ -55,6 +55,205 @@ function remove_item_by_name(cart, name) {
 
 * These copy-on-write operations are generalizable
 
+### JavaScript arrays at a glance
+
+Особенности:
+
+* Can have values of different types.
+* Can access elements by index.
+* Can extend and shrink.
+
+Операции:
+
+**Lookup by index** `[idx]`
+
+This gets the element at `idx`. Indexes start at 0.
+
+```js
+> var array = [1, 2, 3, 4];
+> array[2]
+3
+```
+
+**Set an element** `[] =`
+
+The assignment operator will mutate an array.
+
+```js
+> var array = [1, 2, 3, 4];
+> array[2] = "abc"
+"abc"
+> array
+[1, 2, "abc", 4]
+```
+
+**Length** `.length`
+
+This contains the number of elements in the array. It’s not a method, so don’t use
+parentheses.
+
+```js
+> var array = [1, 2, 3, 4];
+> array.length
+4
+```
+
+**Add to the end** `.push(el)`
+
+This mutates the array by adding el to the end and returns the new length of the array.
+
+```js
+> var array = [1, 2, 3, 4];
+> array.push(10);
+5
+> array
+[1, 2, 3, 4, 10]
+```
+
+**Remove from the end** `.pop()`
+
+This mutates the array by dropping the last element and returns the value that was dropped.
+
+```js
+> var array = [1, 2, 3, 4];
+> array.pop();
+4
+> array
+[1, 2, 3]
+```
+
+**Add to the front** `.unshift(el)`
+
+This mutates the array by adding el to the array at the beginning and returns the new length.
+
+```js
+> var array = [1, 2, 3, 4];
+> array.unshift(10);
+5
+> array
+[10, 1, 2, 3, 4]
+```
+
+**Remove from the front** `.shift()`
+
+This mutates the array by dropping the first element (index 0) and returns the value that
+was dropped.
+
+```js
+> var array = [1, 2, 3, 4];
+> array.shift()
+1
+> array
+[2, 3, 4]
+```
+
+**Copy an array** `.slice()`
+
+This creates and returns a shallow copy of the array.
+
+```js
+> var array = [1, 2, 3, 4];
+> array.slice()
+[1, 2, 3, 4]
+```
+
+**Remove items** `.splice(idx, num)`
+
+This mutates the array by removing num items starting at idx and returns the removed items.
+
+```js
+> var array = [1, 2, 3, 4, 5, 6];
+> array.splice(2, 3); // remove 3 elements
+[3, 4, 5]
+> array
+[1, 2, 6]
+```
+
+### JavaScript objects at a glance
+
+Особенности:
+
+* Objects in JavaScript are collections of key/value pairs, where the keys are unique.
+* The keys are always strings.
+* The values can be any type.
+
+Операции:
+
+**Look up by key** `[key]`
+
+This looks up the value corresponding to `key`. If the key doesn’t exist, you’ll get `undefined`.
+
+```js
+> var object = {a: 1, b: 2};
+> object["a"]
+1
+```
+
+**Look up by key** `.key`
+
+You can also use a dot notation to access the values. This is convenient if `key` fits into
+JavaScript’s tokenization syntax rules.
+
+```js
+> var object = {a: 1, b: 2};
+> object.a
+1
+```
+
+**Set value for key** `.key` or `[key] =`
+
+You can assign a value to a key using either syntax, which mutates the object. It sets
+the value for `key`. If `key` exists, it replaces the value. If the `key` doesn’t exist, it
+adds to it.
+
+```js
+> var object = {a: 1, b: 2};
+> object["a"] = 7;
+7
+> object
+{a: 7, b: 2}
+> object.c = 10;
+10
+> object
+{a: 7, b: 2, c: 10}
+```
+
+**Remove a key/value pair** `delete`
+
+This method mutates the object by removing a key/value pair given the key. You can use
+either look-up syntax.
+
+```js
+> var object = {a: 1, b: 2};
+> delete object["a"];
+true
+> object
+{b: 2}
+```
+
+**Copy an object** `Object.assign(a, b)`
+
+`Object.assign()` copies all key/values pairs from object `b` to object `a` (mutating it).
+We can use it to make a copy of `b` by copying all key/value pairs to an empty object.
+
+```js
+> var object = {x: 1, y: 2};
+> Object.assign({}, object);
+{x: 1, y: 2}
+```
+
+**List the keys** `Object.keys()`
+
+If we want to iterate through the key/value pairs in an object, we can do it indirectly
+by asking the object for all of its keys using the function `Object.keys()`.
+That returns an array of the keys in an object, which we can then loop through.
+
+```js
+> var object = {a: 1, b: 2};
+> Object.keys(object)
+["a", "b"]
+```
+
 ### What to do if an operation is a read and a write
 
 Two approaches:
