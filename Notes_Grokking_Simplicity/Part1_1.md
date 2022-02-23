@@ -199,7 +199,7 @@ Calculations have benefits compared to actions:
 want (local machine, build server, testing machine) in order to test them.
 
 2. They're easier to analyze by a machine. A lot of academic research has gone into what's
-called “static analysis.” It's essentially automated checks that your code makes
+called "static analysis." It's essentially automated checks that your code makes
 sense. We won't get into that in this book.
 
 3. They're very composable. Calculations can be put together into bigger calculations in very
@@ -290,7 +290,7 @@ action. For instance, you can extract a planning stage, implemented as a
 calculation, from the execution stage, where the necessary action is carried out.
 We explore this technique in the next chapter.
 
-3. Restrict your actions to interactions with the outside. Your actions are all of those
+3. Restrict (ограничьте) your actions to interactions with the outside. Your actions are all of those
 things that are affected by the world outside or can affect the world outside.
 Inside, ideally, is just calculations and data. We'll see this more when we talk
 about the onion architecture in chapter 18.
@@ -441,7 +441,7 @@ return values, you may need to assign that value to a local variable in the orig
 function.
 
 It's important to note here that we want our arguments and return values to be
-immutable values—that is, they don't change. If we return a value and some piece of our
+immutable values - that is, they don't change. If we return a value and some piece of our
 function later changes it, that's a kind of implicit output. Similarly, if something changes
 the argument values after our function has received them, that is a kind of implicit input.
 We'll learn way more about immutable data in chapter 6, including why we use it and how

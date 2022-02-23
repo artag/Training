@@ -29,6 +29,554 @@
     * 18 Reactive and onion architectures
     * 19 The functional journey ahead
 
+## Chapter 1 and 2
+
+### Основные действия при рефакторинге кода. Что изучается в книге
+
+* Distinguishing actions, calculations, and data.
+* Organizing code by "rate of change".
+(A first glimpse of stratified design - первый взгляд на многослойный дизайн).
+* First-class abstractions.
+* Timelines visualize distributed systems.
+  * Multiple timelines can execute in different orderings.
+
+### Hard-won lessons about distributed systems
+
+1. Timelines are uncoordinated by default.
+2. You cannot rely on (полагаться) the duration of actions.
+3. Bad timing, however rare, can happen in production.
+4. The timeline diagram reveals (показывают) problems in the system.
+
+## Chapter 3. Distinguishing actions, calculations, and data
+
+1. Actions, calculations, and data can be apply to any situation.
+2. Actions can hide actions, calculations, and data.
+3. Calculations can be composed of smaller calculations and data.
+4. Data can only be composed of more data.
+5. Calculations often happen "in our heads".
+6. Actions spread (распространяются) through code.
+7. Actions can take many forms
+   * Function calls
+   * Method calls
+   * Constructors
+   * Expressions
+   * Statements
+
+### Data
+
+Data is facts about events. It is a record of something that happened.
+
+Unlike actions and calculations, it cannot be run.
+
+#### Immutability
+
+Functional programmers use two main disciplines for implementing immutable data:
+
+1. *Copy-on-write*. Make a copy of data before you modify it.
+2. *Defensive copying*. Make a copy of data you want to keep.
+
+See chapters 6 and 7.
+
+#### Advantages and disadvantages
+
++ Serializable. (Хранение, передача)
+
++ Compare for equality. (Возможность сравнения)
+
++ Open for interpretation.
+
+- Data must be interpreted to be useful.
+
+### Calculations
+
+Calculations are computations from inputs to outputs. No matter when they are run, or how
+many times they are run, they will give the same output for the same inputs.
+
+#### Why prefer calculations to actions?
+
+Calculations have benefits compared to actions:
+
+* They're much easier to test.
+* They're easier to analyze by a machine.
+* They're very composable.
+* Much easier to understand:
+  * What else is running at the same time
+  * What has run in the past and what will run in the future
+  * How many times you have already run it.
+
+### Actions
+
+Actions are anything that have an effect on the world or are affected by the world. As a
+rule of thumb, actions depend on when or how many times they are run.
+
+* When they are run - *Ordering*
+* How many times they are run - *Repetition*
+
+#### Советы по использованию actions
+
+1. Use fewer actions if possible.
+2. Keep your actions small. Remove everything that isn't necessary from the
+action.
+3. Restrict (ограничьте) your actions to interactions with the outside.
+4. Limit how dependent on time an action is.
+
+## Chapter 4. Extracting calculations from actions
+
+* Extract calculations from actions
+* Copy-on-write
+* Aligning design with business requirements
+  * Choosing a better level of abstraction that matches usage
+
+*Explicit inputs* - Arguments.
+
+*Implicit inputs* - Any other input
+
+*Explicit outputs* - Return value
+
+*Implicit outputs* - Any other output
+
+Copying a mutable value before you modify it is a way to implement immutability.
+It's called *copy-on-write*. (See chapter 6).
+
+### Step-by-step: Extracting a calculation
+
+**1. Select and extract the calculation code**
+
+Select a suitable chunk of code for extraction. Refactor that chunk into a new function.
+You may have to add arguments where appropriate. Make sure to call the new function
+where the chunk was in the old function.
+
+**2. Identify the implicit inputs and outputs of the function**
+
+Identify the inputs and outputs of the new function. The inputs are anything that can
+affect the result between calls to the function. And the outputs are anything that can be
+affected by calling that function.
+Example inputs include arguments, reads from variables outside the function, queries
+of a database, and so on.
+Example outputs include return value, modifying a global variable, modifying a shared
+object, sending a web request, and so on.
+
+**3. Convert inputs to arguments and outputs to return values**
+
+One at a time, convert inputs to arguments and outputs to return values. If you add
+return values, you may need to assign that value to a local variable in the original
+function.
+
+Important. If we want our arguments and return values to be
+immutable values - that is, they don't change. If we return a value and some piece of our
+function later changes it, that's a kind of implicit output. Similarly, if something changes
+the argument values after our function has received them, that is a kind of implicit input.
+
+## Chapter 5. Improving the design of actions
+
+A *code smell* is a characteristic of a piece of code that might be a symptom of deeper problems.
+
+### Principles
+
+* Minimize (reducing) implicit inputs and outputs.
+
+* Giving the code a once-over (беглый осмотр).
+
+* Categorizing our calculations.
+  * By grouping our calculations (layers of meaning)
+
+* Smaller functions and more calculations.
+
+* Design is about pulling things apart (разделение сущностей на части).
+  * Easier to reuse.
+  (Smaller, simpler functions are easier to reuse. They do less.
+They make fewer assumptions.)
+
+  * Easier to maintain.
+  (Smaller functions are easier to understand and maintain. They have less code.
+They are often obviously right (or wrong)).
+
+  * Easier to test.
+  (Smaller functions are easier to test. They do one thing, so you just test that
+one thing).
+
+## Chapter 6. Staying immutable in a mutable language
+
+### Categorizing operations into reads, writes, or both
+
+* **Reads**
+  * Get information out of data
+  * Do not modify the data
+* **Writes**
+  * Modify the data
+
+### The three steps of the copy-on-write discipline
+
+1. Make a copy.
+2. Modify the copy (as much as you want!).
+3. Return the copy.
+
+* Copy-on-write converts writes into reads.
+
+* These copy-on-write operations are generalizable
+
+### What to do if an operation is a read and a write
+
+Two approaches:
+
+1. Split function (Splitting the operation into read and write).
+2. Return two values.
+
+*Пример*.
+
+Remove from the front `.shift` This mutates the array by dropping the first element
+(index 0) and returns the value that was dropped.
+
+```js
+> var array = [1, 2, 3, 4];
+> array.shift()
+1
+> array
+[2, 3, 4]
+```
+
+*Подход 1*. Splitting the operation into read and write:
+
+```js
+// just a function that returns the first element (or undefined if the list is empty).
+// it's a calculation
+function first_element(array) {
+    return array[0];
+}
+
+// perform the shift but drop the return value
+// Copy-on-write
+function drop_first(array) {
+    var array_copy = array.slice();
+    array_copy.shift();
+    return array_copy;
+}
+```
+
+*Подход 2*. Returning two values from one function:
+
+```js
+function shift(array) {
+    var array_copy = array.slice();
+    var first = array_copy.shift();
+    return {    // we use an object to return two separate values
+        first : first,
+        array : array_copy
+    };
+}
+```
+
+### Reads to immutable data structures are calculations
+
+* Reads to mutable data are actions.
+* Writes make a given piece of data mutable.
+* If there are no writes to a piece of data, it is immutable.
+* Reads to immutable data structures are calculations.
+* Converting writes to reads makes more code calculations.
+
+### Immutable data structures are fast enough
+
+* We can always optimize later.
+* Garbage collectors are really fast.
+* We're not copying as much as you might think at first.
+  * shallow copy (just copy the top level of a data structure)
+  * structural sharing (copies share a lot of references to the same objects in memory)
+* Functional programming languages have fast implementations.
+
+### Copy-on-write operations on objects
+
+1. Make a copy.
+2. Modify the copy.
+3. Return the copy.
+
+## Chapter 7. Staying immutable with untrusted code
+
+Any data that leaves the safe zone is potentially mutable. Likewise,
+any data that enters the safe zone from untrusted code
+is potentially mutable.
+
+We can use *defensive copies* to protect data and maintain immutability.
+
+### Rule 1: Copy as data leaves your code
+
+1. Make a deep copy of the immutable data.
+2. Pass the copy to the untrusted code.
+
+<img src="images/ch07_data_leaves.jpg" alt="Data leaves the safe zone"/>
+
+### Rule 2: Copy as data enters your code
+
+1. Immediately make a deep copy of the mutable data passed to your code.
+2. Use the copy in your code.
+
+<img src="images/ch07_data_enters.jpg" alt="Data enters the safe zone from the untrusted code"/>
+
+## Chapter 8. Stratified design: Part 1
+
+*Stratified design* is a design technique that builds software in layers.
+
+Each layer defines new functions in terms of the functions in the layers below it.
+
+Пример:
+
+<img src="images/ch08_stratified_design.jpg" alt="Stratified design"/>
+
+### Характеристики, которые могут использоваться в качестве критериев для дизайна
+
+**Function bodies**
+
+* Length
+* Complexity
+* Levels of detail
+* Functions called
+* Language features used
+
+**Layer structure**
+
+* Arrow length
+* Cohesion
+* Level of detail
+
+**Function signatures**
+
+* Function name
+* Argument names
+* Argument values
+* Return value
+
+### Решения, принимаемые при проектировании дизайна
+
+**Organization**
+
+* Decide where a new function goes.
+* Move functions around.
+
+**Implementation**
+
+* Change an implementation.
+* Extract a function.
+* Change a data structure.
+
+**Changes**
+
+* Choose where new code is written.
+* Decide what level of detail is appropriate.
+
+### Patterns of stratified design
+
+* Pattern 1: Straightforward (простая/несложная) implementation
+
+  The layer structure of stratified design should help us build straightforward implementations.
+  When we read a function with a straightforward implementation, the problem the function
+  signature presents should be solved at the right level of detail in the body. Too much detail
+  is a code smell.
+
+* Pattern 2: Abstraction barrier
+
+  Some layers in the graph provide an interface that lets us hide an important implementation
+  detail. These layers help us write code at a higher level and free our limited mental capacity
+  to think at a higher level.
+
+* Pattern 3: Minimal interface
+
+  As our system evolves, we want the interfaces to important business concepts to converge to
+  a small, powerful set of operations. Every other operation should be defined in terms of those,
+  either directly or indirectly.
+
+* Pattern 4: Comfortable layers
+
+  The patterns and practices of stratified design should serve our needs as programmers, who are
+  in turn serving the business. We should invest time in the layers that will help us deliver
+  software faster and with higher quality. We don't want to add layers for sport. The code and
+  its layers of abstraction should feel comfortable to work in.
+
+### Pattern 1: Straightforward implementations
+
+1. Выделить desired (нужные) operations.
+
+2. Visualizing our function calls with a call graph.
+
+Пример такой диаграммы:
+
+```text
+    ------------- freeTieClip() --------------
+    |             |           |              |
+    |             |           v              v
+    |             |      make_item()    add_item()
+    v             v
+array_index    for loop
+```
+
+* Arrows represent function calls.
+* `array index`, `for loop` - language features.
+* `make_item()`, `add_item()` - function calls.
+* Functions and built-in language features могут быть расположены на разных уровнях
+
+Замечания по приведенной диаграмме:
+
+* `freeTieClip()` обращается к разным уровням (стрелки указывают на разные уровни)
+* The difference in layers makes the implementation less obvious and hard to read.
+
+3.Straightforward (простые/несложные) implementations call functions from similar layers of
+abstraction.
+
+In a straightforward implementation, all arrows would be about the same length.
+
+Если из одного слоя идет обращение к разным слоям, то можно ввести промежуточные функции
+для "выравнивания" (чтобы обращения были только к функциям одного нижележащего слоя).
+
+<img src="images/ch08_compare_arrows_before.jpg" alt="Compare arrows before"/>
+
+<img src="images/ch08_compare_arrows_after.jpg" alt="Compare arrows after"/>
+
+4. Стрелки между функциями из разных слоев должны быть как можно короче.
+
+5. All functions in a layer should serve (выполнять) the same pupose (функцию/работу).
+
+### Three different zoom levels
+
+1. Global zoom level
+
+  At the global zoom level, we see the entire call graph.
+
+<img src="images/ch08_global_zoom_level.jpg" alt="Global zoom level"/>
+
+2. Layer zoom level
+
+  At the layer zoom level, we start with the level of interest and draw everything it
+  points to below it.
+
+<img src="images/ch08_layer_zoom_level.jpg" alt="Layer zoom level"/>
+
+3. Function zoom level
+
+  At the function zoom level, we start with one function of interest and draw everything it
+  points to below it.
+
+## Chapter 9. Stratified design: Part 2
+
+An *abstraction barrier* is a layer of functions that hide the implementation.
+
+**Важно**: на диаграмме нет стрелок, которые пересекают abstraction barrier.
+
+### Abstraction barrier. Abstraction barriers hide implementations
+
+Functional programmers strategically employ (используют) abstraction barriers because they
+let them think about a problem at a higher level.
+
+The abstraction barrier in this case means the functions above that layer don't need to
+know what the data structure is.
+
+Также правильный выбор abstraction barrier позволяет нижним слоям успешно игнорировать
+функции из более верхних слоев.
+
+<img src="images/ch09_abstraction_barrier.jpg" alt="Abstraction barriers hide implementations"/>
+
+### When to use abstraction barriers
+
+* To facilitate (для облегчения) changes of implementation.
+
+  * Abstraction barrier позволяет потом изменять нижележащие слои.
+
+  * This property might be useful if you are prototyping something and you still don't
+  know how best to implement it.
+
+  * You know something will change; you're just not ready to do it yet.
+
+* To make code easier to write and read.
+
+  * An abstraction barrier that lets you ignore lower code details will make your code
+  easier to write.
+
+* To reduce coordination between teams.
+
+  * The abstraction barrier allows teams on either (обеих) side to ignore the details the
+  other team handles.
+
+* To mentally focus on the problem at hand.
+
+### When not to use abstraction barriers
+
+* Code in the barrier is lower level, so it's more likely to contain bugs.
+
+* Low-level code is harder to understand.
+
+### Pattern 3: Minimal interface
+
+1. If we add more code to the barrier, we have more to change when we change the
+implementation.
+
+2. More functions in an abstraction barrier mean more coordination between teams.
+
+3. A larger interface to our abstraction barrier is harder to keep in your head.
+
+### Идеальный layer, к которому следует стремиться
+
+1. Layer should have as many functions as necessary, but no more.
+
+2. The functions should not have to change, nor should you need to add functions later.
+
+3. The set should be complete, minimal, and timeless.
+
+### Pattern 4: Comfortable layers
+
+Не надо делать слишком "высокие" башни абстракций.
+
+Не надо добавлять слои только ради спорта.
+
+We should invest time in the layers that will help us deliver software faster and with higher
+quality.
+
+Если нам комфортно работать с текущими уровнями, значит, скорее всего, они не нуждаются в
+дополнительных улучшениях.
+
+### Spreading rule (правило распространения)
+
+Любая функция, которая вызывает action, сама становится action.
+
+<img src="images/ch08_spreading_rule.jpg" alt="Spreading rule"/>
+
+### What does the graph show us about our code?
+
+*Nonfunctional requirements* (**NFR**s) are things like how testable, maintainable, or
+reusable the code is.
+
+Рассматриваются три NFRs:
+
+1. *Maintainability* - What code is easiest to change when requirements change?
+2. *Testability* - What is most important to test?
+3. *Reusability* - What functions are easier to reuse?
+
+### Code at the top of the graph is easier to change
+
+The longer the path from the top to a function, the more expensive that function will be to
+change.
+
+If we put code that changes frequently near or at the top, our jobs will be easier. Build
+less on top of things that change.
+
+<img src="images/ch09_maintainability.jpg" alt="Maintainability"/>
+
+### Testing code at the bottom is more important
+
+Тесты функций на верхних слоях иерархии имеют меньший вес/значение, т.к. данный функционал
+может меняться очень часто.
+
+Наоборот, тесты функций на нижних слоях иерархии имеют больший вес, т.к. здесь изменения
+происходят гораздо реже.
+
+<img src="images/ch09_testability.jpg" alt="Testability"/>
+
+### Code at the bottom is more reusable (более многократно используется)
+
+Чем выше функция в иерархии, тем меньше она пригодна для повторного использования.
+
+<img src="images/ch09_reusability.jpg" alt="Reusability"/>
+
+### Summary: What the graph shows us about our code
+
+<img src="images/ch09_arranging_functions.jpg" alt="Arranging functions"/>
+
 ## Chapter 10. First-class functions: Part 1
 
 Code smell: Implicit argument in function name.
