@@ -89,7 +89,7 @@ The assignment operator will mutate an array.
 
 **Length** `.length`
 
-This contains the number of elements in the array. It’s not a method, so don’t use
+This contains the number of elements in the array. It's not a method, so don't use
 parentheses.
 
 ```js
@@ -181,7 +181,7 @@ This mutates the array by removing num items starting at idx and returns the rem
 
 **Look up by key** `[key]`
 
-This looks up the value corresponding to `key`. If the key doesn’t exist, you’ll get `undefined`.
+This looks up the value corresponding to `key`. If the key doesn't exist, you'll get `undefined`.
 
 ```js
 > var object = {a: 1, b: 2};
@@ -192,7 +192,7 @@ This looks up the value corresponding to `key`. If the key doesn’t exist, you�
 **Look up by key** `.key`
 
 You can also use a dot notation to access the values. This is convenient if `key` fits into
-JavaScript’s tokenization syntax rules.
+JavaScript's tokenization syntax rules.
 
 ```js
 > var object = {a: 1, b: 2};
@@ -203,7 +203,7 @@ JavaScript’s tokenization syntax rules.
 **Set value for key** `.key` or `[key] =`
 
 You can assign a value to a key using either syntax, which mutates the object. It sets
-the value for `key`. If `key` exists, it replaces the value. If the `key` doesn’t exist, it
+the value for `key`. If `key` exists, it replaces the value. If the `key` doesn't exist, it
 adds to it.
 
 ```js

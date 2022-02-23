@@ -1248,7 +1248,7 @@ Usage and variation:
 
 ```js
 // Usage
-var prices = pluck(products, ‘price’);
+var prices = pluck(products, 'price');
 
 // Variation
 function invokeMap(array, method) {
@@ -1322,7 +1322,7 @@ var howMany = frequenciesBy(products, function(p) {
 ```
 
 ```text
-> console.log(howMany[‘ties’])      // 4
+> console.log(howMany['ties'])      // 4
 ```
 
 ```js
@@ -1898,3 +1898,60 @@ Rules of onion architecture:
   Streaming services. Implement a reactive architecture at a larger scale in your system between
   separate services.
 
+* Popular functional languages
+
+  * [Clojure](https://clojure.org)
+
+  Clojure runs on the Java Virtual Machine and JavaScript (in the form of ClojureScript).
+
+  * [Elixir](https://elixir-lang.org)
+
+  Elixir runs on the Erlang Virtual Machine. It uses actors to manage concurrency.
+
+  * [Swift](https://swift.org)
+
+  Swift is Apple's open source, flagship language.
+
+  * [Kotlin](https://kotlinlang.org)
+
+  Kotlin combines object-oriented and functional programming into one JVM language.
+
+  * [Haskell](https://haskell.org)
+
+  Haskell is a statically typed language used in academia, startups, and enterprises alike.
+
+  * [Erlang](https://erlang.org)
+
+  Erlang was built for fault tolerance. It uses actors for concurrency.
+
+  * [Elm](https://elm-lang.org)
+
+  Elm is statically typed and used for frontend web applications that
+  compile to JavaScript.
+
+  * [Scala](https://scala-lang.org)
+
+  Scala combines object-oriented and functional programming into one language.
+  It runs on the Java Virtual Machine and JavaScript.
+
+  * [F#](https://fsharp.org)
+
+  F# is statically typed and runs on the Microsoft Common Language Runtime.
+
+  * [Rust](https://rust-lang.org)
+
+  Rust is a system language with a powerful type system designed to prevent memory
+  leaks and concurrency errors.
+
+  * [PureScript](https://www.purescript.org)
+
+  PureScript is a Haskell-like language that compiles to JavaScript to run in the
+  browser.
+
+  * [Racket](https://racket-lang.org)
+
+  Racket has a rich history and a large and vibrant community.
+
+  * [Reason](https://reasonml.github.io)
+
+  Reason is statically typed and compiles to JavaScript and native assembly.
