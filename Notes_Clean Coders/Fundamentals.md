@@ -1360,3 +1360,53 @@ immobile (неподвижный).
 Важно, чтобы тесты быстро выполнялись и их легко можно было запустить.
 
 #### The Real World
+
+Может показаться, что написание рабочего кода вместе с тестами может замедлить разработку.
+На самом деле все совершенно наоборот.
+
+### The Three Laws of TDD
+
+1. Write **no** production code except to pass a failing test.
+
+2. Write only **enough** of a test to demonstrate a failure.
+
+(Ошибка компиляции также является failure.)
+
+3. Write only **enough** production code to pass the test.
+
+#### Debugging Time
+
+Затраты времени на отладку кода уменьшается в разы. Постоянные запуски тестов позволяют
+сразу откатить ошибочные изменения назад.
+
+#### Design Documents
+
+Тесты - это низкоуровневая проектная документация.
+
+#### Decoupling. (Отделение, разделение)
+
+Writing tests first makes production code testable.
+
+Другое слово для testable - decoupled.
+
+Из-за этого дизайн приложения становится лучше. Тесты улучшают дизайн.
+
+#### Courage to Change. (Смелость изменений)
+
+Тесты защищают от возможности что-либо сломать во время изменений кода.
+
+#### Trust. (Доверие)
+
+Тестам, которые написаны до рабочего кода согласно трем правилам TDD, можно доверять.
+
+Тесты, которые пишутся после написания рабочего кода могут содержать пробелы (неполное покрытие).
+
+### Conclusion
+
+Самая главная мысль этого эпизода "The Three Laws of TDD":
+
+1. Write **no** production code except to pass a failing test.
+
+2. Write only **enough** of a test to demonstrate a failure.
+
+3. Write only **enough** production code to pass the test.
