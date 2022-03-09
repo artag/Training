@@ -1482,3 +1482,78 @@ View и может быть протестирован.
 бага.
 
 * 100% code coverage. 100% очень сложно достичь, но к этому числу нужно стремиться.
+
+## Episode 7. Architecture, Use Cases, and High Level Design
+
+### What is Architecture
+
+#### Architecture Exposes Usage (Архитектура выявляет/показывает сценарии использования)
+
+Архитектура это то, как система/приложение будет использоваться. Хорошая архитектура "screams use cases".
+
+Use cases - сценарии использования.
+
+Внутри приложении мы хотим видеть use cases, а не названия "delivery mechanism" (log, mvc, controllers).
+
+Use cases не должны зависеть от delivery mechanism. Use cases должны располагаться отдельно
+ото всех.
+
+#### Deferring Decisions (Откладывание решений)
+
+Хорошая архитектура не состоит из определенных tools и frameworks (software environment).
+Хорошая архитектура позволяет отложить принятие решения об использовании определенного типа БД,
+framework'а, библиотеки, UI, ...
+
+Пример - проект [FitNesse](http://www.fitnesse.org/). Данные можно хранить в памяти, в файлах,
+в БД. Все модули хранения реализованы как подключаемые плагины.
+
+#### Separation of Value (Разделение ценности)
+
+Разделение системы на компоненты/модули/плагины позволяет оценить параметр **cost vs value**.
+Этот параметр помогает выбрать конкретную технологию для использования в составе разрабатываемого
+ПО.
+
+### Use Cases (Сценарии использования)
+
+Web Delivery (Console Delivery) - это деталь. Главная часть - это бизнес правила.
+Как правило в `MVC`, model не является частью business rules.
+
+Необходимо строить архитектуру приложения так, чтобы delivery были взаимозаменяемы для одной
+основной системной архитектуры:
+
+<img src="images/ep07-use_cases.jpg" alt="Use cases"/>
+
+*Совет: книга "Object-Oriented Software Engineering. A Use Case Driven Approach" by Ivar Jacobson.*
+
+Решение в книге простое: определить взаимодействия пользователя с системой **без**
+использования/рассматривания механизмов delivery. Для взаимодействия рассматриваются т.н.
+*use cases*. (Т.е. при взаимодействии пользователя не рассматриваются такие слова как:
+button, click, page, link, ...).
+
+**Use cases** form the central organizing principles and the abstractions around which is system
+is built (формируют центральные организующие принципы и абстракции, вокруг которых строится
+система).
+
+**Use case** - formal description how user interacts with a system in order to achieve specific
+goal (формальное описание того, как пользователь взаимодействует с системой для достижения
+конкретной цели).
+
+Пример use case:
+
+<img src="images/ep07-use_case_example.jpg" alt="Use case example"/>
+
+Use cases говорят о:
+
+* *командах и данных*, которые получает система.
+* *действиях и данных*, которые она производит в качестве ответа.
+
+Приведенный пример показывает только положительный сценарий развития событий. В реальности подобные
+сценарии также содержат **Exception course**:
+
+<img src="images/ep07-use_case_example2.jpg" alt="Use case example with exception course"/>
+
+*Совет: книга "Writing Effective Use Cases" by Alistair Cockburn.*
+
+*Совет: книга "User Stories Applied. For Agile Software Development" by Mike Cohn.*
+
+### Parititioning (Разделение)
