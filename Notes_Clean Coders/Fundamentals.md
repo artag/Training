@@ -1557,3 +1557,82 @@ Use cases говорят о:
 *Совет: книга "User Stories Applied. For Agile Software Development" by Mike Cohn.*
 
 ### Parititioning (Разделение)
+
+В книге "Object-Oriented Software Engineering" архитектура имеет 3 типа объектов:
+
+1. **Entities** - бизнес-объекты.
+2. **Boundaries** - пользовательские интерфейсы.
+3. **Interactors** (controls) - use-case объекты.
+
+*Entities* have: application independent business rules. Методы этих объектов могут применяться
+во всех типах приложений.
+
+*Interactors* have: application specific business rules. Обычно interactors вызывают entities.
+
+```text
+Create        -- 1. Create -->    Order
+Order       ------------------->  Entity
+Interactor    -- 2. GetID  -->
+              <-- ID --
+```
+
+Interactor знает как создать entity и как вызвать у него метод, чтобы достичь требуемого use case.
+
+Задача use case - получить данные от пользователя и возвратить ему определенные данные.
+
+*Boundary* объекты изолируют use cases от delivery mechanisms и обеспечивают взаимодействие между
+ними. Use cases ничего не знают о delivery mechanisms.
+
+<img src="images/ep07-boundaries.jpg" alt="Boundaries in system"/>
+
+Цепочка взаимодействий выглядит так:
+
+```text
+Пользователь -> Delivery mech. -> Boundary -> Interactor -> Entity
+Entity -> Interactor -> Boundary -> Delivery mech. -> Пользователь
+```
+
+Entities и Interactors являются тестируемыми объектами. Можно долгое время разрабатывать приложение
+без использования delivery mechanism.
+
+### Isolation
+
+Для Web приложения на стороне delivery mechanisms находятся: html, css, JS, MVC, и т.д.
+
+На текущий момент в сложных приложениях View получает данные для отображения из entities через
+цепочку interactors-entities:
+
+<img src="images/ep07-mvc_1.jpg" alt="MVC in system"/>
+
+Model в MVC не является бизнес объектом.
+
+Как выглядит взаимодействие:
+
+1. HttpRequest попадает на Web Server
+2. Router переводит обработку на определенный Controller/
+3. Controller создает Request Model - простую структуру данных для передачи через Boundary.
+4. Request Model через Boundary передается в Iteractor.
+5. Interactor конвертирует Request Model в Result Model.
+
+Он реализует use case, управляет взаимодействием между entities, собирает данные их работы и создает Response Model.
+
+<img src="images/ep07-mvc_2.jpg" alt="MVC in system"/>
+
+6. Interactor посылает Response Model через Boundary назад в Presenter объект, расположенный
+на стороне delivery.
+
+7. Presenter конвертирует Response Model в формат, пригодный для отображения на Web.
+
+---
+
+Boundaries состоят из **двух наборов** интерфейсов:
+
+1. Первый набор Boundary интерфейсов используется Controller'ом, но реализуется Interactor'ом.
+Здесь используется Request Model (data structure).
+
+2. Второй набор Boundary интерфейсов используется Interactor'ом, но реализуется Presenter'ом.
+Здесь используется Response Model (data structure).
+
+<img src="images/ep07-mvc_3.jpg" alt="MVC in system"/>
+
+#### Database
