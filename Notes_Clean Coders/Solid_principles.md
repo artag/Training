@@ -80,8 +80,154 @@ merges сложны и/или требуют много времени для в
 
 #### Почему код становится грязным
 
-Череда неверных шагов, недостаток опыта, страх изменений, небрежность со временем увеличивают
+Череда неверных шагов, недостаток опыта, страх изменений и небрежность со временем увеличивают
 степень загрязнения кода.
 
 ### What is OO?
 
+#### Dependency Inversion
+
+Пример: верхний уровень зависит от нижних. Когда мы добавляем новые элементы, верхний уровень
+начинает зависеть от большего числа компонентов.
+
+<table>
+<tr>
+<td>
+
+![High level from low level dependencies](images/ep08-dependencies.jpg)
+
+</td>
+<td>
+
+![More dependencies](images/ep08-more_dependencies.jpg)
+
+</td>
+</tr>
+</table>
+
+В новой версии реализации зависимостей верхний модуль зависит только от двух компонентов
+`getchar` и `putchar`.
+
+В *nix системах система ввода/вывода зависит от 5 абстракций: `open`, `close`, `read`, `write`,
+`seek`. Если мы хотим работать, например, с файлом, то нам требуется реализовать эти 5 абстракций
+в модуле для работы с файлом.
+
+Полиморфизм можно использовать не только в ООП. Например можно развернуть зависимость даже
+в чистом Си. Для нашего случая можно реализовать работу с нижележащими модулями подобным образом,
+через функции абстракции `File`:
+
+<table>
+<tr>
+<td>
+
+![New version of dependencies](images/ep08-new_version.jpg)
+
+</td>
+<td>
+
+![File in linux](images/ep08-file_linux.jpg)
+
+</td>
+<td>
+
+![More detailed new version](images/ep08-new_version2.jpg)
+
+</td>
+</tr>
+</table>
+
+В новой версии зависимость кода инвертируется: модуль `Copy` ничего не знает про нижележащие
+уровни. Мы можем добавлять новые модули без его изменения и усложнения ("загрязнения").
+
+Аналогично, можно сделать в ООП:
+
+<table>
+<tr>
+<td>
+
+```java
+public interface Reader { char getchar(); }
+public interface Writer { void putchar(int c); }
+
+void copy(Reader reader, Writer writer) {
+    int c;
+    while ((c = reader.getchar()) ! = EOF) {
+        writer.putchar(c);
+    }
+}
+
+public Keyboard implements Reader { ... }
+public Printer implements Writer { ... }
+```
+
+</td>
+<td>
+
+<img src="images/ep08-oop.jpg" alt="OOP" width="300">
+
+</td>
+</tr>
+</table>
+
+#### What is OO?
+
+В ООП вызовы подобного типа:
+
+```java
+o.f(x);
+```
+
+"развязывают" вызываемый код от кода вызывающего. Вызывающий код посылает сообщение с требованием
+выполнить какую-либо операцию. Вызывающий код не знает как именно будет обработан его запрос.
+
+```text
+Flow of control
+-------------------------------->
+
+Sender ---> message <--- Recipient
+
+Opposed dependency
+<--------------------------------
+```
+
+Именно в этом и состоит суть ООП. Говорят, что суть ООП это наследование, инкапсуляция и
+полимофизм. На самом деле, это лишь механизмы. Самое главное свойство ООП, которое отличает его
+от других парадигм - это способность инверсии зависимостей кода - это предотвращение зависимости
+верхних слоев кода от нижних слоев реализации.
+
+#### Dependency Management
+
+Боб мартин создал 5 принципов, согласно которым классы в ООП зависят друг от друга - **SOLID**:
+
+1. The **S**ingle Responsibility Principle
+2. The **O**pen Closed Principle
+3. The **L**iskov Substitution Principle
+4. The **I**nterface Segregation Principle
+5. The **D**ependency Inversion Principle
+
+Три приниципа, согласно которым классы группируются в связанные модули -
+**Component Cohesion Principles** (Принципы Согласованности Компонентов):
+
+1. The Release-Reuse Equivalency Principle
+2. The Common Closure Principle
+3. The Common Reuse Principle
+
+Три принципа, которые описывают зависимости между компонентами -
+**Component Coupling Principles** (Принципы Соединения/Связанности Компонентов):
+
+1. The Acyclic (ациклические/непереодические) Dependencies Principle
+2. The Stable Dependencies Principle
+3. The Stable Abstractions Principle
+
+Все эти принципы образуют **Dependency Management**, позволяя организовывать компоненты системы с
+high cohesion and low coupling (высокая связность и низкое сцепление).
+
+### Conclusion
+
+1. Software expensive to design but cheap to build.
+2. Проблемы дизайна: Rigidity (негибкость), fragility (хрупкость), immobility (статичность),
+viscosity (вязкость, тягучесть, клейкость), needless complexity (ненужная сложность).
+3. Инверсия зависимости позволяет избежать "загрязнения" кода.
+4. Основная суть ООП: оно позволяет изолировать high-level policy от low-level detail.
+5. Dependency Management - список рекомендаций, которые позволит организовывать компоненты системы
+с high cohesion and low coupling (в частности, сюда включены принципы SOLID).
