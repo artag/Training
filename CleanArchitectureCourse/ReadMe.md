@@ -209,3 +209,127 @@ builder.Services.AddScoped<IOrderDomainService, OrderDomainService>();
 ```
 
 5. Использование зарегистрированного сервиса `IOrderDomainService` в `Application.OrderService`.
+
+## DataAccess
+
+### Use Cases
+
+- В Use Cases находится логика приложения - логика, которые связана с автоматизацией бизнес-процессов.
+- Не должны зависеть от фреймворков (ORM, Web, ...).
+- На каждую роль один use case.
+
+Примеры:
+
+- Взаимодествие с инфраструктурой.
+- Информация о сеансе текущего пользователя.
+
+Use Cases нужны интерфейсы инфраструктуры:
+
+- База данных
+- Интеграции (email-сервис)
+- Хост (текущий пользователь и его права)
+
+### Расположение интерфейсов инфраструктуры
+
+В луковой архитектуре расположение интерфейсов четко определено:
+
+<img src="images/05_onion_interfaces.jpg" alt="Interfaces in onion" style="width:550px">
+
+Расположение интерфейсов по DDD:
+
+<img src="images/06_ddd_interfaces.jpg" alt="Interfaces in DDD" style="width:500px">
+
+Где расположены интерфейсы инфраструктуры в чистой архитектуре:
+
+- Не в Entities (как это реализовано в DDD).
+- Интерфейсы инфраструктуры располагаются в слое UseCases.
+
+Наш пример в качестве инфраструктуры использует базу данных.
+
+Поэтому создаем и добавляем слой `DataAccess.Interfaces` и его реализацию `DataAccess`:
+
+<img src="images/07_add_dataaccess_interfaces.jpg" alt="Adding DataAccess.Interfaces" style="width:550px">
+
+- Слой `DataAccess.Interfaces` помещается между слоями `Entities` и `Use Cases`.
+- Слой `DataAccess.Interfaces` ссылается на `Entities`.
+- Слой `DataAccess.Interfaces` используется слоем `Use Cases`.
+- Реализация слоя `DataAccess.Interfaces` находится в слое `DataAccess`, который расположен
+ближе всего к слою `Frameworks`.
+
+### Практика
+
+#### Добавление проекта `DataAccess.Interfaces`
+
+1. Создание проекта `DataAccess.Interfaces`.
+
+2. Добавление в `DataAccess.Interfaces` ссылки на `Entities` и `Microsoft.EntityFrameworkCore`.
+
+3. В `DataAccess.Interfaces`, создаем `IDbContext`:
+
+```csharp
+public interface IDbContext
+{
+    DbSet<Order> Orders { get; }
+    DbSet<Product> Products { get; }
+
+    Task<int> SaveChangesAsync(CancellationToken token);
+}
+```
+
+Почему в интерфейс доступа к БД мы добавляем `DbSet`, а не создаем репозитории?
+Объяснение в двух словах:
+
+- Мы здесь не зависим ни от какой конкретной базы (зависимость только от "общего" пакета
+`Microsoft.EntityFrameworkCore`).
+
+- Концепция `DbContext` сама по себе является реализацией паттерна `Repository` и `Unit of work`.
+(Т.е. реализация дополнительной абстракции `Repository` является избыточной).
+
+4. Добавление в `DataAccess` ссылки на `DataAccess.Interfaces`.
+
+5. Класс `DataAccess.AppDbContext` теперь реализует `IDbContext` (добавляем `IDbContext`):
+
+```csharp
+public class AppDbContext : DbContext, IDbContext
+{
+    // ...
+}
+```
+
+6. `Application` теперь ссылается не на `DataAccess`, а на `DataAccess.Interfaces`:
+
+- Меняем ссылки в `.csproj`
+- В классах, которые используют `AppDbContext` меняем на 
+
+7. Верхний `WebApp` теперь ссылается на `DataAccess`.
+
+- Меняем регистрацию сервиса:
+
+с
+
+```csharp
+builder.Services.AddEntityFrameworkSqlite().AddDbContext<AppDbContext>();
+```
+
+на
+
+```csharp
+builder.Services.AddEntityFrameworkSqlite().AddDbContext<IDbContext, AppDbContext>();
+```
+
+#### Раскладывание проектов по папкам
+
+Рекомендуется для сортировки проектов по уровням использовать именование папок с нумерацией.
+
+Сортировка проектов по папкам в solution:
+
+- Папка `0 Utils`:
+  - Проект `Utils`
+- Папка `1 Entities`:
+  - Проект `Domain`
+  - Проект `DomainServices.Implementation`
+  - Проект `DomainServices.Interfaces`
+
+### Итого
+
+Слой `Application` теперь не зависит от типа БД, а зависит только от `IDbContext`.
