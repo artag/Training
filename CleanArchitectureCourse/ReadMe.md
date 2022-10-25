@@ -57,6 +57,8 @@ dotnet ef database update -v
 
 ## Cross-cutting concerns. Helpers
 
+*Проект: 02. AddUtilsAndDomainServices*
+
 На диаграммах чистой и луковой архитектур обычно не указывается область cross-cutting concerns.
 
 **Cross-cutting concerns** - это сквозная (или пронизывающая) функциональность.
@@ -210,9 +212,11 @@ builder.Services.AddScoped<IOrderDomainService, OrderDomainService>();
 
 5. Использование зарегистрированного сервиса `IOrderDomainService` в `Application.OrderService`.
 
-## DataAccess
+## Data Access
 
-### Use Cases
+*Проект: 03. AddDataAccess*
+
+### Use Cases и Data Access
 
 - В Use Cases находится логика приложения - логика, которые связана с автоматизацией бизнес-процессов.
 - Не должны зависеть от фреймворков (ORM, Web, ...).
@@ -333,3 +337,169 @@ builder.Services.AddEntityFrameworkSqlite().AddDbContext<IDbContext, AppDbContex
 ### Итого
 
 Слой `Application` теперь не зависит от типа БД, а зависит только от `IDbContext`.
+
+## Много инфраструктуры
+
+*Проект: 04. AddInfrastructure* - общий проект под инфраструктуру
+
+*Проект: 05. AddInfrastructureSeparate* - отдельные проекты под инфраструктуру
+
+Что делать если у приложения много инфраструктуры.
+
+Например, в приложении может быть несколько вещей из:
+
+- База данных (на чтение, на запись, KeyValue storage)
+- Веб-фреймворк
+- Service Bus
+- Blob Storage (для хранения файлов)
+- Elastic Search (для ускорения поиска)
+
+### Что сделать
+
+Выделить проект `Infrastructure.Interfaces` и положить туда интерфейсы всей инфраструктуры,
+которая используется приложением:
+
+<img src="images/08_add_infrastructure.jpg" alt="Add Infrastructure.Interfaces" style="width:650px">
+
+- `DataAccess` лучше оставить отдельным слоем.
+- В `Infrastructure.Implementation` будет находиться реализация остальной инфраструктуры.
+
+`DataAccess` и `Infrastructure.Implementation` могут ссылаться **только** на
+`Infrastructure.Interfaces` и, если это необходимо, на `Entities`.
+
+### Что кладем в `Infrastructure.Interfaces`
+
+- Интерфейсы для доступа к инфраструктуре
+  - ORM для доступа к базе
+  - Elastic Search
+  - Blob Storage
+  - ...
+- Интерфейсы для зависимостей веб-фреймворка
+  - Текущий пользователь (получение информации о текущем пользователе)
+- Интерфейсы для интеграции с врешними системами
+  - Отправка Email и SMS
+
+#### Если инфраструктуры слишком много
+
+То `Infrastructure.Interfaces` и `Infrastructure.Implementation` могут стать слишком большими.
+
+Поэтому: выделяем интерфейс и реализацию каждой инфраструктуры.
+
+Пример:
+
+- Для Service Bus:
+  - `ServiceBus.Interfaces`
+  - `ServiceBus.Implementation`
+- Для Blob Storage:
+  - `BlobStorage.Interfaces`
+  - `BlobStorage.Implementation`
+- ...
+- `Инфраструктура N`:
+  - `Интеграция N.Interfaces`
+  - `Интеграция N.Implementation`
+
+<img src="images/09_add_infrastructure_2.jpg" alt="Add Infrastructure.Interfaces" style="width:650px">
+
+При таком походе будет множество слабосвязанных маленьких компонентов.
+
+### Практика
+
+#### 1. Добавление только `Infrastructure.Interfaces` и `Infrastructure.Implementation`
+
+*Проект: 04. AddInfrastructure*
+
+1. `DataAccess.Interfaces` переименовывается в `Infrastructure.Interfaces`
+
+2. В `Infrastructure.Interfaces` создаются папки:
+
+- `Infrastructure` - для доступа к БД - сюда помещеается `IDbContext`.
+- `Integrations` - для какого-нибудь email сервиса.
+- `WebApp` - для получения информации о пользователе.
+
+3. Интерфейсы для наших псевдо-сервисов:
+
+- В `Infrastructure.Interfaces`, `Integrations`:
+создадим `IEmailService` - интерфейс email сервиса.
+
+- В `Infrastructure.Interfaces`, `WebApp`:
+создадим `ICurrentUserService` - интерфейс сервиса для получения информации о текущем пользователе.
+
+4. Новый проект `Infrastructure.Implementation` ссылается на `Infrastructure.Interfaces`.
+
+5. Можно сгруппировать объекты по папкам:
+
+- Папка `2 Infrastructure.Interfaces`:
+  - Проект `Infrastructure.Interfaces`
+- Папка `Infrastructure.Implementation`:
+  - Проект `DataAccess`
+  - Проект `Infrastructure.Implementation`
+
+6. Добавление реализаций
+
+- В `Infrastructure.Implementation` - реализацию для `IEmailService`.
+- В `WebApp`, папку `Services` - реализацию для `ICurrentUserService`.
+
+7. Слой `Application` ссылается на `Infrastructure.Interfaces`.
+
+8. Слой `WebApp` ссылается на `Infrastructure.Implementation` и `DataAccess`.
+
+9. Регистрация новых сервисов на `WebApp`:
+
+```csharp
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+```
+
+Можно сгруппировать регистрацию сервисов по слоям:
+
+```csharp
+// Domain
+builder.Services.AddScoped<IOrderDomainService, OrderDomainService>();
+
+// Infrastructure
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddEntityFrameworkSqlite().AddDbContext<IDbContext, AppDbContext>();
+
+// Application
+builder.Services.AddScoped<IOrderService, OrderService>();
+
+// Frameworks
+builder.Services.AddAutoMapper(typeof(MapperProfile));
+builder.Services.AddControllers();
+```
+
+#### 2. Добавление `Infrastructure.Interfaces` и `Infrastructure.Implementation` для каждого компонента инфраструктуры
+
+*Проект: 05. AddInfrastructureSeparate*
+
+Все сервисы инфраструктуры разбиваются на попарные проекты.
+
+1. В solution получаются следующие компоненты инфраструктуры:
+
+- `DataAccess.Interfaces` и `DataAccess`
+- `Email.Interfaces` и `Email.Implementation`
+- `Web.Interfaces` и `WebApp`
+
+2. Добавление интерфейсов для наших псевдо-сервисов:
+
+- В `Email.Interfaces` добавляем `IEmailService`
+- В `Web.Interfaces` добавляем `ICurrentUserService`
+- В `DataAccess.Interfaces` остается `IDbContext`
+
+3. Интерфейсы инфраструктуры могут ссылаться только на "нижние" слои:
+
+- `Entity`
+- `Utils`
+
+4. Релизации инфраструктуры
+
+- `Email.Implementation`, добавляется `EmailService`
+- `WebApp` - в папку `Services`добавим `CurrentUserService`
+- `DataAccess.Interfaces` - лежит `AppDbContext`
+
+5. Слой `Application` ссылается на интерфейсные слои инфраструктуры `*.Interfaces`
+
+6. Слой `WebApp` ссылается на реализацию слоев инфраструктуры `*.Implementation`
+
+7. Обязательно: регистрация в `WebApp` всех сервисов (см. прошлый раздел)
