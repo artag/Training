@@ -5,7 +5,6 @@ using DomainServices.Interfaces;
 using Email.Implementation;
 using Email.Interfaces;
 using MediatR;
-using UseCases;
 using UseCases.Order.Commands.CreateOrder;
 using UseCases.Order.Utils;
 using Web.Interfaces;
@@ -22,11 +21,11 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddEntityFrameworkSqlite().AddDbContext<IDbContext, AppDbContext>();
 
 // Application
-builder.Services.AddMediatR(typeof(CreateOrderCommand));
 
 // Frameworks
 builder.Services.AddControllers();
 builder.Services.AddAutoMapper(typeof(MapperProfile));
+builder.Services.AddMediatR(typeof(CreateOrderCommand));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
