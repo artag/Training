@@ -57,7 +57,7 @@ dotnet ef database update -v
 
 ## Cross-cutting concerns. Helpers
 
-*Проект: 02. AddUtilsAndDomainServices*
+*Проект: 02. UtilsAndDomainServices*
 
 На диаграммах чистой и луковой архитектур обычно не указывается область cross-cutting concerns.
 
@@ -146,6 +146,8 @@ dotnet ef database update -v
 
 ### Практика
 
+*Проект: 02. UtilsAndDomainServices*
+
 Перенос метода расчета стоимости заказа из `Application.OrderService` в слой Entities.
 
 ```csharp
@@ -214,7 +216,7 @@ builder.Services.AddScoped<IOrderDomainService, OrderDomainService>();
 
 ## Data Access
 
-*Проект: 03. AddDataAccess*
+*Проект: 03. DataAccess*
 
 ### Use Cases и Data Access
 
@@ -261,6 +263,8 @@ Use Cases нужны интерфейсы инфраструктуры:
 ближе всего к слою `Frameworks`.
 
 ### Практика
+
+*Проект: 03. DataAccess*
 
 #### Добавление проекта `DataAccess.Interfaces`
 
@@ -340,9 +344,9 @@ builder.Services.AddEntityFrameworkSqlite().AddDbContext<IDbContext, AppDbContex
 
 ## Много инфраструктуры
 
-*Проект: 04. AddInfrastructure* - общий проект под инфраструктуру
+*Проект: 04. Infrastructure* - общий проект под инфраструктуру
 
-*Проект: 05. AddInfrastructureSeparate* - отдельные проекты под инфраструктуру
+*Проект: 05. InfrastructureSeparate* - отдельные проекты под инфраструктуру
 
 Что делать если у приложения много инфраструктуры.
 
@@ -406,7 +410,7 @@ builder.Services.AddEntityFrameworkSqlite().AddDbContext<IDbContext, AppDbContex
 
 #### 1. Добавление только `Infrastructure.Interfaces` и `Infrastructure.Implementation`
 
-*Проект: 04. AddInfrastructure*
+*Проект: 04. Infrastructure*
 
 1. `DataAccess.Interfaces` переименовывается в `Infrastructure.Interfaces`
 
@@ -471,7 +475,7 @@ builder.Services.AddControllers();
 
 #### 2. Добавление `Infrastructure.Interfaces` и `Infrastructure.Implementation` для каждого компонента инфраструктуры
 
-*Проект: 05. AddInfrastructureSeparate*
+*Проект: 05. InfrastructureSeparate*
 
 Все сервисы инфраструктуры разбиваются на попарные проекты.
 
@@ -790,4 +794,70 @@ public class OrdersController : ControllerBase
         return id;
     }
 }
+```
+
+## Application Services
+
+*Проект: 07. ApplicationServices*
+
+В хендлерах может использоваться общая логика:
+
+- Вызов хранимок и островов SQL.
+- Проверка прав и ролей пользователей.
+
+### Куда поместить общую логику?
+
+- Сделать базовые классы хенлера - не всегда может получиться. Особенно если проект большой.
+
+- Аналогично для generic - может не получиться.
+
+- Предпочтительно: общую логику можно сделать как **Application Services** и внедрять в хедлеры
+через Dependency Injection.
+
+### Куда поместить Application Services?
+
+Оставить в Use Cases в отдельной папке - неконсистентно (некрасиво: в `UseCase` будут
+и Use Cases и Application Services).
+
+Лучше переместить Application Services в отдельный компонент:
+
+<img src="images/12_application_services.jpg" alt="Add application services" style="width:750px">
+
+- `ApplicationServices.Interfaces` помещаются между `Entities` и `Use Cases`.
+- `Use Cases` ссылаеются на `ApplicationServices.Interfaces`.
+- На `ApplicationServices.Implementation` может ссылаться только самый верхний компонент -
+composition root (на схеме это `Frameworks`, в тестовом примере это `WebApp`).
+
+### Практика
+
+*Проект: 07. ApplicationServices*
+
+1. Новые проекты: `ApplicationServices.Interfaces` и `ApplicationServices.Implementation`.
+
+2. Новая папка `3 Application`.
+
+Сюда помещаем:
+
+- `ApplicationServices.Interfaces`
+- `ApplicationServices.Implementation`
+- `UseCases`
+
+3. Переименуем старую папку `Infrastructure.Implementation` в `4 Infrastructure.Implementation`.
+
+4. Для примера создадим для управления правами и ролями пользователей:
+
+в `ApplicationServices.Interfaces` и `ApplicationServices.Implementation`
+добавим `ISecurityService` и `SecurityService` соответственно.
+
+5. Добавление ссылок:
+
+- `ApplicationServices.Implementation` ссылается на `ApplicationServices.Interfaces`
+- `UseCases` ссылается на `ApplicationServices.Interfaces`
+- `WebApp` ссылается на `ApplicationServices.Implementation`
+
+6. Регистрация сервиса в `WebApp`:
+
+```csharp
+// Application
+builder.Services.AddScoped<ISecurityService, SecurityService>();
 ```
