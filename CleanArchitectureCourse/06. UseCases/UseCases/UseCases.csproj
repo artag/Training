@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DataAccess.Interfaces\DataAccess.Interfaces.csproj" />
+      <ProjectReference Include="..\DomainServices.Interfaces\DomainServices.Interfaces.csproj" />
+      <ProjectReference Include="..\Email.Interfaces\Email.Interfaces.csproj" />
+      <ProjectReference Include="..\Web.Interfaces\Web.Interfaces.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AutoMapper" Version="12.0.0" />
+      <PackageReference Include="MediatR" Version="11.0.0" />
+    </ItemGroup>
+
+</Project>

@@ -506,6 +506,8 @@ builder.Services.AddControllers();
 
 ## Use Cases
 
+*Проект: 06. UseCases*
+
 Определения:
 
 - **Use Case** - это операция, которую хочет выполнить пользователь.
@@ -606,3 +608,186 @@ public class GetOrderRequestHandler
   - *(Что?)* Cross-cutting concerns через pipeline, а не магию Fosy или DynamicProxy.
 
 ### Практика
+
+*Проект: 06. UseCases*
+
+1. Добавим еще один Use Case (для наглядности).
+
+1.1. Сейчас есть только 1 use case: в `Application`, в `OrderService`, метод `GetByIdAsync`.
+
+Добавим метод `CreateOrderAsync` в `IOrderService`:
+
+```csharp
+Task<int> CreateOrderAsync(CreateOrderDto dto);
+```
+
+И его реализацию в `OrderService`:
+
+```csharp
+public async Task<int> CreateOrderAsync(CreateOrderDto dto)
+{
+    var order = _mapper.Map<Order>(dto);
+    _dbContext.Orders.Add(order);
+    await _dbContext.SaveChangesAsync();
+    return order.Id;
+}
+```
+
+Dto'шки:
+
+```csharp
+public class CreateOrderDto
+{
+    public List<OrderItemDto> Items { get; set; }
+}
+
+public class OrderDto
+{
+    public int Id { get; set; }
+    public decimal Total { get; set; }
+}
+
+public class OrderItemDto
+{
+    public int ProductId { get; set; }
+    public int Quantity { get; set; }
+}
+```
+
+Не забываем добавить Dto'шки в `MapperProfile`.
+
+1.2. Новый метод в контроллере `OrdersController`:
+
+```csharp
+[HttpPost]
+public async Task<int> Create([FromBody] CreateOrderDto dto)
+{
+    var id = await _orderService.CreateOrderAsync(dto);
+    return id;
+}
+```
+
+Теперь, переход к реализации Use Cases
+
+2. Проект `Application` переименуем в `UseCases`.
+
+3. Подключение `MediatR`.
+
+- В проект `UseCases` добавляется nuget пакет `MediatR`.
+- В проект `WebApp` добавляется nuget пакет `MediatR.Extensions.Microsoft.DependencyInjection`.
+
+*Мое замечание: использование `MediatR` некоторые рассматривают как антипаттерн.*
+
+4. Отрефакторим сервисы - заменим их на хендлеры.
+
+4.1. Для каждого агрегата внутри проекта `UseCases` создадим отдельные папки.
+
+- Папка `Order`. Внутри - все, что относится к заказу.
+  - Папка `Order\Commands` - команды.
+    - Папка `Order\Commands\CreateOrder` - Команда "Создание заказа".
+  - Папка `Order\Queries` - queries.
+    - Папка `Order\Queries\GetById` - Query "Получение заказа".
+  - Папка `Order\Dto` - папка для Dto'шек.
+  - Папка `Order\Utils` - папка для вспомогательных инструментов.
+
+4.2. Создадим внутренний request, который отправляется от контроллера к use case'у:
+
+В `Order\Commands\CreateOrder` создадим `CreateOrderCommand`:
+
+```csharp
+public class CreateOrderCommand : IRequest<int>
+{
+    public CreateOrderDto Dto { get; set; }
+}
+```
+
+И handler для него (тоже в папке `Order\Commands\CreateOrder`):
+
+```csharp
+public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int>
+{
+    private readonly IMapper _mapper;
+    private readonly IDbContext _dbContext;
+
+    public CreateOrderCommandHandler(IMapper mapper, IDbContext dbContext)
+    {
+        _mapper = mapper;
+        _dbContext = dbContext;
+    }
+
+    public async Task<int> Handle(CreateOrderCommand command, CancellationToken cancellationToken)
+    {
+        var order = _mapper.Map<Domain.Entities.Order>(command.Dto);
+        _dbContext.Orders.Add(order);
+        await _dbContext.SaveChangesAsync();
+        return order.Id;
+    }
+}
+```
+
+В метод `CreateOrderCommandHandler.Handle` попадает функционал из метода
+`OrderService.CreateOrderAsync`.
+
+4.3. Аналогично делаем внутренний request:
+
+В `Order\Queries\GetById` создадим `GetOrderByIdQuery` и `GetOrderByIdQueryHandler`.
+
+4.4. В `Order\Dto` переносим:
+
+- `CreateOrderDto`
+- `OrderDto`
+- `CreateItemDto`
+
+4.5. В `Order\Utils` перенесем `MapperProfile`
+
+*Мое замечание: если будет mapping чего-то другого, помимо Order, то `Utils` надо ИМХО переместить в корень проекта `UseCases`*.
+
+5. Удаляем `IOrderService` и `OrderService` - они уже больше не нужны.
+
+6. В `WebApp`:
+
+6.1. Регистрация `MediatR`
+
+Вместо:
+
+```csharp
+builder.Services.AddScoped<IOrderService, OrderService>();
+```
+
+Будет:
+
+```csharp
+builder.Services.AddMediatR(typeof(CreateOrderCommand));
+```
+
+6.2. Контроллер `OrdersController` будет выглядеть так:
+
+```csharp
+[ApiController]
+[Route("[controller]")]
+public class OrdersController : ControllerBase
+{
+    private readonly ISender _sender;
+
+    public OrdersController(ISender sender)
+    {
+        _sender = sender;
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<OrderDto> Get(int id)
+    {
+        var result = await _sender.Send(new GetOrderByIdQuery { Id = id });
+        return result;
+    }
+
+    [HttpPost]
+    public async Task<int> Create([FromBody] CreateOrderDto dto)
+    {
+        var id = await _sender.Send(new CreateOrderCommand { Dto = dto });
+        return id;
+    }
+}
+```
