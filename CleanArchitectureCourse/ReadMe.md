@@ -861,3 +861,214 @@ composition root (на схеме это `Frameworks`, в тестовом пр�
 // Application
 builder.Services.AddScoped<ISecurityService, SecurityService>();
 ```
+
+## Controllers
+
+*Проект: 08. Controllers*
+
+- Связывают бизнес-логику с внешним миром.
+  - Контроллеры принимают запросы от внешних систем.
+  - Преобразуют входные данные в формат, понятный ядру, use case'у.
+  - Передают запрос ядру, use case'у.
+  - Получают результат.
+  - При необходимости преобразуют результат в формат, понятный получателю результата.
+  - Результат отправляют получателю.
+- Контроллеры зависят от web-фреймворка.
+
+Пример контроллера с методом, принимающим запрос от внешнего мира:
+
+```csharp
+public class OrdersController
+{
+    [HttpGet("{id}")]
+    public OrderDto Get(int id)
+    {
+        return _mediator.Send(new GetOrderByIdRequest { Id = id });
+    }
+}
+```
+
+Можно ли напрямую из контроллера обратиться к уровню данных? Вот так, например:
+
+```csharp
+public class OrdersController
+{
+    [HttpGet("{id}")]
+    public OrderDto Get(int id)
+    {
+        return _orderRepository.Get(id);
+    }
+}
+```
+
+`_orderRepository` - это объект уровня `DbContext`.
+
+Или можем ли мы из контроллера обращаться напрямую к внешним сервисам? Вот так, например:
+
+```csharp
+public class OrdersController
+{
+    [HttpPost("{id}")]
+    public void SendNotification(int id)
+    {
+        return _emailService.Notify(id);
+    }
+}
+```
+
+### Controllers. Зависимости
+
+Вспомним **правило зависимостей**: снаружи-внутрь. Наружные компоненты могут обращаться ко
+всем внутренним слоям.
+
+Но тогда контроллеры могут использовать инфраструктуру:
+
+- Получать данные из репозитория напрямую в обход use cases.
+- И напрямую использовать интеграции.
+
+Такие ссылки контроллеров надо **запретить** для "чистоты архитектуры".
+
+Контроллеры могут **только вызывать Use Cases** и ничего больше:
+
+<img src="images/13_controller_references.jpg" alt="Controller references" style="width:650px">
+
+### Controllers. Методы
+
+Должен ли контроллер содержать отдельный метод для каждого use case? Ответ: это необязательно.
+
+Метод контроллера может запускать разные use cases:
+
+- Использовать разные параметры (заказ из корзины и в один клик).
+- В зависимости от прав текущего пользователя (админ или нет).
+
+Так можно делать по чистой архитектуре:
+
+```csharp
+public class OrderController
+{
+    public void CreateOrder(OrderDto order)
+    {
+        if (User.IsInRole("Admin"))
+            _mediator.Send(new CreateAdminOrderRequest(order));
+        else
+            _mediator.Send(new CreateUserOrderRequest(order));
+    }
+}
+```
+
+или так:
+
+```csharp
+public class OrdersController
+{
+    public void CreateOrder(OrderDto order, bool oneClick)
+    {
+        if (oneClick)
+            _mediator.Send(new CreateOneClickOrderRequest(order));
+        else
+            _mediator.Send(new CreateOrderRequest(order));
+    }
+}
+```
+
+Но все же **рекомендуется** создавать по одному методу на каждый use case:
+
+```csharp
+public class OrdersController
+{
+    public void CreateOrder(OrderDto order)
+    {
+        _mediator.Send(new CreateOrderRequest(order));
+    }
+
+    public void CreateOneClickOrder(OneClickOrderDto order)
+    {
+        _mediator.Send(new CreateOneClickOrderRequest(order));
+    }
+}
+```
+
+### Controllers. Надо ли их выделять в отдельный проект
+
+<img src="images/14_separate_controller.jpg" alt="Controllers project" style="width:600px">
+
+С одной стороны в выделении контроллеров в отдельный проект нет преимуществ, т.к. они
+сильно завязаны и зависят от web-framework'а.
+
+Controllers могут быть частью Framework если:
+
+- В проекте всего один модуль.
+- Миримся с возможностью залезть из контроллера в инфраструктуру (данные, внешние сервисы).
+
+<img src="images/15_controller_in_framework.jpg" alt="Controllers with framework" style="width:600px">
+
+Controllers могут быть расположены отдельно от Framework если:
+
+- Есть несколько точек входа в приложение
+  - Frontend API
+  - Admin API
+  - Mobile API
+  - Public API
+  - Background / Web Jobs
+
+- Чтобы защититься от ссылки на `Infrastructure.Interfaces` (т.к. мы должны обращаться только к Use Cases).
+
+*Мое примечание: из `Controllers` все равно будут видны `*.Interfaces`, т.к. ссылки на них видны через слой `UseCases`*.
+
+- Чтобы защититься от вызова handlers других модулей:
+
+<img src="images/16_controller_use_cases.jpg" alt="Separate controllers and use cases" style="width:700px">
+
+Здесь физически невозможно использовать Use Cases для соседнего функционала.
+
+### Практика
+
+*Проект: 08. Controllers*
+
+1. Новый проект `Controllers`, перемещаем туда `OrdersController` из `WebApp`.
+
+Зависимости `Contollers`:
+
+- Nuget пакет `MediatR`
+- Nuget пакет `Microsoft.AspNetCore.Mvc.Core`
+- Проект `UseCases`
+
+2. Для демонстрации добавим в solution еще один API: 
+
+- Проект `Web.Controllers`
+- Проект `Web.UseCases`
+
+- Проект `Controllers` переименуем в `Mobile.Controllers`.
+- Проект `UseCases` переименуем в `Mobile.UseCases`.
+
+Это все положим в новые папки (папки в корне solution):
+
+- Папка `Mobile`:
+  - Проекты `Mobile.Controllers` и `Mobile.UseCases`.
+- Папка `Web`:
+  - Проекты `Web.Controllers` и `Web.UseCases`.
+
+3. `WebApp` будет ссылаться на:
+
+- Проект `Mobile.Controllers`
+- Проект `Web.Controllers`
+
+4. Дополнительно, что `ASP.NET` увидел контроллеры в нескольких проектах надо при регистрации:
+
+Вместо:
+
+```csharp
+builder.Services.AddControllers();
+```
+
+Добавить:
+
+```csharp
+builder.Services
+    .AddControllers().PartManager.ApplicationParts
+    .Add(new AssemblyPart(typeof(Web.Controllers.DummyController).Assembly));
+
+builder.Services
+    .AddControllers().PartManager.ApplicationParts
+    .Add(new AssemblyPart(typeof(Mobile.Controllers.OrdersController).Assembly));
+```
