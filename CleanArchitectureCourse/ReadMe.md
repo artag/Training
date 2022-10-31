@@ -1244,3 +1244,123 @@ builder.Services
 - Проект `WebApp`. Все в порядке.
 
 Такие переименования более четко задают назначение проектов и слоев.
+
+## 10.1 Изоляция домена от инфраструктуры
+
+*Проект: 10. DomainBad*
+
+Пример. Усложним бизнес-логику. Вначале плохой пример: Добавление ссылки на инфраструктуру в
+`Entities`.
+
+Задача. Надо сделать расчет стоимости заказа с учетом доставки:
+
+- Если стоимость заказа больше определенного порога, то доставка бесплатна.
+- Если стоимость заказа меньше - доставка добавляется к стоимости.
+- Стоимость доставки считается во внешнем сервисе.
+
+### Добавление `Weight` в `Product`
+
+Добавление веса в продукт надо для расчета стоимости доставки.
+
+```csharp
+namespace Domain.Models;
+
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public float Weight { get; set; }
+}
+```
+
+Плюс, надо добавить данные в `Product`, в `AppDbContext`.
+
+1. В Package Manager Console (default project: `WebApp`):
+
+```text
+add-migration Weight -project DataAccess.Sqlite
+```
+
+2. Обновление БД, из Package Manager Console (default project: `WebApp`):
+
+```text
+update-database -project DataAccess.Sqlite
+```
+
+### Добавление ссылки на службу доставки
+
+Служба доставки является инфраструктурой.
+
+Добавление двух проектов:
+
+- `Delivery.Interfaces` в папку `2 Infrastructure.Interfaces`.
+- `Delivery.DeliveryCompany` (реализация) в папку `4 Infrastructure.Implementation`.
+
+Интерфейс:
+
+```csharp
+namespace Delivery.Interfaces
+{
+    public interface IDeliveryService
+    {
+        decimal CalculateDeliveryCost(float weight);
+    }
+}
+```
+
+Реализация:
+
+```csharp
+namespace Delivery.DeliveryCompany
+{
+    public class DeliveryService : IDeliveryService
+    {
+        public decimal CalculateDeliveryCost(float weight)
+        {
+            return (decimal)weight * 10;
+        }
+    }
+}
+```
+
+Ссылки:
+
+- `DomainServices.Implementation` на `Delivery.Interfaces`.
+- `Delivery.DeliveryCompany` на `Delivery.Interfaces`.
+- `WebApp` на `Delivery.DeliveryCompany` (еще добавление регистрации).
+
+### Обновление метода расчета заказа
+
+В `OrderDomainService` инжектируется сервис `IDeliveryService`. Метод `GetTotal` будет таким:
+
+```csharp
+public class OrderDomainService : IOrderDomainService
+{
+    private readonly IDeliveryService _deliveryService;
+
+    public OrderDomainService(IDeliveryService deliveryService)
+    {
+        _deliveryService = deliveryService;
+    }
+
+    public decimal GetTotal(Order order)
+    {
+        var totalPrice = order.Items.Sum(x => x.Quantity * x.Product.Price);
+        decimal deliveryCost = 0;
+        if (totalPrice < 1000)
+        {
+            var totalWeight = order.Items.Sum(x => x.Product.Weight);
+            deliveryCost = _deliveryService.CalculateDeliveryCost(totalWeight);
+        }
+
+        return totalPrice + deliveryCost;
+    }
+}
+```
+
+### Итоговая (плохая) архитектура
+
+<img src="images/20_delivery_bad.jpg" alt="Bad architecture example" style="width:700px">
+
+Видно, что из `Entities` зависимость идет в обратную сторону - плохой признак.
