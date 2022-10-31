@@ -1276,16 +1276,30 @@ public class Product
 
 Плюс, надо добавить данные в `Product`, в `AppDbContext`.
 
+#### Создание миграции
+
 1. В Package Manager Console (default project: `WebApp`):
 
 ```text
 add-migration Weight -project DataAccess.Sqlite
 ```
 
+Или из консоли (из корня проекта `DataAccess.Sqlite`):
+
+```text
+dotnet ef migrations add Weight -s ..\WebApp\WebApp.csproj -p DataAccess.Sqlite.csproj
+```
+
 2. Обновление БД, из Package Manager Console (default project: `WebApp`):
 
 ```text
 update-database -project DataAccess.Sqlite
+```
+
+Или из консоли (из корня проекта `DataAccess.Sqlite`):
+
+```text
+dotnet ef database update -s ..\WebApp\WebApp.csproj
 ```
 
 ### Добавление ссылки на службу доставки
@@ -1364,3 +1378,192 @@ public class OrderDomainService : IOrderDomainService
 <img src="images/20_delivery_bad.jpg" alt="Bad architecture example" style="width:700px">
 
 Видно, что из `Entities` зависимость идет в обратную сторону - плохой признак.
+
+## 10.2 Изоляция домена от инфраструктуры
+
+*Проект: 11. DomainGood*
+
+Пример. Усложним бизнес-логику. Вначале плохой пример: Добавление ссылки на инфраструктуру в
+`Entities` через delegate.
+
+Задача. Надо сделать расчет стоимости заказа с учетом доставки:
+
+- Если стоимость заказа больше определенного порога, то доставка бесплатна.
+- Если стоимость заказа меньше - доставка добавляется к стоимости.
+- Стоимость доставки считается во внешнем сервисе.
+
+### Добавление `Weight` в `Product`
+
+Добавление веса в продукт надо для расчета стоимости доставки.
+
+```csharp
+namespace Domain.Models;
+
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public float Weight { get; set; }
+}
+```
+
+Плюс, надо добавить данные в `Product`, в `AppDbContext`.
+
+#### Создание миграции
+
+1. В Package Manager Console (default project: `WebApp`):
+
+```text
+add-migration Weight -project DataAccess.Sqlite
+```
+
+Или из консоли (из корня проекта `DataAccess.Sqlite`):
+
+```text
+dotnet ef migrations add Weight -s ..\WebApp\WebApp.csproj -p DataAccess.Sqlite.csproj
+```
+
+2. Обновление БД, из Package Manager Console (default project: `WebApp`):
+
+```text
+update-database -project DataAccess.Sqlite
+```
+
+Или из консоли (из корня проекта `DataAccess.Sqlite`):
+
+```text
+dotnet ef database update -s ..\WebApp\WebApp.csproj
+```
+
+### Добавление ссылки на службу доставки
+
+Служба доставки является инфраструктурой.
+
+Добавление двух проектов:
+
+- `Delivery.Interfaces` в папку `2 Infrastructure.Interfaces`.
+- `Delivery.DeliveryCompany` (реализация) в папку `4 Infrastructure.Implementation`.
+
+Интерфейс:
+
+```csharp
+namespace Delivery.Interfaces
+{
+    public interface IDeliveryService
+    {
+        decimal CalculateDeliveryCost(float weight);
+    }
+}
+```
+
+Реализация:
+
+```csharp
+namespace Delivery.DeliveryCompany
+{
+    public class DeliveryService : IDeliveryService
+    {
+        public decimal CalculateDeliveryCost(float weight)
+        {
+            return (decimal)weight * 10;
+        }
+    }
+}
+```
+
+Ссылки:
+
+- `Delivery.DeliveryCompany` на `Delivery.Interfaces`.
+- `WebApp` на `Delivery.DeliveryCompany` (еще добавление регистрации).
+
+**Не надо добавлять** ссылку `DomainServices.Implementation` на `Delivery.Interfaces`.
+
+### Обновление метода расчета заказа
+
+Обращение к `IDeliveryService` можно реализовать из `DomainService.Interfaces`
+через делегат.
+
+#### Добавление делегата
+
+В `DomainServices.Interfaces` добавляется новый файл `CalculateDeliveryCost.cs`:
+
+```csharp
+namespace DomainServices.Interfaces
+{
+    public delegate decimal CalculateDeliveryCost(float weight);
+}
+```
+
+А интерфейс метода расчета стоимости товара станет таким:
+
+```csharp
+public interface IOrderDomainService
+{
+    decimal GetTotal(Order order, CalculateDeliveryCost calculateDeliveryCost);
+}
+```
+
+В `OrderDomainService` метод `GetTotal` теперь такой:
+
+```csharp
+public class OrderDomainService : IOrderDomainService
+{
+    public decimal GetTotal(Order order, CalculateDeliveryCost calculateDeliveryCost)
+    {
+        var totalPrice = order.Items.Sum(x => x.Quantity * x.Product.Price);
+        decimal deliveryCost = 0;
+        if (totalPrice < 1000)
+        {
+            var totalWeight = order.Items.Sum(x => x.Product.Weight);
+            deliveryCost = calculateDeliveryCost(totalWeight);
+
+            return totalPrice + deliveryCost;
+        }
+    }
+}
+```
+
+#### Изменения в UseCases
+
+- В проект `Mobile.UseCases` добавляется ссылка на `Delivery.Interfaces`
+- Через конструктор класса `GetOrderByIdQueryHandler` инжектируется `IDeliveryService`
+- Делегат `_deliveryService.CalculateDeliveryCost` передается в вызов расчета стоимости заказа с учетом доставки:
+
+```csharp
+public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, OrderDto>
+{
+    // ...
+
+    public GetOrderByIdQueryHandler(
+        // ...
+        IDeliveryService deliveryService)
+    {
+        // ...
+        _deliveryService = deliveryService;
+    }
+
+    public async Task<OrderDto> Handle(GetOrderByIdQuery query, CancellationToken cancellationToken)
+    {
+        // ...
+        dto.Total = _orderDomainService.GetTotal(order, _deliveryService.CalculateDeliveryCost);
+        return dto;
+    }
+}
+```
+
+### Итоговая (хорошая) архитектура
+
+<img src="images/21_delivery_good.jpg" alt="Good architecture example" style="width:800px">
+
+Уже лучше - нет обратных зависимостей, как в предыдущем примере.
+
+### Выводы
+
+- Бизнес логика может быть сложной и зависеть от вызовов к внешней инфраструктуре.
+- Использование делегатов позволяет сохранить логику независимой от внешней инфраструктуры.
+- Как правило, в реальности очень малая часть бизнес логики зависит от внешней инфраструктуры.
+Как следстие - требуется малое количество делегатов.
+
+- Подход DDD разрешает вносить зависимости (интерфейсы) от внешней инфраструктуры в доменную
+область, но лучше оставлять домен независимым от них.
