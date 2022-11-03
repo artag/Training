@@ -311,7 +311,7 @@ public class AppDbContext : DbContext, IDbContext
 
 7. Верхний `WebApp` теперь ссылается на `DataAccess`.
 
-- Меняем регистрацию сервиса:
+7.1. Меняем регистрацию сервиса:
 
 с
 
@@ -323,6 +323,23 @@ builder.Services.AddEntityFrameworkSqlite().AddDbContext<AppDbContext>();
 
 ```csharp
 builder.Services.AddEntityFrameworkSqlite().AddDbContext<IDbContext, AppDbContext>();
+```
+
+7.2. Еще один вариант регистрации сервиса. Через чтение конфигурационного файла:
+
+```csharp
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<IDbContext, AppDbContext>(opts => opts.UseSqlite(connectionString));
+```
+
+В `AppDbContext` метод `OnConfiguring(DbContextOptionsBuilder options)` пустой.
+
+В `appsettings.json` строка подключения такая:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Filename=WebApp.db;"
+}
 ```
 
 #### Раскладывание проектов по папкам
@@ -1567,3 +1584,168 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Order
 
 - Подход DDD разрешает вносить зависимости (интерфейсы) от внешней инфраструктуры в доменную
 область, но лучше оставлять домен независимым от них.
+
+## 11. Background Jobs
+
+*Проект: 12. BackgroundJob*
+
+**Background Job** - это какая-то логика, которая запускается не по триггеру из внешней системы,
+а по событию, которое генерирует само приложение.
+
+Пример триггеров из внешней системы:
+
+- Пользователь нажал кнопку на frontend'е, пришел запрос на backend.
+- Обращение к public API "снаружи".
+
+Сейчас достаточно популярным является использование облачных сервисов, таких как:
+
+- AWS Amazon
+- Microsoft Azure
+
+В таком случае Background Job'ы реализуются в виде отдельных процессов - Web Job'ов.
+
+Также возможно добавить Background Job'ы как часть разрабатываемого приложения, что здесь
+и будет продемонстрировано.
+
+### Практика. Background Job'а
+
+*Проект: 12. BackgroundJob*
+
+Будет рассмотрен пример  background job, который будет получать информацию из Delivery Service
+о статусе заказов (заказ доставлен/не доставлен):
+
+- Background Job будет доставать из БД все еще недоставленные заказы.
+- Через сервис доставки проверять их статус.
+- Если статус заказа изменился на "доставлен", то Background Job сохраняет новое состояние заказа в БД.
+
+Фактически, Background Job это еще один Interactor (Use case), который управляет взаимодействием.
+Он взаимодействует:
+
+- С инфраструктурой (БД, Delivery Service).
+- Производит бизнес-операции (изменение статусов заказов на "доставлен").
+
+Поэтому:
+
+1. Добавить в `Mobile.UseCases`, в папку `Orders`, новую папку `BackgroundJobs`.
+
+2. В `BackgroundJobs` новый класс `UpdateDeliveryStatusJob`:
+
+```csharp
+public class UpdateDeliveryStatusJob
+{
+    private readonly IDbContext _dbContext;
+    private readonly IDeliveryService _deliveryService;
+
+    public UpdateDeliveryStatusJob(IDbContext dbContext, IDeliveryService deliveryService)
+    {
+        _dbContext = dbContext;
+        _deliveryService = deliveryService;
+    }
+
+    public async Task ExecuteAsync()
+    {
+        // Получение заказов из БД.
+        var orders = await _dbContext.Orders
+            .Where(x => x.Status == OrderStatus.Created)
+            .ToListAsync();
+
+        // Получение информации о статусе заказов.
+        var items = orders
+            .Select(x => new { Order = x, Task = _deliveryService.IsDeliveredAsync(x.Id) })
+            .ToList();
+
+        await Task.WhenAll(items.Select(x => x.Task));
+
+        // Бизнес операция. Обновление статуса заказа.
+        foreach (var item in items)
+        {
+            if (item.Task.Result)
+            {
+                item.Order.Status = OrderStatus.Delivered;
+            }
+        }
+
+        // Сохранение заказов в БД.
+        await _dbContext.SaveChangesAsync();
+    }
+}
+```
+
+В реальности `UpdateDeliveryStatusJob` может выглядеть сложнее:
+может быть добавлено ограничение количества запросов к `_deliveryService` например, в минуту 100
+запросов (а то заспамим).
+
+`IDeliveryService`:
+
+```csharp
+public interface IDeliveryService
+{
+    decimal CalculateDeliveryCost(float weight);
+    Task<bool> IsDeliveredAsync(int orderId);       // new
+}
+```
+
+Его реализация:
+
+```csharp
+public class DeliveryService : IDeliveryService
+{
+    public decimal CalculateDeliveryCost(float weight) =>
+        (decimal)weight * 10;
+
+    public Task<bool> IsDeliveredAsync(int orderId) =>
+        Task.FromResult(true);    // Для учебного примера пусть всегда возвращает true.
+}
+```
+
+3. Добавление в `WebApp` nuget пакета `Hangfire`.
+
+`Hangfire` - планировщик. Довольно популярный пакет.
+
+>Пакет `Hangfire.SQLite` надо ставить дополнительно, если используется SQLite.
+
+3.1. `Hangfire` добавляется в конфигурацию приложения (секция `Startup.Configure` или
+`Program` в .NET Core 6):
+
+```csharp
+app.UseHangfireDashboard();
+
+RecurringJob.AddOrUpdate<UpdateDeliveryStatusJob>(
+    recurringJobId: "UpdateDeliveryStatusJob",
+    methodCall: job => job.ExecuteAsync(),
+    cronExpression: Cron.Minutely);
+```
+
+- `Cron.Daily` - задача будет запускаться каждый день, в 00:00 часов.
+
+3.2. `Hangfire` регистрируется в сервисах:
+
+Пример регистрации для MSSQL сервера:
+
+```csharp
+// Frameworks
+// ...
+var connectionString = builder.Configuration.GetConnectionString("MsSql");
+builder.Services.AddHangfire(cfg => cfg.UseSqlServerStorage(connectionString));
+builder.Services.AddHangfireServer();
+```
+
+Пример регистрации для SQLite сервера (я использую):
+
+```csharp
+// Frameworks
+// ...
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddHangfire(cfg => cfg.UseSQLiteStorage(connectionString));
+builder.Services.AddHangfireServer();
+```
+
+В `app.settings`:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Filename=WebApp.db;"
+},
+```
+
+**Обязательно** ставить `;`, т.к. без нее Hangfire не воспринимает строку подключения.
