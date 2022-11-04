@@ -18,6 +18,7 @@ using Mobile.UseCases.Order.BackgroundJobs;
 using Mobile.UseCases.Order.Commands.CreateOrder;
 using Mobile.UseCases.Order.Utils;
 using Web.Interfaces;
+using WebApp.Extensions;
 using WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,7 @@ builder.Services.AddScoped<IOrderDomainService, OrderDomainService>();
 
 // Infrastructure
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IBackgroundJobService, BackgroundJobService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IDeliveryService, DeliveryService>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

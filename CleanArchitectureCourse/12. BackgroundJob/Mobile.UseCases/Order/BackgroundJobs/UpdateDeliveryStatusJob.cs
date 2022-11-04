@@ -7,45 +7,44 @@ using Delivery.Interfaces;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace Mobile.UseCases.Order.BackgroundJobs
+namespace Mobile.UseCases.Order.BackgroundJobs;
+
+public class UpdateDeliveryStatusJob : IJob
 {
-    public class UpdateDeliveryStatusJob
+    private readonly IDbContext _dbContext;
+    private readonly IDeliveryService _deliveryService;
+
+    public UpdateDeliveryStatusJob(IDbContext dbContext, IDeliveryService deliveryService)
     {
-        private readonly IDbContext _dbContext;
-        private readonly IDeliveryService _deliveryService;
+        _dbContext = dbContext;
+        _deliveryService = deliveryService;
+    }
 
-        public UpdateDeliveryStatusJob(IDbContext dbContext, IDeliveryService deliveryService)
+    public async Task ExecuteAsync()
+    {
+        // Получение заказов из БД.
+        var orders = await _dbContext.Orders
+            .Where(x => x.Status == OrderStatus.Created)
+            .ToListAsync();
+
+        // Получение информации о статусе заказов.
+        var items = orders
+            .Select(x => new { Order = x, Task = _deliveryService.IsDeliveredAsync(x.Id) })
+            .ToList();
+
+        await Task.WhenAll(items.Select(x => x.Task));
+
+        // Бизнес операция. Обновление статуса заказа.
+        foreach (var item in items)
         {
-            _dbContext = dbContext;
-            _deliveryService = deliveryService;
-        }
-
-        public async Task ExecuteAsync()
-        {
-            // Получение заказов из БД.
-            var orders = await _dbContext.Orders
-                .Where(x => x.Status == OrderStatus.Created)
-                .ToListAsync();
-
-            // Получение информации о статусе заказов.
-            var items = orders
-                .Select(x => new { Order = x, Task = _deliveryService.IsDeliveredAsync(x.Id) })
-                .ToList();
-
-            await Task.WhenAll(items.Select(x => x.Task));
-
-            // Бизнес операция. Обновление статуса заказа.
-            foreach (var item in items)
+            var delivered = await item.Task;
+            if (delivered)
             {
-                var delivered = await item.Task;
-                if (delivered)
-                {
-                    item.Order.Status = OrderStatus.Delivered;
-                }
+                item.Order.Status = OrderStatus.Delivered;
             }
-
-            // Сохранение заказов в БД.
-            await _dbContext.SaveChangesAsync();
         }
+
+        // Сохранение заказов в БД.
+        await _dbContext.SaveChangesAsync();
     }
 }

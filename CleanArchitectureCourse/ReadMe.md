@@ -1624,14 +1624,17 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Order
 - С инфраструктурой (БД, Delivery Service).
 - Производит бизнес-операции (изменение статусов заказов на "доставлен").
 
-Поэтому:
+### Background Job по расписанию
+
+В качетстве управления запуском job'ов будет использован планировщик `Hangfire`.
 
 1. Добавить в `Mobile.UseCases`, в папку `Orders`, новую папку `BackgroundJobs`.
 
 2. В `BackgroundJobs` новый класс `UpdateDeliveryStatusJob`:
 
 ```csharp
-public class UpdateDeliveryStatusJob
+namespace Mobile.UseCases.Order.BackgroundJobs;
+public class UpdateDeliveryStatusJob : IJob
 {
     private readonly IDbContext _dbContext;
     private readonly IDeliveryService _deliveryService;
@@ -1671,11 +1674,21 @@ public class UpdateDeliveryStatusJob
 }
 ```
 
+В проект `Mobile.UseCases` также добавлен интерфейс `IJob` (*Зачем он нужен?*):
+
+```csharp
+namespace Mobile.UseCases;
+public interface IJob
+{
+    Task ExecuteAsync();
+}
+```
+
 В реальности `UpdateDeliveryStatusJob` может выглядеть сложнее:
 может быть добавлено ограничение количества запросов к `_deliveryService` например, в минуту 100
 запросов (а то заспамим).
 
-`IDeliveryService`:
+`IDeliveryService` теперь выглядит так:
 
 ```csharp
 public interface IDeliveryService
@@ -1749,3 +1762,83 @@ builder.Services.AddHangfireServer();
 ```
 
 **Обязательно** ставить `;`, т.к. без нее Hangfire не воспринимает строку подключения.
+
+### Background Job. Запуск из Use Case
+
+Например, отправка email пользователю при создании заказа. Отправка
+email может добавляться в планировзик или ставиться в очередь сообщений.
+
+Задача отправки email это не задача use case, это задача инфраструктуры.
+
+1. В нашем примере опять будет использован планировщик `Hangfire`.
+Use Case'ы будут обращаться к нему через интерфейсы слоя `WebApp.Interfaces`
+(т.к. `HangFire` находится в слое `WebApp`):
+
+```csharp
+namespace Web.Interfaces;
+
+public interface IBackgroundJobService
+{
+    void Schedule<T>(Expression<Func<T, Task>> expression);
+}
+```
+
+В `WebApp`, в папке `Services` реализация:
+
+```csharp
+namespace WebApp.Services;
+
+public class BackgroundJobService : IBackgroundJobService
+{
+    public void Schedule<T>(Expression<Func<T, Task>> expression)
+    {
+        BackgroundJob.Schedule(expression, delay: TimeSpan.Zero);
+    }
+}
+```
+
+- `BackgroundJob` - это класс из `Hangfire`.
+- `TimeSpan.Zero` - немедленный запуск.
+
+2. Регистрация сервиса
+
+```csharp
+// Infrastructure
+// ...
+builder.Services.AddScoped<IBackgroundJobService, BackgroundJobService>();
+```
+
+3. Использоание сервиса `IBackgroundJobService` в Use Case
+
+Добавление отправки пользователю email после создания заказа.
+
+В `CreateOrderCommandHandler` добавляется:
+
+```csharp
+namespace Mobile.UseCases.Order.Commands.CreateOrder;
+
+public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int>
+{
+    public CreateOrderCommandHandler(
+        IMapper mapper,
+        IDbContext dbContext,
+        IBackgroundJobService backgroundJobService,     // New
+        ICurrentUserService currentUserService)         // New
+    {
+        // ...
+    }
+
+    public async Task<int> Handle(CreateOrderCommand command, CancellationToken cancellationToken)
+    {
+        var order = _mapper.Map<Domain.Models.Order>(command.Dto);
+        _dbContext.Orders.Add(order);
+        await _dbContext.SaveChangesAsync();
+
+        // New. Отправка email при помощи планировщика.
+        _backgroundJobService.Schedule<IEmailService>(emailService =>
+            emailService.SendAsync(_currentUserService.Email, "Order created", $"Order {order.Id} created"));
+
+        return order.Id;
+    }
+}
+```

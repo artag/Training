@@ -1,7 +1,7 @@
 using System.Net;
 using Mobile.UseCases;
 
-namespace WebApp.Services;
+namespace WebApp.Extensions;
 
 public class ExceptionHandlerMiddleware
 {
