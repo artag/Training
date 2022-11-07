@@ -49,3 +49,90 @@
 
 <img src="images/23_microservice2.jpg" alt="Microservice architecture" style="width:650px">
 
+## Микросервис. Пример реализации
+
+*Проект: 13. Microservice*
+
+Здесь показан минимально возможный набор компонентов (слоев) для реализации микросервиса в
+виде чистой архитектуры.
+
+### 0 `Utils`
+
+Все тоже самое - здесь находится инфраструктура, переиспользуемая всеми слоями:
+
+- Helpers
+- Extension методы
+- Cross-cutting concerns - инфраструктурная пронизывающая функциональность, которая используется
+на разных слоях приложения:
+  - Логирование.
+  - Обработка ошибок.
+  - Измерение времени работы каких-либо методов.
+
+### 1 `Entities`
+
+Все тоже самое:
+
+- Сущности
+- Enums
+- Исключения, связанные с бизнес-логикой
+
+Изменения:
+
+В Entities переместился метод рассчета заказа. Раньше он был в `DomainServices.Implementation`.
+Сейчас в `Entity.Order`:
+
+```csharp
+namespace Domain.Models;
+
+public class Order
+{
+    public int Id { get; set; }
+    public DateTime CreateDate { get; set; }
+    public OrderStatus Status { get; set; }
+
+    public ICollection<OrderItem> Items { get; set; }
+
+    // Этот метод перенесен из DomainServices.Implementation.OrderService
+    public decimal GetTotal()
+    {
+        return Items.Sum(x => x.Quantity * x.Product.Price);
+    }
+}
+```
+
+### 2 `Infrastructure.Interfaces`
+
+Все интерфейсы инфраструктуры в одном проекте. В примере здесь находятся:
+
+- `IDbContext` - интерфейс доступа к данным (раньше был в проекте `DataAccess.Interfaces`).
+- `ICurrentUserService` - (раньше был в `Web.Interfaces`).
+
+Здесь могут быть также и другие интерфейсы инфраструктуры: например, интерфейсы для взаимодействия
+с шиной сообщений.
+
+### 3 `UseCases`
+
+Здесь use cases в стиле CQRS:
+
+- отдельный класс, отдельный handler на каждый use case.
+- есть Command
+- есть Query
+
+### 4 `Controllers`
+
+Папка для контроллеров пустая - контроллеры расположены в composition root (`WebApp`).
+
+В отдельный проект их не выделяем, т.к. микросервис маленький и бонусов от выделения контроллеров
+в отдельный проект мы не получим.
+
+### 5 `Infrastructure.Implementation`
+
+В качестве реализации `DataAccess.MsSql`. Здесь находятся:
+
+- Migrations
+- `AppDbContext`
+- Здесь mapping'и entity на базу
+
+### Взаимосвязи в микросервисе
+
+<img src="images/24_microservice_refs.jpg" alt="Projects references in microservice" style="width:550px">
