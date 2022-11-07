@@ -1,9 +1,5 @@
 # Чистая архитектура на практике
 
-Курс: `https://www.udemy.com/course/clean-architecture-csharp-ru/`
-
-Git: `https://github.com/denis-tsv/CleanArchitectureCourse`
-
 ## Создание Migration
 
 ### Установка (обновление) Entity Framework Core Tool
