@@ -1,1 +1,1 @@
-![Microservice solution](Solution.jpg "Solution")
+![Startup solution](Solution.jpg "Solution")
