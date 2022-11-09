@@ -136,3 +136,99 @@ public class Order
 ### Взаимосвязи в микросервисе
 
 <img src="images/24_microservice_refs.jpg" alt="Projects references in microservice" style="width:550px">
+
+## Стартап
+
+Отличие от микросервисов - много инфраструктуры.
+
+<img src="images/25_startup.jpg" alt="Startup scheme" style="width:650px">
+
+По количеству бизнес и application логики стартап не будет сильно превосходить microservice.
+
+Здесь скорее всего будет тот же самый набор уровней: `DomainServices`, `ApplicationServices`
+скорее всего не понадобятся.
+
+По количеству инфраструктуры - здесь ее больше. Примеры:
+
+- Интеграция с внешней системой
+- Логирование
+- Поисковый движок (Elastic Search)
+
+Инфраструктура представлена попарными компонентами: интерфейсами `*.Interfaces` и их реализацией:
+
+- `DataAccess.Interfaces` и `DataAccess.MsSql`
+- `Delivery.Interfaces` и `Delivery.Company`
+- `WebApp.Interfaces` и `WebApp` (на схеме `Host`)
+
+## Стартап. Масштабирование из микросервиса. Пример реализации
+
+*Проект: 14. Startup*
+
+### Дробление `Infrastructure.Interfaces`
+
+1. Выделение нескольких отдельных проектов из `Infrastructure.Interfaces`:
+
+- БД
+  - `DataAccess.Interfaces`
+  - `DataAccess.MsSql`
+- Информация о текущем пользователе
+  - `WebApp.Interfaces`
+  - `WebApp`
+- Служьы доставки (новая служба, добавилась в микросервис)
+  - `Delivery.Interfaces`
+  - `Delivery.Company`
+
+2. `UseCase` ссылаются на:
+
+- `DataAccess.Interfaces`
+- `WebApp.Interfaces`
+- `Delivery.Interfaces`
+
+3. Регистрация служб в `WebApp`:
+
+```csharp
+// Infrastructure
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IDeliveryService, DeliveryService>();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<IDbContext, AppDbContext>(opts => opts.UseSqlite(connectionString));
+```
+
+### Использование `IDeliveryService`
+
+Пример использование сервиса в `Use Cases`:
+
+```csharp
+namespace UseCases.Order.Queries.GetById;
+
+public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, OrderDto>
+{
+    public GetOrderByIdQueryHandler(
+        IDbContext dbContext,
+        IDeliveryService deliveryService,
+        IMapper mapper)
+    {
+        // ...
+    }
+
+    public async Task<OrderDto> Handle(GetOrderByIdQuery query, CancellationToken cancellationToken)
+    {
+        // Использование БД через интерфейс
+        var order = await _dbContext.Orders
+            .AsNoTracking()
+            .Include(x => x.Items).ThenInclude(x => x.Product)
+            .FirstOrDefaultAsync(x => x.Id == query.Id);
+
+        if (order == null)
+            throw new EntityNotFoundException();
+
+        // Расчет цена с использованием сервиса доставки через интерфейс
+        var dto = _mapper.Map<OrderDto>(order);
+        var totalWeight = order.Items.Sum(x => x.Product.Weight);
+        var deliveryCost = _deliveryService.CalculateDeliveryCost(totalWeight);
+        dto.Total = order.GetTotal() + deliveryCost;
+
+        return dto;
+    }
+}
+```
