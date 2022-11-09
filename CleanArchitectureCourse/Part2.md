@@ -232,3 +232,35 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Order
     }
 }
 ```
+
+## Средний проект
+
+На схемах, чтобы их не загромождать, не показано множество интерфейсов и реализаций
+компонентов инфраструктуры. Вся инфраструктура лежит в `Infrastructure.Interfaces`,
+`Infrastructure.Implementation` и `DataAccess.MsSql`.
+
+`Controllers` все еще остаются в составе `WebApp` (на схемах `Host`).
+
+### Изменение 1. Больше логики в домене
+
+<img src="images/26_middle_project.jpg" alt="Middle project with domain services" style="width:750px">
+
+В средних проектах по сравнению со стартапом больше доменной логики приложения:
+
+- Стоимость заказа с учетом скидок
+- Стоимость заказа с учетом доставки
+
+Появляются новые компоненты: `DomainServices.Interfaces` и `DomainServices.Implementation`.
+
+`Use Cases` ссылаются и используют `DomainServices.Interfaces`.
+
+### Изменение 2. Больше логики в домене
+
+<img src="images/27_middle_project_2.jpg" alt="Middle project with application services" style="width:750px">
+
+В средних проектах по сравнению со стартапом появляются Application Services: растет количество
+Use Cases, общая логика, используемая в Use Cases помещается в Application Services.
+
+Появляются новые компоненты: `ApplicationServices.Interfaces` и `ApplicationServices.Implementation`.
+
+`Use Cases` ссылаются и используют `ApplicationServices.Interfaces`.
