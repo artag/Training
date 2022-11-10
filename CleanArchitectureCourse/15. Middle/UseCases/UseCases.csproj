@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.0" />
+    <PackageReference Include="MediatR" Version="11.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ApplicationServices.Interfaces\ApplicationServices.Interfaces.csproj" />
+    <ProjectReference Include="..\DataAccess.Interfaces\DataAccess.Interfaces.csproj" />
+    <ProjectReference Include="..\Delivery.Interfaces\Delivery.Interfaces.csproj" />
+    <ProjectReference Include="..\DomainServices.Interfaces\DomainServices.Interfaces.csproj" />
+    <ProjectReference Include="..\WebApp.Interfaces\WebApp.Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>

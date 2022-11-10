@@ -1,6 +1,6 @@
 # Масштабирование
 
-## Введение
+## 1. Введение
 
 ### Применение на практике
 
@@ -31,7 +31,7 @@
   - Это проект на ~10000 и более человеко-часов.
   - Большая команда (5-7 человек) в течение полугода или 4-5 человек - год и более.
 
-## Микросервис
+## 2. Микросервис
 
 <img src="images/22_microservice.jpg" alt="Microservice architecture" style="width:650px">
 
@@ -137,7 +137,7 @@ public class Order
 
 <img src="images/24_microservice_refs.jpg" alt="Projects references in microservice" style="width:550px">
 
-## Стартап
+## 3. Стартап
 
 Отличие от микросервисов - много инфраструктуры.
 
@@ -233,7 +233,7 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, Order
 }
 ```
 
-## Средний проект
+## 4. Средний проект
 
 На схемах, чтобы их не загромождать, не показано множество интерфейсов и реализаций
 компонентов инфраструктуры. Вся инфраструктура лежит в `Infrastructure.Interfaces`,
@@ -264,3 +264,151 @@ Use Cases, общая логика, используемая в Use Cases пом
 Появляются новые компоненты: `ApplicationServices.Interfaces` и `ApplicationServices.Implementation`.
 
 `Use Cases` ссылаются и используют `ApplicationServices.Interfaces`.
+
+## Средний проект. Масштабирование стартапа. Добавление бизнес логики. Пример реализации
+
+*Проект: 15. Middle*
+
+### Добавление DomainServices
+
+Добавляются: `DomainServices.Interfaces` и `DomainServices.Implementation` в слой "1 Entities":
+
+```csharp
+namespace DomainServices.Interfaces;
+
+public delegate decimal CalculateDeliveryCost(float weight);
+
+public interface IOrderDomainService
+{
+    decimal GetTotal(Order order, CalculateDeliveryCost deliveryCostCalculator);
+}
+```
+
+Реализация (предварительная версия):
+
+```csharp
+namespace DomainServices.Implementation;
+
+public class OrderDomainService : IOrderDomainService
+{
+    public decimal GetTotal(Order order, CalculateDeliveryCost deliveryCostCalculator)
+    {
+        var totalWeight = order.Items.Sum(x => x.Product.Weight);
+        var deliveryCost = deliveryCostCalculator(totalWeight);
+        var total = order.GetTotal() + deliveryCost;
+        return total;
+    }
+}
+```
+
+Логика в метод `GetTotal` была перенесена из `UseCases.Order.Queries.GetById`,
+класса `GetOrderByIdQueryHandler`.
+
+Если мы перенесем сюда логику из `Order` (метод `GetTotal`), то итоговая реализация будет такой:
+
+```csharp
+namespace DomainServices.Implementation;
+
+public class OrderDomainService : IOrderDomainService
+{
+    public decimal GetTotal(Order order, CalculateDeliveryCost deliveryCostCalculator)
+    {
+        var totalWeight = order.Items.Sum(x => x.Product.Weight);
+        var deliveryCost = deliveryCostCalculator(totalWeight);
+        var total = order.Items.Sum(x => x.Quantity * x.Product.Price) + deliveryCost;
+        return total;
+    }
+}
+```
+
+### Регистраци DomainServices
+
+Верхний/корневой слой `WebApp` ссылается на `DomainServices.Implementation`.
+
+```csharp
+// Domain
+builder.Services.AddScoped<IOrderDomainService, OrderDomainService>();
+
+// Infrastructure
+// ...
+```
+
+### Использование DomainServices в UseCases
+
+`Use Cases` ссылаются на `DomainServices.Interfaces`.
+
+Использование:
+
+```csharp
+namespace UseCases.Order.Queries.GetById;
+
+public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, OrderDto>
+{
+    public GetOrderByIdQueryHandler(
+        IDbContext dbContext,
+        IMapper mapper,
+        IDeliveryService deliveryService,
+        IOrderDomainService domainService)
+    {
+        // ...
+    }
+
+    public async Task<OrderDto> Handle(GetOrderByIdQuery query, CancellationToken cancellationToken)
+    {
+        var order = await _dbContext.Orders
+            .AsNoTracking()
+            .Include(x => x.Items).ThenInclude(x => x.Product)
+            .FirstOrDefaultAsync(x => x.Id == query.Id);
+
+        if (order == null)
+            throw new EntityNotFoundException();
+
+        var dto = _mapper.Map<OrderDto>(order);
+        dto.Total = _domainService.GetTotal(order, _deliveryService.CalculateDeliveryCost);   // new
+        return dto;
+    }
+}
+```
+
+## Средний проект. Масштабирование стартапа. Добавление логики приложения. Пример реализации
+
+*Проект: 15. Middle*
+
+ApplicationServices содержат логику, которая повторно используется между разными Use Case'ами.
+
+### Добавление ApplicationServices
+
+Добавляются: `ApplicationServices.Interfaces` и `ApplicationServices.Implementation` в слой "3 Use Cases".
+
+### Регистраци ApplicationServices
+
+Верхний/корневой слой `WebApp` ссылается на `ApplicationServices.Implementation`.
+
+```csharp
+// Domain
+// ...
+
+// UseCases & Application
+builder.Services.AddScoped<ISecurityService, SecurityService>();
+
+// Infrastructure
+// ...
+```
+
+### Использование ApplicationServices в UseCases
+
+`Use Cases` ссылаются на `ApplicationServices.Interfaces`.
+
+## Средний проект. Итоги
+
+Итого, для реализации business и application логики 4 уровня:
+
+- Бизнес логика:
+  - `Entities`
+  - `DomainServices`
+- Application логика:
+  - `ApplicationServices`
+  - `UseCases`
+
+На практике, 4 уровня логики должно хватить на проект любой сложности. Часто используется даже
+меньшее число уровней логики: 2-3.
