@@ -2,12 +2,12 @@
 <tr>
 <td>
 
-<img src="Solution_crop.jpg" alt="Middle solution" style="width:750px">
+<img src="Solution_crop.jpg" alt="Middle solution collapsed">
 
 </td>
 <td>
 
-<img src="Solution.jpg" alt="Middle solution" style="width:750px">
+<img src="Solution.jpg" alt="Middle solution">
 
 </td>
 </table>
