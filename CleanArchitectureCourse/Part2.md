@@ -412,3 +412,117 @@ builder.Services.AddScoped<ISecurityService, SecurityService>();
 
 На практике, 4 уровня логики должно хватить на проект любой сложности. Часто используется даже
 меньшее число уровней логики: 2-3.
+
+## 5. Большой проект. Масштабирование среднего проекта
+
+*Проект: 16. BigProject*
+
+Большой проект - проект, в котором есть несколько backend'ов для нескольких типов клиентов.
+Например:
+
+- WebAPI (для frontend)
+- PublicAPI (интеграция с внешними системами)
+- MobileAPI (для мобильного приложения)
+- AdminAPI (админка)
+
+Либо возможна группировка по функционалу:
+
+- По Bounded Contexts
+- По подразделениям (один модуль для маркетинга, второй для операторов, третий для бухгалтерии...)
+
+<img src="images/28_big_project.jpg" alt="Big project" style="width:750px">
+
+Первое отличие от среднего проекта: добавление попарных `*.UseCases` и `*.Controllers`:
+
+- `Web.UseCases` и `Web.Controllers`
+- `PublicApi.UseCases` и `PublicApi.Controllers`
+
+Контроллеры выделяются в отдельные модули, чтобы они не ходили в чужие Use Case'ы.
+
+Второе отличие от среднего проекта: возможно выделение собственных инфраструктурных модулей
+для разных компонентов (также реализованы попарно):
+
+<img src="images/29_big_project_2.jpg" alt="Big project" style="width:750px">
+
+В таких проектах могут содержаться как общие инфраструктурные модули, так и специфичные.
+
+## Большой проект. Масштабирование среднего проекта. Пример реализации
+
+*Проект: 16. BigProject*
+
+### Добавление `Mobile.UseCases` и `Mobile.Controllers`
+
+- Новая папка `Mobile`, туда помещаются `Mobile.UseCases` и `Mobile.Controllers`.
+
+- `Mobile.Controllers` ссылается на `Mobile.UseCases`.
+
+- В `Mobile.Controllers` добавляются nuget пакеты:
+  - `MediatR` (для вызова Use Cases)
+  - `Microsoft.AspNetCore.Mvc.Core` (для контроллеров)
+
+- В `Mobile.Controllers` переносятся нужные контроллеры из верхнего `WebApp`.
+
+- `WebApp` ссылается на `Mobile.UseCases` и `Mobile.Controllers`.
+
+### Добавление `Web.UseCases` и `Web.Controllers`
+
+- Новая папка `Web`, туда помещаются `Web.UseCases` и `Web.Controllers`.
+
+- `Web.Controllers` ссылается на `Web.UseCases`.
+
+- `WebApp` ссылается на `Web.Controllers` и может ссылаться на `Web.UseCases`.
+
+### Добавление выделенной инфраструктуры для Mobile функциональности
+
+Пусть функциональность Mobile будет взаимодействовать с telemetry:
+
+- В папку `Mobile` помещаются:
+  - `Mobile.Telemetry.Interfaces` и `Mobile.Telemetry.Implementation`.
+
+- Ссылки:
+  - `Mobile.Telemetry.Implementation` ссылается на `Mobile.Telemetry.Interfaces`
+  - `Mobile.UseCases` ссылается на `Mobile.Telemetry.Interfaces`
+  - `WebApp` ссылается на `Mobile.Telemetry.Implementation`
+
+- Регистрация в DI контейнере:
+
+```csharp
+// Domain
+// UseCases & Application
+// Infrastructure
+// ...
+
+// Mobile Infrastructure
+builder.Services.AddScoped<ITelemetryService, TelemetryService>();
+
+// Frameworks
+// ...
+```
+
+### Добавление выделенной инфраструктуры для Web функциональности
+
+Пусть функциональность Web будет взаимодействовать с ApplicationServices:
+
+- В папку `Web` помещаются:
+  - `Web.ApplicationServices.Interfaces` и `Web.ApplicationServices.Implementation`.
+
+- Ссылки:
+  - `Web.ApplicationServices.Implementation` ссылается на `Web.ApplicationServices.Interfaces`
+  - `Web.UseCases` ссылается на `Web.ApplicationServices.Interfaces`
+  - `WebApp` ссылается на `Mobile.Telemetry.Implementation`
+
+- Регистрация в DI контейнере:
+
+```csharp
+// Domain
+// UseCases & Application
+// Infrastructure
+// Mobile Infrastructure
+// ...
+
+// Web Infrastructure
+builder.Services.AddScoped<IWebAppService, WebAppService>();
+
+// Frameworks
+// ...
+```
