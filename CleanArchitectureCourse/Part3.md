@@ -290,5 +290,40 @@ Composition Root.
 
 ### Итоговая промежуточная архитектура после рефакторинга
 
-
 <img src="images/35_refactor_arch1.jpg" alt="Architecture after the first refactoring" style="width:750px">
+
+## Рефакторинг инфраструктуры
+
+*Проект: 19. FromSteveSmithRefactor2*
+
+В компоненте `Clean.Architecture.Infrastructure` есть реализации нескольких инфраструктур:
+
+- Доступ к с данным (доступ к БД)
+- Реализация почтового сервиса `EmailSender`.
+
+Плюс, для функционала доступа к БД возможно в будущем дополнительное разделение, т.к.
+в примере используются два провайдера к БД: `MSSql` и `SQLite`.
+
+Возможное будущее дополнительное разделение проекта реализации доступа к БД на:
+
+- `Clean.Architecture.DataAccess.MSSql`
+- `Clean.Architecture.DataAccess.SQLite`
+
+### Разделение проекта `Clean.Architecture.Infrastructure` на две части
+
+- Новый проект `Clean.Architecture.Infrastructure.Implementation`
+- `Clean.Architecture.Infrastructure` переименуем в `Clean.Architecture.DataAccess`.
+
+### Проект `Clean.Architecture.Infrastructure.Implementation`
+
+Сюда перемещаем `EmailSender`.
+
+Ссылка на `Clean.Architecture.Infrastructure.Interfaces`.
+
+### Проект `Clean.Architecture.Web`
+
+Добавляются ссылки на:
+
+- `Clean.Architecture.ApplicationServices.Implementation` (ссылка была ранее)
+- `Clean.Architecture.DataAccess` (ссылка была ранее)
+- `Clean.Architecture.Infrastructure.Implementation`
