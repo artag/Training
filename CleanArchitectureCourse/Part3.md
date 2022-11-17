@@ -327,3 +327,157 @@ Composition Root.
 - `Clean.Architecture.ApplicationServices.Implementation` (ссылка была ранее)
 - `Clean.Architecture.DataAccess` (ссылка была ранее)
 - `Clean.Architecture.Infrastructure.Implementation`
+
+## Рефакторинг Use Cases. CQRS и Mediator
+
+*Проект: 20. FromSteveSmithRefactor3*
+
+Слишком "толстые" контроллеры - в их методах реализованы Use Cases.
+
+Будем переносить логику из контроллеров API в Use Cases.
+
+### Добавление нового компонента `Clean.Architecture.UseCases`
+
+- В `Clean.Architecture.UseCases` добавить ссылку на:
+  - Проект `Clean.Architecture.Entities`
+  - Проект `Clean.Architecture.Infrastructure.Interfaces`
+  - nuget `MediatR`
+
+- В новый проект из `Clean.Architecture.Web` переносится папка `ApiModels` с переименованием ее в
+`Dtos` (там находятся 2 dto).
+
+Итоговая раскладка CQRS выглядит так:
+
+- Папка `Project`
+  - Папка `Commands`
+    - Папка `CompleteProject`
+      - `CompleteProjectCommand.cs`
+      - `CompleteProjectCommandHandler.cs`
+      - `CompleteProjectCommandResult.cs`
+    - Папка `CreateProject`
+      - `CreateProjectCommand.cs`
+      - `CreateProjectCommandHandler.cs`
+  - Папка `Dtos`
+    - `ProjectDTO.cs`
+    - `ToDoItemDTO.cs`
+  - Папка `Queries`
+    - Папка `GetProjectById`
+      - `GetProjectByIdQuery.cs`
+      - `GetProjectByIdQueryHanlder.cs`
+    - Папка `GetProjectsList`
+      - `GetProjectsListQuery.cs`
+      - `GetProjectsListQueryHandler.cs`
+
+#### Пример команды и ее обработчика
+
+```csharp
+public class CreateProjectCommand : IRequest<ProjectDTO>
+{
+    public CreateProjectDTO Dto { get; init; } = null!;
+}
+```
+
+```csharp
+public class CreateProjectCommandHandler : IRequestHandler<CreateProjectCommand, ProjectDTO>
+{
+    private readonly IRepository<ProjectEntity> _repository;
+
+    public CreateProjectCommandHandler(IRepository<ProjectEntity> repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<ProjectDTO> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
+    {
+        var newProject = new ProjectEntity(request.Dto.Name, PriorityStatus.Backlog);
+        var createdProject = await _repository.AddAsync(newProject);
+        var result = new ProjectDTO
+        (
+            id: createdProject.Id,
+            name: createdProject.Name
+        );
+
+        return result;
+    }
+}
+```
+
+#### Пример запроса и его обработчика
+
+```csharp
+public class GetProjectsListQuery : IRequest<List<ProjectDTO>>
+{
+}
+```
+
+```csharp
+public class GetProjectsListQueryHanlder : IRequestHandler<GetProjectsListQuery, List<ProjectDTO>>
+{
+    private readonly IRepository<ProjectEntity> _repository;
+
+    public GetProjectsListQueryHanlder(IRepository<ProjectEntity> repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<List<ProjectDTO>> Handle(GetProjectsListQuery request, CancellationToken cancellationToken)
+    {
+        var projects = await _repository.ListAsync();
+        var projectDTOs = projects
+            .Select(project => new ProjectDTO(id: project.Id, name: project.Name))
+            .ToList();
+
+        return projectDTOs;
+    }
+}
+```
+
+### Изменения в `Clean.Architecture.Web`
+
+- Добавить ссылку на `Clean.Architecture.UseCases`
+- Добавить ссылку на nuget `MediatR` (ранее ссылка уже была)
+- Добавить ссылку на nuget `MediatR.Extensions.Microsoft.DependencyInjection`
+- Опционально. Добавить ссылку на nuget `AutoMapper` (было в примере, на видео)
+
+#### Регистрация сервисов
+
+- Регистрация `MediatR`:
+
+```csharp
+builder.Services.AddMediatR(typeof(GetProjectByIdQuery));
+```
+
+- Опционально. Регистрация `AutoMapper` (было в примере, на видео):
+
+```csharp
+builder.Services.AddAutoMapper(typeof(ToDoItemMappingProfile));
+```
+
+#### Контроллер `ProjectsController`
+
+Пример использования CQRS и MediatR. Находится в поддиректории `Api`.
+
+Вот что получилось, после переноса кода в слой Use Cases:
+
+```csharp
+public class ProjectsController : BaseApiController
+{
+    private readonly IMediator _mediator;
+
+    public ProjectsController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var result = await _mediator.Send(new GetProjectByIdQuery { Id = id });
+        if (result == null)
+            return NotFound();
+
+        return Ok(result);
+    }
+
+    // ...
+```
