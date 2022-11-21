@@ -481,3 +481,62 @@ public class ProjectsController : BaseApiController
 
     // ...
 ```
+
+## Рефакторинг контроллеров
+
+*Проект: 21. FromSteveSmithRefactor4*
+
+Имеет ли смысл выносить контроллеры в отдельный компонент из `Clean.Architecture.Web`?
+
+В данном решении два типа контроллеров: API и которые генерируют View представления (html разметку).
+
+Выносить последние в отдельное решение не имеет смысла: рядом расположены View - их надо
+будет тоже переносить. Проще оставить их как есть.
+
+Контроллеры API имеет смысл перенести в отдельный компонент, хотя бы ради того, чтобы
+не путать их с контроллерами, отвечающими за генерацию представлений View.
+
+### Перенос контроллеров API из `Clean.Architecture.Web`
+
+- Создание нового проекта `Clean.Architecture.Controllers`
+
+- В `Clean.Architecture.Controllers` добавление ссылок:
+  - На nuget пакет `Microsoft.AspNetCore.Mvc.Core`
+  - На проект `Clean.Architecture.UseCases`
+
+- Перенос контроллеров API из `Clean.Architecture.Web` в новый проект.
+
+- В `Clean.Architecture.Web` добавление ссылки на `Clean.Architecture.Controllers`.
+
+## Создание папок для группировки проектов по слоям. Итоги
+
+*Проект: 21. FromSteveSmithRefactor4*
+
+Последний шаг - создание папок для группировки проектов по слоям:
+
+- Папка `1 Entities`. (Все, что касается бизнес логики)
+  - `Clean.Architecture.Entities`
+  - `Clean.Architecture.Entities.Abstractions` (базовые классы для моделирования предтной области)
+
+- Папка `2 Infrastructure.Interfaces`
+  - `Clean.Architecture.Infrastructure.Interfaces`
+
+- Папка `3 ApplicationServices`
+  - `Clean.Architecture.ApplicationServices.Implementation`
+  - `Clean.Architecture.ApplicationServices.Interfaces`
+
+- Папка `4 UseCases`
+  - `Clean.Architecture.UseCases`
+
+- Папка `5 Controllers`
+  - `Clean.Architecture.Controllers`
+
+- Папка `6 Infrastructure.Implementation` (реализация инфраструктуры)
+  - `Clean.Architecture.DataAccess` (реализация доступа к данным)
+  - `Clean.Architecture.Infrastructure.Implementation` (остальные реализации инфраструктуры)
+
+- `Clean.Architecture.Web` (самый верхний компонент)
+
+### Итоговая диаграмма зависимостей
+
+<img src="images/36_solution_scheme.jpg" alt="Refactored solution scheme">
