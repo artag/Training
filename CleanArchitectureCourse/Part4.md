@@ -154,7 +154,7 @@ namespace Northwind.Application.Common.Interfaces
 
 5. Перенос DTO из `Application` в `Infrastructure.Interfaces` для их использования в интерфейсах.
 
-### Перенос проектов в папки
+### Перенос проектов в папки по слоям
 
 - Папка `0 Utils`
   - Проект `Common`
@@ -164,3 +164,89 @@ namespace Northwind.Application.Common.Interfaces
   - Проект `DomainServices.Infrastructure`
 - Папка `2 Infrastructure Interfaces`
   - Проект `Infrastructure.Interfaces`
+
+## Добавление доменных сервисов `ApplicationServices`
+
+*Проект: 24. FromJasonTaylorRefactor2*
+
+В `Application` с прошлого раза остался только 1 интерфейс `ICsvFileBuilder`:
+
+```csharp
+namespace Northwind.Application.Common.Interfaces
+{
+    public interface ICsvFileBuilder
+    {
+        byte[] BuildProductsFile(IEnumerable<ProductRecordDto> records);
+    }
+}
+```
+
+Его можно перенести в ApplicationServices.
+
+Есть еще в папке `Common\Mappings` интерфейс `IMapFrom`:
+
+```csharp
+public interface IMapFrom<T>
+{
+    void Mapping(Profile profile) => profile.CreateMap(typeof(T), GetType());
+}
+```
+
+Этот интерфейс может использоваться любым из слоев - его можно переместить на самый нижний
+слой `Common`.
+
+1. Новая папка `3 UseCases`. Туда помещается `Application`.
+
+2. Создание двух новых проектов: `ApplicationServices` и `ApplicationServices.Interfaces`.
+
+3. Перенос в `ApplicationServices.Interfaces` файлы:
+
+- `ICsvFileBuilder`
+- `ProductRecordDto` (dto, которое используется в `ICsvFileBuilder`)
+
+4. Ссылки:
+
+- `ApplicationServices.Interfaces` ссылается на `Domain`
+- `ApplicationServices` ссылается на `ApplicationServices.Interfaces`
+- `Application` ссылается на `ApplicationServices.Interfaces`
+
+В `ApplicationServices.Interfaces` добавляется nuget пакет `AutoMapper`.
+
+5. Реализация `ICsvFileBuilder` находится в `Infrastructure`, файл `CsvFileBuilder`.
+
+Перенос этого файла в `ApplicationServices`.
+
+В `ApplicationServices` надо добавить nuget пакеты:
+
+- `CsvHelper`
+- `Microsoft.Extensions.DependencyInjection.Abstractions`
+
+6. В `ApplicationServices` добавляется `DependencyInjection` - вспомогательный класс
+для регистрации зависимостей:
+
+```csharp
+public static class DependencyInjection
+{
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    {
+        services.AddTransient<ICsvFileBuilder, CsvFileBuilder>();
+        return services;
+    }
+}
+```
+
+В `WebUI` добавляется ссылка на `ApplicationServices`.
+
+Регистрация в `WebUI`:
+
+```csharp
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddApplicationServices();
+        //...
+    }
+```
+
+7. Из `Infrastructure` теперь можно удалить ссылку на `Application`.
