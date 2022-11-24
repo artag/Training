@@ -195,7 +195,7 @@ public interface IMapFrom<T>
 Этот интерфейс может использоваться любым из слоев - его можно переместить на самый нижний
 слой `Common`.
 
-1. Новая папка `3 UseCases`. Туда помещается `Application`.
+1. Новая папка `3 UseCases`. Туда помещается `Application` и новые `ApplicationServices`
 
 2. Создание двух новых проектов: `ApplicationServices` и `ApplicationServices.Interfaces`.
 
@@ -281,6 +281,13 @@ public class Startup
   - `DesignTimeDbContextFactoryBase`
   - `NorthwindDbContext`
   - `NorthwindDbContextFactory`
+
+Инфраструктуру БД лучше **всегда выделять** в отдельный проект, т.к. он "жирный":
+
+- ORM маппинги
+- Миграции
+- DbFactory
+- Data seed - наполнение БД первоначальными данными
 
 ### Проект `Infrastructure.Interfaces`
 
@@ -382,3 +389,154 @@ public void ConfigureServices(IServiceCollection services)
 ```
 
 4. В `Application` надо добавить ссылки на `Persistence.Interfaces` и `Notification.Interfaces`.
+
+## Рефакторинг контроллеров
+
+*Проект: 26. FromJasonTaylorRefactor4*
+
+В `WebUI`, в папке `Controllers` находятся контроллеры.
+
+Реализованы хорошо: единственное, что они делают это:
+
+- Получают данные
+- Отправляют входные данные с помощью `MediatR` в Use Cases
+- Возвращают результат
+
+Ради чистоты эксперимента контроллеры можно выделить в отдельный компонент.
+Хотя это необязательно делать:
+
+- Здесь нет нескольких frontend'ов/backend'ов.
+- Нет отдельных API (mobile, admin и т.д.)
+
+### Выделение контроллеров в отдельный проект `Controllers`
+
+1. Создание нового проекта `Controllers`.
+
+2. Добавить nuget'ы:
+
+- `MediatR`
+- `Microsoft.AspNetCore.Mvc.Core`
+- `Microsoft.AspNetCore.ApiAuthorization.IdentityServer`
+
+3. Перенести все контроллеры из `WebUI`, папки `Controllers` в проект `Controllers`.
+
+4. Добавление ссылки из `Controllers` на `Application`.
+
+5. Добавление ссылки из `WebUI` на `Controllers`.
+
+### Добавление ссылки на контроллеры в другом проекте
+
+*(Может понадобиться сделать в некоторых версиях .NET)*
+
+При регистрации, в `Startup` классе надо написать:
+
+```csharp
+services.AddApplicationPart(typeof(CategoriesController).Assembly)
+```
+
+где `CategoriesController` - это один из регистрируемых контроллеров.
+
+### Группировка проектов в solution по папкам
+
+- Папка `0 Utils`
+  - Проект `Common`
+- Папка `1 Domain`
+  - Проект `Domain`
+  - Проект `DomainServices`
+  - Проект `DomainServices.Infrastructure`
+- Папка `2 Infrastructure Interfaces`
+  - Проект `Infrastructure.Interfaces`
+  - Проект `Notification.Interfaces`
+  - Проект `Persistence.Interfaces`
+- Папка `3 UseCases`
+  - Проект `Application`
+  - Проект `ApplicationServices`
+  - Проект `ApplicationServices.Interfaces`
+- Папка `4 Controllers`
+  - Проект `Controllers`
+- Папка `5 Infrastructure`
+  - Проект `Infrastructure`
+  - Проект `Notification`
+  - Проект `Persistence`
+- Папка `Presentation` (была изначально)
+  - Проект `WebUI` (был изначально)
+
+### Пример возможной доработки Command/Query (`MediatR`)
+
+В исходном solution Command выглядела примерно так:
+
+```csharp
+public class DeleteCategoryCommand : IRequest
+{
+    public int Id { get; set; }
+
+    public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryCommand>
+    {
+        private readonly INorthwindDbContext _context;
+
+        public DeleteCategoryCommandHandler(INorthwindDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Unit> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
+        {
+            var entity = await _context.Categories
+                .FindAsync(request.Id);
+
+            if (entity == null)
+            {
+                throw new NotFoundException(nameof(Category), request.Id);
+            }
+
+            _context.Categories.Remove(entity);
+            await _context.SaveChangesAsync(cancellationToken);
+            return Unit.Value;
+        }
+    }
+}
+```
+
+Непринципиальные замечания:
+
+1. Сам запрос CQRS можно вынести в отдельный файл от обработчика.
+2. Воспользоваться `AsyncRequestHandler` чтобы возвращать не `Task<Unit>`, а просто `Task`.
+
+После изменений:
+
+```csharp
+public class DeleteCategoryCommand : IRequest
+{
+    public int Id { get; set; }
+}
+```
+
+```csharp
+public class DeleteCategoryCommandHandler : AsyncRequestHandler<DeleteCategoryCommand>
+{
+    private readonly INorthwindDbContext _context;
+
+    public DeleteCategoryCommandHandler(INorthwindDbContext context)
+    {
+        _context = context;
+    }
+
+    protected override async Task Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
+    {
+        var entity = await _context.Categories
+            .FindAsync(request.Id);
+
+        if (entity == null)
+        {
+            throw new NotFoundException(nameof(Category), request.Id);
+        }
+
+        _context.Categories.Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}
+```
+
+## Итоговая структура solution
+
+<img src="images/37_solution_scheme_final.jpg" alt="Final solution" style="width:800px">
