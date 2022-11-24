@@ -250,3 +250,135 @@ public class Startup
 ```
 
 7. Из `Infrastructure` теперь можно удалить ссылку на `Application`.
+
+## Рефакторинг инфраструктуры
+
+*Проект: 25. FromJasonTaylorRefactor3*
+
+Здесь сделано два Bounded Context: один для авторизации (проект `Infrastructure`),
+второй для управления объектами Northwind (проект `Persistence`).
+
+### Проект `Infrastructure`
+
+Содержит:
+
+- Папка `Identity` (реализация авторизации)
+  - Папка `Migrations`
+  - `ApplicationDbContext`
+  - `ApplicationUser`
+  - `IdentityResultExtensions`
+  - `UserManagerService`
+
+- `MachineDateTime` (реализация `IDateTime` - время на текущей машине)
+- `NotificationService` (реализация `INotificationService` - сервиса уведовмлений)
+
+### Проект `Persistence`
+
+Содержит:
+
+- Папка `Configuration` (настройки БД для Northwind)
+  - Папка `Migrations`
+  - `DesignTimeDbContextFactoryBase`
+  - `NorthwindDbContext`
+  - `NorthwindDbContextFactory`
+
+### Проект `Infrastructure.Interfaces`
+
+(Уже ранее был рассмотрен). Содержит:
+
+- `ICurrentUserService`
+- `INorthwindDbContext`
+- `INotificationService`
+- `IUserManager`
+- `MessageDto`
+
+Данные интерфейсы и их реализации можно распределить на три группы:
+
+1. `INotificationService` и `MessageDto`
+2. `INorthwindDbContext`
+3. `ICurrentUserService` и `IUserManager` (для работы с текущим пользователем)
+
+### Разделение инфраструктуры
+
+В папку `2 Infrastructure Interfaces` добавляются новые проекты:
+
+1. Новый проект `Persistence.Interfaces`
+
+Сюда переносится `INorthwindDbContext`, добавляются ссылки на `Domain`, nuget пакет
+`Microsoft.EntityFrameworkCore`.
+
+В принципе, из `Infrastructure.Interfaces` ссылку на nuget пакет `Microsoft.EntityFrameworkCore`
+можно удалить.
+
+2. Новый проект `Notification.Interfaces` - инфраструктура для отправки сообщений.
+
+(Обычно в такого рода проектах находятся реализации для взаимодействия с шиной сообщений).
+
+Сюда переносятся `INotificationService` и `MessageDto`.
+
+3. В уже существующем проекте `Infrastructure.Interfaces` остались `ICurrentUserService` и
+`IUserManager`.
+
+### Реализации
+
+Все реализации инфраструктуры будут находиться в папке `Infrastructure`.
+
+1. Уже существующий `Persistence` будет ссылаться на `Persistence.Interfaces`.
+
+1. Уже существующий `Infrastructure` ссылается на `Infrastructure.Interfaces`.
+
+3. Новая реализация инфраструктуры - создаем новый проект`Notification`.
+
+Будет ссылаться на `Notification.Interfaces`.
+
+Из `Infrastructure` в `Notification` переносится `NotificationService`.
+
+В `Notification` надо добавить ссылку на nuget пакет
+`Microsoft.Extensions.DependencyInjection.Abstractions`
+
+В `Notification` добавляется `DependencyInjection` - вспомогательный класс
+для регистрации зависимостей:
+
+```csharp
+public static class DependencyInjection
+{
+    public static IServiceCollection AddNotification(this IServiceCollection services)
+    {
+        services.AddTransient<INotificationService, NotificationService>();
+        return services;
+    }
+}
+```
+
+В `WebUI` добавляется ссылка на `Notification`.
+
+Регистрация в `WebUI`:
+
+```csharp
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddNotification();
+        //...
+    }
+```
+
+Регистрацию сервисов можно отсортировать в порядке возрастания их иеарархии в solution:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddDomainServices();
+
+    services.AddApplication();
+    services.AddApplicationServices();
+
+    services.AddInfrastructure(Configuration, Environment);
+    services.AddPersistence(Configuration);
+    services.AddNotification();
+    //...
+}
+```
+
+4. В `Application` надо добавить ссылки на `Persistence.Interfaces` и `Notification.Interfaces`.
