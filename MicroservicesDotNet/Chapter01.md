@@ -1,5 +1,10 @@
 # 1. Microservices at a glance (первый взгляд)
 
+- Understanding microservices and their core characteristics
+- Examining the benefits and drawbacks of microservices
+- An example of microservices working in concert to serve a user request
+- Using ASP.NET for a simple application
+
 ## 1.1 What is a microservice?
 
 A **microservice** is a service with one, and only one, very narrowly focused capability that a
@@ -214,6 +219,10 @@ Disadvantages of big, monolithic systems:
   - `Fiddler`
   - `Postman`
   - `cURL`
+
+## The complete picture of microservices working in concert to serve a user request
+
+![The comlete picture of microservices](images/01_complete_picture.jpg)
 
 ## 1.9 A simple microservices example
 
