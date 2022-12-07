@@ -342,4 +342,4 @@ stored in an event store and published through an event feed.
 
 ## Запросы
 
-Все запросы [тут](ch02_requests.http)
+Все запросы [тут](chapter02/requests.http)

@@ -228,8 +228,8 @@ Disadvantages of big, monolithic systems:
 
 *Исходники*:
 
-- [C#: HelloMicroservices/cs](HelloMicroservices/cs/)
-- [F#: HelloMicroservices/fs](HelloMicroservices/fs/)
+- [C#: HelloMicroservices/cs](chapter01/HelloMicroservices/cs/)
+- [F#: HelloMicroservices/fs](chapter01/HelloMicroservices/fs/)
 
 Создание простого сервиса, который возвращает текущие дату и время в виде строки при
 обращении к нему по адресу `http://localhost:5000` или `https://localhost:5001`.
@@ -250,7 +250,7 @@ dotnet new web -lang F# -n HelloMicroservices
 
 ### Примеры запросов в `REST client`
 
-*Файл*: [requests.http](requests.http):
+*Файл*: [requests.http](chapter01/requests.http):
 
 ```text
 GET http://localhost:5000/
