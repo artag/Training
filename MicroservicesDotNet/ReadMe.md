@@ -11,3 +11,8 @@
     - Creating HTTP endpoints with ASP.NET MVC
     - Implementing a request from one microservice to another
     - Implementing a simple event feed for a microservice
+  - [Chapter 3. Deploying a microservice to Kubernetes](Chapter03.md)
+    - Packaging a microservice in a Docker container
+    - Deploying a microservice container to Kubernetes on localhost
+    - ~~Creating a basic Kubernetes cluster on Azure's AKS (Azure Kubernetes Service)~~
+    - ~~Deploying a microservice container to a Kubernetes cluster on AKS~~
