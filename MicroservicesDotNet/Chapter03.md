@@ -37,6 +37,8 @@ servers.
 
 ## 3.2 Putting the Shopping Cart microservice in a container
 
+Исходники микросервиса "ShoppingCart" перенесены из предыдущей, [2 главы](Chapter02.md).
+
 ### 3.2.1 Adding a Dockerfile to the Shopping Cart microservice
 
 Для создания docker контейнера используются файлы:
@@ -125,3 +127,88 @@ runs the compiled ASP.NET application in the `ShoppingCart.dll`.
 [B|b]in/
 [O|o]bj/
 ```
+
+### 3.2.2 Building and running the shopping cart container
+
+Запускать из директории где находится `Dockerfile`.
+
+#### Команда. Build
+
+Build a shopping cart container image from the `Dockerfile`:
+
+```text
+docker build . -t shopping-cart
+```
+
+- `-t` присваивает тег собранному image
+
+#### Команда. Run
+
+Run the container image:
+
+```text
+docker run --name shopping-cart --rm -p 5000:80 shopping-cart
+```
+
+- `-d` - запуск docker контейнера в фоновом режиме и возврат обратно в терминал.
+- `--name` - gives the container a name (`shopping-cart`).
+- `--rm` - container is automatically removed when the container exits.
+- `-p 5000:80` - container exposes port 5000 and listens to traffic on
+that port. Any incoming traffic to port 5000 is forwarded to port 80 inside the
+container.
+- `shopping-cart` at the end of the command is the name of the container image to run.
+
+
+![Forward port inside the container.](images/05_containter_port.jpg)
+
+#### Команда. Stop
+
+To stop the shopping cart container:
+
+```text
+docker stop shopping-cart
+```
+
+## 3.3 Running the shopping cart container in Kubernetes
+
+![Running the shopping cart on Kubernetes  .](images/06_run_on_kubernetes.jpg)
+
+### 3.3.1 Setting up Kubernetes localhost
+
+#### On Windows
+
+Using Docker Desktop with with the option to enable Kubernetes.
+
+`Settings - >Kubernetes -> Enable Kubernetes`
+
+#### On Linux
+
+- To install MicroK8S (Kubernetes cluster) on a Linux machine:
+
+```text
+sudo snap install microk8s --classic
+```
+
+This installs the `microk8s` command-line interface, which includes the `kubectl` command.
+
+- Create an alias for `kubectl`:
+
+```text
+snap alias microk8s.kubectl kubectl
+```
+
+#### Команда. Check that Kubernetes is indeed running
+
+```text
+kubectl cluster-info
+```
+
+The `kubectl` command is the command line interface to control Kubernetes, and we
+will be using that to deploy the shopping cart to Kubernetes, both on localhost and on
+Azure.
+
+Furthermore, `kubectl` can be used to inspect the Kubernetes cluster and to
+start the Kubernetes dashboard, which gives you a friendly UI for looking inside the
+Kubernetes cluster.
+
+## 3.4 Creating Kubernetes deployment for the shopping cart
