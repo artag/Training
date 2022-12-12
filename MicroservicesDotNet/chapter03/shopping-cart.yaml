@@ -1,0 +1,41 @@
+# Start of the section specifying the container deployment
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: shopping-cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopping-cart
+  template:
+    metadata:
+      labels:
+        app: shopping-cart
+    spec:
+      containers:
+        - name: shopping-cart
+          # The container image to deploy
+          image: shopping-cart
+          imagePullPolicy: IfNotPresent
+          ports:
+            # The port the container listens for requests on
+            - containerPort: 80
+---
+# Start of the section specifying a service
+kind: Service
+apiVersion: v1
+metadata:
+  name: shopping-cart
+spec:
+  # Specifies this is a load balancer service
+  type: LoadBalancer
+  ports:
+    - name: shopping-cart
+      # Listens on port 5000 externally
+      port: 5000
+      # Maps to port 80 on the container
+      targetPort: 80
+  selector:
+    # Routes requests to the shopping cart
+    app: shopping-cart

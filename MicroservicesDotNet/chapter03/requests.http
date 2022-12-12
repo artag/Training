@@ -1,13 +1,18 @@
-### Get shopping cart for a user with ID 123
-GET https://localhost:5001/shoppingcart/123
+@host = localhost
+@port=5000
 
-#### Adding two items to a shopping cart
-POST https://localhost:5001/shoppingcart/123/items
+@user={{$randomInt 1 1000}}
+
+### Get shopping cart for a user with some ID
+GET http://{{host}}:{{port}}/shoppingcart/360
+
+#### Adding two items to a shopping cart to random user
+POST http://{{host}}:{{port}}/shoppingcart/{{user}}/items
 Accept: application/json
 Content-Type: application/json
 
 [1, 2]
 
-### Get all events between 0 and 20
-GET https://localhost:5001/events?start=0&end=20
+# ### Get all events between 0 and 20
+GET http://{{host}}:{{port}}/events?start=0&end=20
 Accept: application/json

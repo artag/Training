@@ -179,7 +179,7 @@ docker stop shopping-cart
 
 Using Docker Desktop with with the option to enable Kubernetes.
 
-`Settings - >Kubernetes -> Enable Kubernetes`
+`Settings -> Kubernetes -> Enable Kubernetes`
 
 #### On Linux
 
@@ -197,14 +197,14 @@ This installs the `microk8s` command-line interface, which includes the `kubectl
 snap alias microk8s.kubectl kubectl
 ```
 
-#### Команда. Check that Kubernetes is indeed running
+#### Команда. Check that Kubernetes is indeed (действительно) running
 
 ```text
 kubectl cluster-info
 ```
 
 The `kubectl` command is the command line interface to control Kubernetes, and we
-will be using that to deploy the shopping cart to Kubernetes, both on localhost and on
+will be using that to deploy the shopping cart to Kubernetes, both on `localhost` and on
 Azure.
 
 Furthermore, `kubectl` can be used to inspect the Kubernetes cluster and to
@@ -212,3 +212,142 @@ start the Kubernetes dashboard, which gives you a friendly UI for looking inside
 Kubernetes cluster.
 
 ## 3.4 Creating Kubernetes deployment for the shopping cart
+
+Для описания deployment требуется manifest файл `.yaml`.
+
+В примере файл manifest располагается рядом с `Dockerfile`.
+
+Файл `shopping-cart.yaml` содержит 2 секции.
+
+1. A deployment section that specifies which container we want to deploy and how
+we want it set up:
+
+- We want to deploy the shopping cart container.
+
+- We want one copy of the container running. We could set this number differently and Kubernetes
+would take care of running as many instances as we wanted.
+
+- The port the container communicates on, port `80` in the case of the shopping cart,
+just like we saw earlier.
+
+2. A service section that configures load balancing in front of the shopping cart.
+The load balancer makes the shopping cart accessible outside the Kubernetes
+cluster by giving it an external IP. If we were deploying more than one instance
+of the shopping cart container, the load balancer would balance the incoming
+traffic between the shopping cart instances.
+
+Файл `shopping-cart.yaml`:
+
+```yaml
+# (1) Start of the section specifying the container deployment
+# (2) The container image to deploy
+# (3) The port the container listens for requests on
+
+# (4) Start of the section specifying a service
+# (5) Specifies this is a load balancer service
+# (6) Listens on port 5000 externally
+# (7) Maps to port 80 on the container
+# (8) Routes requests to the shopping cart
+
+kind: Deployment            # (1)
+apiVersion: apps/v1
+metadata:
+  name: shopping-cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopping-cart
+  template:
+    metadata:
+      labels:
+        app: shopping-cart
+    spec:
+      containers:
+        - name: shopping-cart
+          image: shopping-cart              # (2)
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80             # (3)
+---
+kind: Service                 # (4)
+apiVersion: v1
+metadata:
+  name: shopping-cart
+spec:
+  type: LoadBalancer          # (5)
+  ports:
+    - name: shopping-cart
+      port: 5000              # (6)
+      targetPort: 80          # (7)
+  selector:
+    app: shopping-cart        # (8)
+```
+
+#### Команды. Deploy and run, list
+
+- Run everything described in the manifest:
+
+```text
+kubectl apply -f shopping-cart.yaml
+```
+
+`-f` - The file(s) that contain the configurations to apply.
+
+- List everything running in the Kubernetes cluster:
+
+```text
+kubectl get all
+```
+
+#### Команды. Removing a service from Kubernetes
+
+```text
+kubectl delete -f shopping-cart.yaml
+```
+
+### (Optional). Install Kubernetes dashboard
+
+Документация: [https://github.com/kubernetes/dashboard](https://github.com/kubernetes/dashboard)
+
+Install the Kubernetes dashboard in version 2.2.0 (в книге):
+
+```text
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.2.0/aio/deploy/recommended.yaml
+```
+
+На момент чтения:
+
+```text
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+```
+
+Удаляется такой же командой:
+
+```text
+kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+```
+
+#### Access to Dashboard from your local workstation
+
+- Create a secure channel to your Kubernetes cluster:
+
+```text
+kubectl proxy
+```
+
+- Now access Dashboard at:
+
+```text
+http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+```
+
+- Token (может не понадобиться)
+
+If the Kubernetes dashboard asks for a login token, you can get one by running command:
+
+*(Примечание: не вышло получение token)*
+
+```text
+kubectl -n kube-system describe secret default
+```
