@@ -16,3 +16,21 @@
     - Deploying a microservice container to Kubernetes on localhost
     - ~~Creating a basic Kubernetes cluster on Azure's AKS (Azure Kubernetes Service)~~
     - ~~Deploying a microservice container to a Kubernetes cluster on AKS~~
+
+- Part 2. Building microservices
+  - [Chapter 4. Identifying and scoping microservices](Chapter04.md)
+    - Scoping microservices for business capability.
+    (Определение области применения микросервисов для бизнес-функций)
+
+    - Scoping microservices to support technical capabilities.
+    (Определение области применения микросервисов для поддержки технических функций)
+
+    - Scoping microservices to support efficient development work.
+    (Определение области применения микросервисов для эффективной разработки/развития)
+
+    - Managing when scoping microservices is difficult.
+    (Разрешение затруднений в определении области действия микросервисов)
+
+    - Carving out new microservices from existing ones.
+    (Создание новых микросервисов из существующих)
+
