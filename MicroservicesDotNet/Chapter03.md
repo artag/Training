@@ -310,7 +310,9 @@ kubectl delete -f shopping-cart.yaml
 
 Документация: [https://github.com/kubernetes/dashboard](https://github.com/kubernetes/dashboard)
 
-Install the Kubernetes dashboard in version 2.2.0 (в книге):
+#### Deploying the Dashboard UI
+
+Deploy Kubernetes dashboard version 2.2.0 (в книге):
 
 ```text
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.2.0/aio/deploy/recommended.yaml
@@ -328,26 +330,91 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/a
 kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
 ```
 
-#### Access to Dashboard from your local workstation
+И вообще, для любой команды, которая была выполнена через `kubectl apply -f *`, можно
+остановить ее через `kubectl delete -f *`.
 
-- Create a secure channel to your Kubernetes cluster:
+#### Accessing the Dashboard UI
+
+Здесь [Creating sample user](https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md) описано:
+
+- how to create a new user using the Service Account mechanism of Kubernetes.
+- grant this user admin permissions.
+- login to Dashboard using a bearer token tied to this user.
+
+1. Надо создать в Kubernetes: Service Account и ClusterRoleBinding. Это делается
+в манифесте - файл [`dashboard-adminuser.yaml`](dashboard-adminuser.yaml) (необязательно называть именно так).
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+```
+
+2. Запуск файла `dashboard-adminuser.yaml`. Я запускал через PowerShell, может можно через обычный
+`cmd`:
+
+```text
+ kubectl apply -f dashboard-adminuser.yaml
+```
+
+3. Getting a Bearer Token
+
+```text
+kubectl -n kubernetes-dashboard create token admin-user
+```
+
+В консоли будет выведена строка, содержащая токен.
+
+*Примечание. В книге была приведена вот эта команда:*
+
+```text
+kubectl -n kube-system describe secret default
+```
+
+*без описания двух предыдущих шагов. Конечно же, не вышло получить token.*
+
+4. Create a secure channel to your Kubernetes cluster. (По сути, запуск dashboard).
+
+Команда из терминала:
 
 ```text
 kubectl proxy
 ```
 
-- Now access Dashboard at:
+5. Зайти на Dashboard можно по этому адресу:
 
 ```text
 http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 ```
 
-- Token (может не понадобиться)
+6. В строку Token надо вставить сгенеренную строку из шага 3. Готово.
 
-If the Kubernetes dashboard asks for a login token, you can get one by running command:
+## Summary
 
-*(Примечание: не вышло получение token)*
-
-```text
-kubectl -n kube-system describe secret default
-```
+- The microservices can be deployed to many different environments.
+- .NET-based microservices are easily put into containers and run as containers.
+- Dockerfiles for .NET-based microservices follow a common template.
+- Deploying microservices to Kubernetes gives us a highly scalable environment and
+a versatile container orchestrator (универсальный оркестратор контейнеров).
+- Kubernetes works the same on localhost and in the cloud. This means we can
+easily run the exact containers on localhost for development and in the cloud
+for production.
+- Kubernetes manifests for our microservices are all similar.
+- Kubernetes has various tools for scaling, monitoring, and debugging microservices.
+- Azure Kubernetes Services - это простой в настройке управляемый сервис для Kubernetes,
+который позволяет быстро приступить к работе с Kubernetes.
