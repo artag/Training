@@ -34,3 +34,18 @@
     - Carving out new microservices from existing ones.
     (Создание новых микросервисов из существующих)
 
+  - [Chapter 5. Microservice collaboration](Chapter05.md)
+    - Understanding how microservices collaborate through commands, queries, and events.
+    (Понимание того, как микросервисы взаимодействуют с помощью команд, запросов и событий)
+
+    - Comparing event-based collaboration with collaboration based on commands and queries.
+    (Сравнение совместной работы на основе событий с совместной работой, основанной на командах и запросах)
+
+    - Implementing an event feed.
+    (Реализация потока событий)
+
+    - Implementing command-, query-, and event-based collaboration.
+    (Реализация совместной работы на основе команд, запросов и событий)
+
+    - Deploying collaborating microservices to Kubernetes.
+    (Развертывание взаимодействующих микросервисов в Kubernetes)
