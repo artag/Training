@@ -271,10 +271,7 @@ The event-subscriber process - это фоновый процесс, котор�
 
 ### 5.1.3 Data formats. (Форматы данных)
 
-So far, we’ve focused on exchanging data in JSON format. JSON works well in many
-situations, but there are reasons you might want to use something else:
-
-Обмене данными в формате JSON хорошо работает во многих ситуациях.
+Обмен данными в формате JSON хорошо работает во многих ситуациях.
 В зависимости от задач иногда лучше использовать что-то другое:
 
 - Если требуется обмен большим объемами данных, может потребоваться более компактный формат.
@@ -327,3 +324,111 @@ Settings:
 ```
 
 ## 5.2 Implementing collaboration. (Реализация взаимодействия)
+
+Реализация взаимодействия будет состоять из трех шагов:
+
+1. Создание проекта для loyalty program (программы лояльности). Как раньше: создание
+пустого приложения ASP.NET и добавление ASP.NET MVC.
+
+2. Реализация взаимодействий на основе команд и запросов. Реализация всех команд и запросов,
+в микросервисах которые их используют.
+
+3. Реализация взаимодействий на основе событий. Сначала реализация event feed (ленты событий)
+в разделе "Специальные предложения", а затем реализация подписки в программе лояльности.
+Подписка будет включена в новый проект программы лояльности и будет управляться
+Kubernetes CronJob.
+
+Микросервис loyalty program состоит из веб-процесса (web process) и event consumer process, который
+реализует взаимодействие на основе событий:
+
+![Loyalty program microservice](images/31_lp_microservice.jpg)
+
+### 5.2.1 Setting up a project for the loyalty program
+
+Создание проекта web process для loyalty program так же, как было описано во 2 главе:
+
+```text
+dotnet new web -n LoyaltyProgram
+```
+
+Реализация `Program.cs` похожа на реализацию в главе 2.
+См. [LoyaltyProgram/Program.cs](chapter05/LoyaltyProgram/LoyaltyProgram/Program.cs)
+
+### 5.2.2 Implementing commands and queries
+
+Для web process в loyalty program надо реализовать следующие endpoints:
+
+- `GET` по адресу `/users/{userId}`, который возвращает информацию о пользователе.
+- `POST` по адресу `/users/`, который принимает информацию о пользователе и регистрирует его
+в сервисе loyalty program.
+- `PUT` по адресу `/users/{userId}`, который принимает информацию о пользователе и обновляет
+информацию о зарегистрированном пользователе.
+
+### 5.2.3 и 5.2.4 Implementing commands with HTTP `POST`, `PUT` and `GET`
+
+Контроллер можно посмотреть тут:
+[LoyaltyProgram/Users/UsersController.cs](chapter05/LoyaltyProgram/LoyaltyProgram/Users/UsersController.cs)
+
+Информация о пользователе тут:
+[LoyaltyProgram/Users/LoyaltyProgramUser.cs](chapter05/LoyaltyProgram/LoyaltyProgram/Users/LoyaltyProgramUser.cs). В книге этого кода нет.
+
+```csharp
+public record LoyaltyProgramUser(int Id, string Name, int LoyaltyPoints, LoyaltyProgramSettings Settings);
+
+public record LoyaltyProgramSettings()
+{
+    public LoyaltyProgramSettings(string[] interests) : this()
+    {
+        Interests = interests;
+    }
+
+    public string[] Interests { get; init; } = Array.Empty<string>();
+}
+```
+
+Это приемная сторона. Клиентская часть, API Gateway microservice:
+
+![API Gateway microservice](images/23_collaboration_styles.jpg)
+
+это mock, консольное приложение. Его код в книге не показан. Находится тут:
+[chapter05/ApiGatewayMock](chapter05/ApiGatewayMock/).
+
+Интерес представляет класс [ApiGatewayMock/LoyaltyProgramClient.cs](chapter05/ApiGatewayMock/LoyaltyProgramClient.cs):
+
+```csharp
+public class LoyaltyProgramClient
+{
+    private readonly HttpClient _httpClient;
+
+    public LoyaltyProgramClient(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
+    // (1) Sends the command to loyalty program
+    public Task<HttpResponseMessage> RegisterUser(string name)
+    {
+        var user = new { name, Settings = new { } };
+        return _httpClient.PostAsync("/users/", CreateBody(user));      // (1)
+    }
+
+    // (1) Sends the UpdateUser command as a PUT request
+    public Task<HttpResponseMessage> UpdateUser(LoyaltyProgramUser user) =>
+        _httpClient.PutAsync($"/users/{user.Id}", CreateBody(user));    // (1)
+
+    public Task<HttpResponseMessage> QueryUser(string arg) =>
+        _httpClient.GetAsync($"/users/{int.Parse(arg)}");
+
+    // (1) Serializes user as JSON
+    // (2) Sets the Content-Type header
+    private static StringContent CreateBody(object user) =>
+        new StringContent(                      // (1)
+            JsonSerializer.Serialize(user),
+            Encoding.UTF8,
+            "application/json");                // (2)
+}
+```
+
+Он создает запросы к loyalty program microservice и получает ответы в виде `HttpResponseMessage`.
+
+### 5.2.5 Implementing an event-based collaboration
