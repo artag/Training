@@ -432,3 +432,220 @@ public class LoyaltyProgramClient
 Он создает запросы к loyalty program microservice и получает ответы в виде `HttpResponseMessage`.
 
 ### 5.2.5 Implementing an event-based collaboration
+
+Loyalty program подписывается на события из special offers (специальных предложений) и использует
+события, чтобы решить, когда уведомлять зарегистрированных пользователей
+о новых специальных предложениях:
+
+![The event-based collaboration in the loyalty program microservice](images/32_event-based_collab.jpg)
+
+#### Implementing an event feed
+
+В главе 2 похожее уже было реализовано. Микросервис special offers содержит endpoint
+`/events`, который возвращает список последовательно пронумерованных событий.
+Он принимает два параметра: `start` и `end`, которые определяют диапазон событий.
+
+- События необязательно могут возвращаться в одной форме - разные события могут иметь разные данные.
+- В одном ответе может быть несколько типов событий.
+
+Подробная реализация special offers в книге не показана. Реализация special offers в виде web API.
+
+Здесь конфигурация web API [SpecialOffers/Program.cs](chapter05/SpecialOffers/Program.cs) как обычно.
+
+Интересен контроллер, который реализует endpoint `/events` [](chapter05/SpecialOffers/Events/EventFeedController.cs):
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+
+namespace SpecialOffers.Events;
+
+[Route("/events")]
+public class EventFeedController : ControllerBase
+{
+    private readonly IEventStore _eventStore;
+
+    public EventFeedController(IEventStore eventStore)
+    {
+        _eventStore = eventStore;
+    }
+
+    [HttpGet("")]
+    public ActionResult<EventFeedEvent[]> GetEvents(
+        [FromQuery] int start, [FromQuery] int end)
+    {
+        if (start < 0 || end < start)
+            return BadRequest();
+
+        return _eventStore.GetEvents(start, end).ToArray();
+    }
+}
+```
+
+`IEventStore` - это хранилище событий сервиса. Его псевдо-реализация расположена тут:
+[SpecialOffers/Events/EventStore.cs](chapter05/SpecialOffers/Events/EventStore.cs).
+
+```csharp
+public record EventFeedEvent(long SequenceNumber, DateTimeOffset OccuredAt, string Name, object Content);
+
+public interface IEventStore
+{
+    void RaiseEvent(string name, object content);
+    IEnumerable<EventFeedEvent> GetEvents(int start, int end);
+}
+
+public class EventStore : IEventStore
+{
+    private static long _currentSequenceNumber = 0;
+    private static readonly IList<EventFeedEvent> Database = new List<EventFeedEvent>();
+
+    public void RaiseEvent(string name, object content)
+    {
+        var seqNumber = Interlocked.Increment(ref _currentSequenceNumber);
+        Database.Add(new EventFeedEvent(seqNumber, DateTimeOffset.UtcNow, name, content));
+    }
+
+    public IEnumerable<EventFeedEvent> GetEvents(int start, int end) =>
+        Database
+            .Where(e => start <= e.SequenceNumber && e.SequenceNumber < end)
+            .OrderBy(e => e.SequenceNumber);
+}
+```
+
+У `EventFeedEvent` свойство `Content` используется для данных события и может быть разным, в
+зависимости от типа события.
+
+#### Creating an event-subscriber process
+
+Подписка на event feed (канал событий), по сути, означает, что вы будете опрашивать endpoint
+микросервиса через определенные промежутки времени.
+
+Отправляется HTTP-запрос `GET` на endpoint `/events`, чтобы проверить, есть ли какие-либо
+необработанные события.
+
+Реализация таких периодических опросов состоит из двух частей:
+
+- Простое консольное приложение, которое считывает batch (пакет) событий.
+- Kubernetes CronJob запускает консольное приложение через определенные интервалы времени.
+
+Первым шагом в реализации процесса подписки на события является создание консольного
+приложения:
+
+```text
+dotnet new console -n EventConsumer
+```
+
+Расположено оно будет тут [LoyaltyProgram/EventConsumer/](chapter05/LoyaltyProgram/EventConsumer/).
+
+Запуск консольного приложения из CLI:
+
+```text
+dotnet run
+```
+
+#### Subscribing to an event feed
+
+Реализация функционала для консольного приложения `EventConsumer`.
+Состоит из одного файла [LoyaltyProgram/EventConsumer/Program.cs](chapter05/LoyaltyProgram/EventConsumer/Program.cs):
+
+```csharp
+// (1) Read the starting point of this batch (пакета) from a database.
+// (2) Send GET request to the event feed.
+// (3) Call the method to process the events in this batch.
+//     ProcessEvents also updates the start variable.
+// (4) Save the starting point of the next batch of events.
+
+using System.Net.Http.Headers;
+using System.Net.Mime;
+using System.Text.Json;
+
+var start = await GetStartIdFromDatastore();    // (1)
+var end = 100;
+
+var client = new HttpClient();
+client.DefaultRequestHeaders
+    .Accept
+    .Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+
+using var resp = await client.GetAsync(         // (2)
+    new Uri($"http://special-offers:5002/events?start={start}&end={end}"));
+
+await ProcessEvents(await resp.Content.ReadAsStreamAsync());    // (3)
+await SaveStartIdToDataStore(start);                            // (4)
+
+// Fake implementation. Should get from a real database
+Task<long> GetStartIdFromDatastore() => Task.FromResult(0L);
+
+// Fake implementation. Should save to a real database
+Task SaveStartIdToDataStore(long startId) => Task.CompletedTask;
+
+// Fake implementation. Should apply business rules to events
+// (5) This is where the event would be processed.
+// (6) Keeps track of the highest event number handled.
+async Task ProcessEvents(Stream content)
+{
+    var events = await JsonSerializer.DeserializeAsync<SpecialOfferEvent[]>(content)
+        ?? Array.Empty<SpecialOfferEvent>();
+    foreach (var @event in events)
+    {
+        Console.WriteLine(@event);                              // (5)
+        start = Math.Max(start, @event.SequenceNumber + 1);     // (6)
+    }
+}
+
+public record SpecialOfferEvent(
+    long SequenceNumber, DateTimeOffset OccuredAt, string Name, object Content);
+```
+
+Для метода ``ProcessEvents` следует отметить несколько моментов:
+
+- Метод `ProcessEvents` отслеживает, какие события были обработаны. Это гарантирует,
+что вы не будете запрашивать события, которые вы уже обработали.
+
+- События могут содержать разные данные в свойстве `Content`. В зависимости от свойства `Name`
+можно выбирать обработку данных для определенных типов событий.
+Можно игнорировать некоторые типы событий и их данные, если они не требуются для текущей
+функциональности.
+
+- События десериализуются в тип `SpecialOfferEvent`. Этот тип отличается от `EventFeedEvent`,
+который используется в special offers.
+Двум разным микросервисам не обязательно работать с одинаковым типом события.
+Если микросервис LoyaltyProgram не зависит от данных, которых нет во входном событии, то
+никаких ошибок в работе это не вызовет.
+
+Тип `EventFeedEvent` структурно похож на `SpecialOfferEvent`. В `SpecialOfferEvent`
+даже может отсутствовать часть полей, если это будет нужно:
+
+```csharp
+public record EventFeedEvent(
+    long SequenceNumber, DateTimeOffset OccuredAt, string Name, object Content);
+```
+
+### 5.2.6 Deploying to Kubernetes
+
+Для deploy в Kubernetes надо выполнить три шага:
+
+- Создание контейнеров Docker для обоих микросервисов.
+
+  - Контейнер для special offers (специальных предложений) похож на Docker из [главы 3](Chapter03.md).
+
+  - Контейнер для loyalty program (программы лояльности) имеет особенность:
+на основе переменной среды он может действовать либо как HTTP API, предоставляющий endpoints
+`POST`, `PUT` и `GET`, либо как event consumer (обработчик событий).
+
+- Deploy для special offers (специальных предложений) в Kubernetes похож на deploy в [главе 3](Chapter03.md).
+
+- Deploy для loyalty program (программы лояльности) будет в виде двух экземпляров разных
+конфигураций: один работает как API, а другой - как event consumer (обработчик событий).
+
+Выполнив эти три шага, мы получим три модуля, работающие в Kubernetes:
+
+- Модуль микросервиса special offers (специальных предложений).
+- Модуль API-части микросервиса loyalty program (программы лояльности).
+- CronJob для event consumer части микросервиса loyalty program.
+
+Также будет два deployments в Kubernetes, одно для микросервиса special offers
+и одно для микросервиса loyalty program.
+API и event consumer микросервиса loyalty program рассматриваются как единое целое, поэтому
+они развертываются вместе и опиваются в одном Kubernetes manifest file (файле манифеста).
+Во время выполнения они запускаются независимо, что позволяет, например, отдельно масштабировать
+только часть с API, а обработчика событий оставить в единственном экземпляре.

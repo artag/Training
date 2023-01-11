@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using static System.Net.WebRequestMethods;
 
 namespace LoyaltyProgram.Users;
 
