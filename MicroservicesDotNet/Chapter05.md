@@ -596,7 +596,7 @@ public record SpecialOfferEvent(
     long SequenceNumber, DateTimeOffset OccuredAt, string Name, object Content);
 ```
 
-Для метода ``ProcessEvents` следует отметить несколько моментов:
+Для метода `ProcessEvents` следует отметить несколько моментов:
 
 - Метод `ProcessEvents` отслеживает, какие события были обработаны. Это гарантирует,
 что вы не будете запрашивать события, которые вы уже обработали.
@@ -646,6 +646,127 @@ public record EventFeedEvent(
 Также будет два deployments в Kubernetes, одно для микросервиса special offers
 и одно для микросервиса loyalty program.
 API и event consumer микросервиса loyalty program рассматриваются как единое целое, поэтому
-они развертываются вместе и опиваются в одном Kubernetes manifest file (файле манифеста).
+они развертываются вместе и описываются в одном Kubernetes manifest file (файле манифеста).
 Во время выполнения они запускаются независимо, что позволяет, например, отдельно масштабировать
 только часть с API, а обработчика событий оставить в единственном экземпляре.
+
+### 5.2.7 Building a Docker container special offers microservice
+
+[`Dockerfile`](chapter05/SpecialOffers/Dockerfile) для special offers microservice (как в [главе 3](Chapter03.md)):
+
+```dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+WORKDIR "/src"
+COPY . .
+RUN dotnet restore "SpecialOffers.csproj"
+RUN dotnet build "SpecialOffers.csproj" -c Release -o /api/build
+
+FROM build AS publish
+WORKDIR "/src"
+RUN dotnet publish "SpecialOffers.csproj" -c Release -o /api/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
+WORKDIR "/app"
+EXPOSE 80
+COPY --from=publish /api/publish ./api
+ENTRYPOINT dotnet api/SpecialOffers.dll
+```
+
+### 5.2.8 Building a Docker container for both parts of the loyalty program
+
+The loyalty program состоит из двух частей: API и event consumer.
+Мы создадим один контейнер, который способен работать либо как API, либо как event consumer
+в зависимости от environment variable (переменной окружения). Создается `Dockerfile`, где `ENTRYPOINT`
+управляется environment variable [`Dockerfile`](chapter05/LoyaltyProgram/Dockerfile):
+
+```dockerfile
+# (1) Builds the API
+# (2) Builds the event consumer
+# (3) Publishes the API
+# (4) Publishes the event consumer
+# (5) Uses the value of the STARTUPDLL environment variable as the entry point
+
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+WORKDIR "/src"
+COPY . .
+RUN dotnet restore "LoyaltyProgram/LoyaltyProgram.csproj"
+RUN dotnet restore "EventConsumer/EventConsumer.csproj"
+WORKDIR "/src/LoyaltyProgram"
+RUN dotnet build "LoyaltyProgram.csproj" -c Release -o /api/build       #(1)
+WORKDIR "/src/EventConsumer"
+RUN dotnet build "EventConsumer.csproj" -c Release -o /consumer/build   #(2)
+
+FROM build AS publish
+WORKDIR "/src/LoyaltyProgram"
+RUN dotnet publish "LoyaltyProgram.csproj" -c Release -o /api/publish       #(3)
+WORKDIR "/src/EventConsumer"
+RUN dotnet publish "EventConsumer.csproj" -c Release -o /consumer/publish   #(4)
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
+WORKDIR "/app"
+EXPOSE 80
+COPY --from=publish /api/publish ./api
+COPY --from=publish /consumer/publish ./consumer
+ENTRYPOINT dotnet $STARTUPDLL                     #(5)
+```
+
+Созданный image будет содержать `LoyaltyProgram.dll` и `EventConsumer.dll`
+
+Build a loyalty program Docker image (запускать из директории где находится `Dockerfile`):
+
+```txt
+docker build . -t loyalty-program
+```
+
+- `-t` присваивает тег собранному image
+
+Запуск loyalty program как API:
+
+```txt
+docker run --rm -p 5001:80 -e STARTUPDLL="api/LoyaltyProgram.dll" loyalty-program
+```
+
+- `-d` - запуск docker контейнера в фоновом режиме и возврат обратно в терминал.
+- `--rm` - container is automatically removed when the container exits.
+- `-p 5001:80` - container exposes port 5001 and listens to traffic on
+that port. Any incoming traffic to port 5001 is forwarded to port 80 inside the
+container.
+- `-e STARTUPDLL="api/LoyaltyProgram.dll"` - переменная окружения (для запуска API)
+- `loyalty-program` at the end of the command is the name of the container image to run.
+
+Запуск loyalty program как Event Consumer:
+
+```txt
+docker run --rm -e STARTUPDLL="consumer/EventConsumer.dll" loyalty-program
+```
+
+Event Consumer будет запущен, но ему не удастся извлечь события из special offers
+event feed, потому что микросервис special offers еще не запущен.
+Надо запустить микросервис special offers в контейнере и поместить его в ту же Docker network,
+что и event consumer. Для этого создается новая сеть Docker под названием "microservices":
+
+```text
+docker network create --driver=bridge microservices
+```
+
+Контейнеры, которые мы добавляем в network микросервисов, могут взаимодействовать,
+используя контейнер и имена хостов.
+
+Запуск микросервиса special offers с добавлением его в network микросервисов и присвоением ему
+названия "special-offers":
+
+```text
+docker build . -t special-offers
+docker run --rm -p 5002:80 --network=microservices --name=special-offers special-offers
+```
+
+Теперь можно повторно запустить loyalty program как Event Consumer:
+
+```txt
+docker run --rm -e STARTUPDLL="consumer/EventConsumer.dll" --network=microservices loyalty-program
+```
+
+При этом event consumer запустится один раз и он обработает только один пакет событий.
+Позже мы настроим расписание Cron в Kubernetes, которое периодически будет запускать event consumer.
+
+### 5.2.9 Deploying the loyalty program API and the special offers
