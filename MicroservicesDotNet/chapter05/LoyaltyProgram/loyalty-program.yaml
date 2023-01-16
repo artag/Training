@@ -1,0 +1,73 @@
+# (1) Start of the section specifying the container deployment
+# (2) The number of copies of the LoyaltyProgram API we want deployed.
+# (3) The container image to deploy.
+# (4) The port the container listens for requests on
+# (5) Override the STARTUPDLL environment variable to control how the container starts up.
+# (6) Point to the LoyaltyProgram.dll, which will run the LoyaltyProgram API.
+kind: Deployment            # (1)
+apiVersion: apps/v1
+metadata:
+  name: loyalty-program
+spec:
+  replicas: 1               # (2)
+  selector:
+    matchLabels:
+      app: loyalty-program
+  template:
+    metadata:
+      labels:
+        app: loyalty-program
+    spec:
+      containers:
+        - name: loyalty-program
+          image: loyalty-program                  # (3)
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80                   # (4)
+          env:
+            - name: STARTUPDLL                    # (5)
+              value: "api/LoyaltyProgram.dll"     # (6)
+---
+# Start of the section specifying a service
+# (1) Specifies this is a load balancer service
+# (2) Listens on port 5000 externally
+# (3) Maps to port 80 on the container
+# (4) Routes requests to the loyalty program
+apiVersion: v1
+kind: Service
+metadata:
+  name: loyalty-program
+spec:
+  type: LoadBalancer            # (1)
+  ports:
+    - name: loyalty-program
+      port: 5001                # (2)
+      targetPort: 80            # (3)
+  selector:
+    app: loyalty-program        # (4)
+---
+# (1) The Kubernetes API version needed to specify a CronJob
+# (2) Indicate that this is a CronJob.
+# (3) Define the schedule for this job. (Run once every minute).
+# (4) Point to the event consumer dll.
+# (5) Make sure consumer runs only one copy at the time of the event.
+apiVersion: batch/v1                # (1)
+kind: CronJob                       # (2)
+metadata:
+  name: loyalty-program-consumer
+spec:
+  schedule: "*/1 * * * *"           # (3)
+  startingDeadlineSeconds: 30
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: loyalty-program
+              image: loyalty-program
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: STARTUPDLL
+                  value: "consumer/EventConsumer.dll"   # (4)
+          restartPolicy: Never
+  concurrencyPolicy: Forbid                             # (5)

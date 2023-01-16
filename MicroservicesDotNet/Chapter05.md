@@ -770,3 +770,294 @@ docker run --rm -e STARTUPDLL="consumer/EventConsumer.dll" --network=microservic
 Позже мы настроим расписание Cron в Kubernetes, которое периодически будет запускать event consumer.
 
 ### 5.2.9 Deploying the loyalty program API and the special offers
+
+#### Создание Kubernetes manifest
+
+Добавляем файлы Kubernetes manifest `loyalty-program.yaml` и `special-offers.yaml`.
+Аналогичный файл был создан в [главе 3](Chapter03.md).
+
+Файл [LoyaltyProgram/loyalty-program.yaml](chapter05/LoyaltyProgram/loyalty-program.yaml):
+
+```yaml
+# (1) Start of the section specifying the container deployment
+# (2) The number of copies of the LoyaltyProgram API we want deployed.
+# (3) The container image to deploy.
+# (4) The port the container listens for requests on
+# (5) Override the STARTUPDLL environment variable to control how the container starts up.
+# (6) Point to the LoyaltyProgram.dll, which will run the LoyaltyProgram API.
+kind: Deployment            # (1)
+apiVersion: apps/v1
+metadata:
+  name: loyalty-program
+spec:
+  replicas: 1               # (2)
+  selector:
+    matchLabels:
+      app: loyalty-program
+  template:
+    metadata:
+      labels:
+        app: loyalty-program
+    spec:
+      containers:
+        - name: loyalty-program
+          image: loyalty-program                  # (3)
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80                   # (4)
+          env:
+            - name: STARTUPDLL                    # (5)
+              value: "api/LoyaltyProgram.dll"     # (6)
+---
+# Start of the section specifying a service
+# (1) Specifies this is a load balancer service
+# (2) Listens on port 5000 externally
+# (3) Maps to port 80 on the container
+# (4) Routes requests to the loyalty program
+apiVersion: v1
+kind: Service
+metadata:
+  name: loyalty-program
+spec:
+  type: LoadBalancer            # (1)
+  ports:
+    - name: loyalty-program
+      port: 5001                # (2)
+      targetPort: 80            # (3)
+  selector:
+    app: loyalty-program        # (4)
+```
+
+Файл [SpecialOffers/special-offers.yaml](chapter05/SpecialOffers/special-offers.yaml):
+
+```yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: special-offers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: special-offers
+  template:
+    metadata:
+      labels:
+        app: special-offers
+    spec:
+      containers:
+        - name: special-offers
+          image: special-offers
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: special-offers
+spec:
+  type: LoadBalancer
+  ports:
+    - name: special-offers
+      port: 5002
+      targetPort: 80
+  selector:
+    app: special-offers
+```
+
+#### Deploy to Kubernetes
+
+Deploy the loyalty program API to Kubernetes:
+
+```text
+kubectl apply -f loyalty-program.yaml
+```
+
+Deploy special offers:
+
+```text
+kubectl apply -f special-offers.yaml
+```
+
+- Посмотреть запущенные микросервисы в Kubernetes:
+
+```text
+kubectl get pods
+```
+
+Пример вывода:
+
+```text
+NAME                               READY   STATUS    RESTARTS   AGE
+loyalty-program-58758df679-6tbbf   1/1     Running   0          37s
+special-offers-7759869665-w24xn    1/1     Running   0          9s
+```
+
+- Посмотреть IP адреса и порты запущенных микросервисов в Kubernetes:
+
+```text
+kubectl get services
+```
+
+Пример вывода:
+
+```text
+NAME              TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+kubernetes        ClusterIP      10.96.0.1       <none>        443/TCP          38d
+loyalty-program   LoadBalancer   10.98.171.182   localhost     5001:30351/TCP   3m
+special-offers    LoadBalancer   10.98.154.204   localhost     5002:30162/TCP   2m32s
+```
+
+- List everything running in the Kubernetes cluster:
+
+```text
+kubectl get all
+```
+
+### 5.2.10 Deploy EventConsumer
+
+В Kubernetes manifest для loyalty program (программы лояльности) надо сконфигурировать
+event consumer как CronJob, который будет вызываться по расписанию.
+
+Добавление следующей секции в файл [LoyaltyProgram/loyalty-program.yaml](chapter05/LoyaltyProgram/loyalty-program.yaml):
+
+```yaml
+# (1) The Kubernetes API version needed to specify a CronJob
+# (2) Indicate that this is a CronJob.
+# (3) Define the schedule for this job. (Run once every minute).
+# (4) Point to the event consumer dll.
+# (5) Make sure consumer runs only one copy at the time of the event.
+apiVersion: batch/v1                # (1)
+kind: CronJob                       # (2)
+metadata:
+  name: loyalty-program-consumer
+spec:
+  schedule: "*/1 * * * *"           # (3)
+  startingDeadlineSeconds: 30
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: loyalty-program
+              image: loyalty-program
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: STARTUPDLL
+                  value: "consumer/EventConsumer.dll"   # (4)
+          restartPolicy: Never
+  concurrencyPolicy: Forbid                             # (5)
+```
+
+EventConsumer будет запускаться раз в минуту (`*/1 * * * *`).
+Можно и так было задать (`* * * * *`).
+
+- Снова deploy the loyalty program to Kubernetes:
+
+```text
+kubectl apply -f loyalty-program.yaml
+```
+
+Выполнение этой команды снова вполне нормально. Kubernetes определит, нужно ли вносить какие-либо
+изменения, и применит только эти изменения.
+
+- Посмотреть CronJob:
+
+```text
+kubectl get cronJob
+```
+
+Пример вывода:
+
+```text
+NAME                       SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+loyalty-program-consumer   */1 * * * *   False     0        41s             106s
+```
+
+- Посмотреть список заданий Kubernetes:
+
+```text
+kubectl get jobs
+```
+
+```text
+NAME                                COMPLETIONS   DURATION   AGE
+loyalty-program-consumer-27898274   1/1           5s         2m47s
+loyalty-program-consumer-27898275   1/1           5s         107s
+loyalty-program-consumer-27898276   1/1           5s         47s
+```
+
+- Посмотреть логи (журналы) одного из экземпляров CronJob:
+
+```text
+kubectl logs job.batch/loyalty-program-consumer-27898276
+```
+
+- Removing a service from Kubernetes
+
+```text
+kubectl delete -f loyalty-program.yaml
+kubectl delete -f special-offers.yaml
+```
+
+#### Формат cron job
+
+[Взято отсюда](https://cloud.google.com/scheduler/docs/configuring/cron-job-schedules)
+
+A schedule is defined using the unix-cron string format `(* * * * *)` which is a set of five fields
+in a line, indicating when the job should be executed.
+
+| Field            | Format of valid values
+|------------------|------------------------
+| Minute           | 0-59
+| Hour             | 0-23
+| Day of the month | 1-31
+| Month            | 1-12 (or JAN to DEC)
+| Day of the week  | 0-6 (or SUN to SAT; or 7 for Sunday)
+
+- A field can contain an asterisk (`*`), which always stands for "first-last".
+- Ranges are two numbers separated with a hyphen (`-`) and the specified range is inclusive.
+- Following a range with `/NUMBER` specifies skips of the number's value through the range. For
+example, both `0-23/2` and `*/2` can be used in the Hour field to specify execution every two hours.
+- A list is a set of numbers (or ranges) separated by commas (`,`). For example, `1,2,5,6` in the
+Day of the month field specifies an execution on the first, second, fifth, and sixth days
+of the month.
+
+| Sample schedule                              | Cron job format
+|----------------------------------------------|-----------------------
+| Every minute                                 | `* * * * *`
+| Every Saturday at 23:45 (11:45 PM)           | `45 23 * * 6`
+| Every Monday at 09:00 (9:00 AM)              | `0 9 * * 1`
+| Every Sunday at 04:05 (4:05 AM)              | `5 4 * * SUN`
+| Every weekday (Mon-Fri) at 22:00 (10:00 PM)  | `0 22 * * 1-5`
+
+## Запросы
+
+Все запросы [тут](chapter05/requests.http)
+
+## Summary
+
+- Существует три типа взаимодействий между микросервисами:
+  - Взаимодействия на основе команд (command-based). Когда один микросервис использует HTTP `POST`,
+`PUT`, или `DELETE` чтобы заставить другой микросервис выполнить какое-либо действие.
+  - Взаимодействия на основе запросов (query-based). Когда один микросервис использует HTTP `GET`
+запроса состояния другого микросервиса.
+  - Взаимодействия на основе событий (event-based). Когда один микросервис предоставляет
+event feed (ленту событий), на которую другие микросервисы могут подписаться, опрашивая ленту на
+предмет наличия новых событий.
+
+- Взаимодействие на основе событий более слабо связано, чем взаимодействие на основе команд и
+запросов.
+
+- Можно использовать `HttpClient` для отправки команд и запросов другим микросервисам.
+
+- Можно использовать MVC controllers для реализации endpoints для приема и обработки
+команд и запросов.
+
+- С помощью MVC controller можно реализовать простой event feed (ленту событий).
+
+- Можно создать процесс, который подписывается на события при помощи:
+  - Консольное приложение .NET.
+  - Использование `HttpClient` чтения событий из event feed (ленты событий).
+  - Запуск этого приложения как CronJob в Kubernetes.
