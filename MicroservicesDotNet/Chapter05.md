@@ -431,6 +431,71 @@ public class LoyaltyProgramClient
 
 Он создает запросы к loyalty program microservice и получает ответы в виде `HttpResponseMessage`.
 
+#### Special Offers endpoint
+
+В книге не показан, но есть в исходных кодах. В микросервисе special offers реализуется CRUD
+для endpoint `/offers`. Все действия со специальными предложениями сохраняются в event storage.
+Все эти события затем появляются в event feed.
+
+Это простой Web API. Реализуется при помощи контроллера
+[SpecialOffers/SpecialOffers/SpecialOffersController.cs](chapter05/SpecialOffers/SpecialOffers/SpecialOffersController.cs):
+
+```csharp
+public record Offer(string Description, int Id);
+
+[Route("/offers")]
+public class SpecialOffersController : ControllerBase
+{
+    private static readonly IDictionary<int, Offer> Offers =
+        new ConcurrentDictionary<int, Offer>();
+    private readonly IEventStore _eventStore;
+
+    public SpecialOffersController(IEventStore eventStore)
+    {
+        _eventStore = eventStore;
+    }
+
+    [HttpGet("{id:int}")]
+    public ActionResult<Offer> GetOffer(int id) =>
+        Offers.ContainsKey(id)
+            ? Ok(Offers[id])
+            : NotFound();
+
+    [HttpPost("")]
+    public ActionResult<Offer> CreateOffer([FromBody] Offer offer)
+    {
+        if (offer == null)
+            return BadRequest();
+        var newOffer = NewOffer(offer);
+        return Created(new Uri($"/offers/{newOffer.Id}", UriKind.Relative), newOffer);
+    }
+
+    [HttpPut("{id:int}")]
+    public Offer UpdateOffer(int id, [FromBody] Offer offer)
+    {
+        var offerWithId = offer with { Id = id };
+        _eventStore.RaiseEvent("SpecialOfferUpdated", new { OldOffer = Offers[id], NewOffer = offerWithId });
+        return Offers[id] = offerWithId;
+    }
+
+    [HttpDelete("{id:int}")]
+    public ActionResult DeleteOffer(int id)
+    {
+        _eventStore.RaiseEvent("SpecialOfferRemoved", new { Offer = Offers[id] });
+        Offers.Remove(id);
+        return Ok();
+    }
+
+    private Offer NewOffer(Offer offer)
+    {
+        var offerId = Offers.Count;
+        var newOffer = offer with { Id = offerId };
+        _eventStore.RaiseEvent("SpecialOfferCreated", newOffer);
+        return Offers[offerId] = newOffer;
+    }
+}
+```
+
 ### 5.2.5 Implementing an event-based collaboration
 
 Loyalty program подписывается на события из special offers (специальных предложений) и использует
@@ -583,8 +648,10 @@ Task SaveStartIdToDataStore(long startId) => Task.CompletedTask;
 // (6) Keeps track of the highest event number handled.
 async Task ProcessEvents(Stream content)
 {
-    var events = await JsonSerializer.DeserializeAsync<SpecialOfferEvent[]>(content)
+    var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var events = await JsonSerializer.DeserializeAsync<SpecialOfferEvent[]>(content, options)
         ?? Array.Empty<SpecialOfferEvent>();
+
     foreach (var @event in events)
     {
         Console.WriteLine(@event);                              // (5)
@@ -762,12 +829,20 @@ docker run --rm -p 5002:80 --network=microservices --name=special-offers special
 
 Теперь можно повторно запустить loyalty program как Event Consumer:
 
-```txt
+```text
 docker run --rm -e STARTUPDLL="consumer/EventConsumer.dll" --network=microservices loyalty-program
 ```
 
 При этом event consumer запустится один раз и он обработает только один пакет событий.
 Позже мы настроим расписание Cron в Kubernetes, которое периодически будет запускать event consumer.
+
+- Если ошиблись, то можно удалить image
+
+```text
+docker stop special-offers
+docker image list
+docker image rm 7581fa3f72a3
+```
 
 ### 5.2.9 Deploying the loyalty program API and the special offers
 

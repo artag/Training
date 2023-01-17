@@ -169,6 +169,20 @@ To stop the shopping cart container:
 docker stop shopping-cart
 ```
 
+#### Команда. Просмотр images
+
+```text
+docker image list
+```
+
+#### Команда. Удаление image
+
+```text
+docker image rm 7581fa3f72a3
+```
+
+Где `7581fa3f72a3` - image ID удаляемого контейнера.
+
 ## 3.3 Running the shopping cart container in Kubernetes
 
 ![Running the shopping cart on Kubernetes  .](images/06_run_on_kubernetes.jpg)

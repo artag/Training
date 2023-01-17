@@ -65,8 +65,9 @@ GET http://localhost:5001/users/1
 Accept: application/json
 
 ##############
+# Добавить специальное предложение (2 раза)
 
-POST https://localhost:5001/offers
+POST http://localhost:5002/offers
 Accept: application/json
 Content-Type: application/json
 
@@ -75,8 +76,9 @@ Content-Type: application/json
 }
 
 ##############
+# Изменить специальное предложение 1
 
-PUT https://localhost:5001/offers/1
+PUT http://localhost:5002/offers/1
 Accept: application/json
 Content-Type: application/json
 
@@ -85,19 +87,43 @@ Content-Type: application/json
 }
 
 ##############
+# Получить специальное предложение 1
 
-DELETE http://52.142.115.22:5002:5001/offers/0
+GET http://localhost:5002/offers/1
 Accept: application/json
 Content-Type: application/json
 
 ##############
+# Удалить специальное предложение 0
 
-GET https://localhost:5001/offers/3
+DELETE http://localhost:5002/offers/0
 Accept: application/json
 Content-Type: application/json
 
 ##############
+# Добавить специальные предложения
 
-GET https://localhost:5001/events?start=0&end=10
+# POST1
+POST http://localhost:5002/offers
+Accept: application/json
+Content-Type: application/json
+
+{
+  "Description": "Sale. Only this weekend."
+}
+
+# POST2
+POST http://localhost:5002/offers
+Accept: application/json
+Content-Type: application/json
+
+{
+  "Description": "Christmas sale."
+}
+
+##############
+# Получить события из special-offers
+
+GET http://localhost:5002/events?start=0&end=10
 Accept: application/json
 Content-Type: application/json

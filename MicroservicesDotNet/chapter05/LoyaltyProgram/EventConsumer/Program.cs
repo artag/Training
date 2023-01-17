@@ -33,12 +33,14 @@ Task SaveStartIdToDataStore(long startId) => Task.CompletedTask;
 // (6) Keeps track of the highest event number handled.
 async Task ProcessEvents(Stream content)
 {
-    var events = await JsonSerializer.DeserializeAsync<SpecialOfferEvent[]>(content)
+    var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var events = await JsonSerializer.DeserializeAsync<SpecialOfferEvent[]>(content, options)
         ?? Array.Empty<SpecialOfferEvent>();
-    foreach (var @event in events)
+
+    foreach (var ev in events)
     {
-        Console.WriteLine(@event);                              // (5)
-        start = Math.Max(start, @event.SequenceNumber + 1);     // (6)
+        Console.WriteLine(ev);                                  // (5)
+        start = Math.Max(start, ev.SequenceNumber + 1);         // (6)
     }
 }
 
