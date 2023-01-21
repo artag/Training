@@ -49,3 +49,19 @@
 
     - Deploying collaborating microservices to Kubernetes.
     (Развертывание взаимодействующих микросервисов в Kubernetes)
+
+  - [Chapter 6. Data ownership and data storage](Chapter06.md)
+    - Which data microservices store.
+    (Какие данные хранят микросервисы).
+
+    - Understanding how data ownership follows business capabilities.
+    (Понимание того, как владение данными соответствует бизнес-функциям).
+
+    - Using data replication for speed and robustness.
+    (Использование репликации данных для повышения скорости и надежности).
+
+    - Building read models from event feeds with event subscribers.
+    (Построение read models из каналов (лент) событий с помощью подписчиков на события).
+
+    - Implementing data storage in microservices.
+    (Реализация хранения данных в микросервисах).
