@@ -237,3 +237,298 @@ read altogether? Do the reads come in bursts?
 Не следует слишком долго выбирать тип используемой БД. Лучше быстро выбрать более-менее
 подходящий тип БД и запустить микросервис в производство, а на более позднем этапе,
 возможно, заменить микросервис на другой, использующий другой тип БД.
+
+## 6.3 Implementing data storage in a microservice. (Реализация хранения данных в микросервисе)
+
+В этой главе будут рассмотрены следующие технологии:
+
+- `SQL Server` - БД от Microsoft.
+- [`Dapper`](https://github.com/StackExchange/dapper-dot-net) - A lightweight object-relational
+mapper (ORM).
+- [`EventStoreDB`](https://www.eventstore.com/eventstoredb) - A database product specifically
+designed to store events.
+
+#### Про Dapper
+
+Dapper - это простая библиотека для работы с данными в базе данных SQL из C#.
+Такие библиотеки называют `micro ORMs`. Аналоги - `Simple.Data` и `Massive`.
+Эти библиотеки просты в использовании и быстрые.
+
+Более традиционные ORM генерируют весь SQL, необходимый для чтения и записи данных в БД.
+Для запросов в Dapper требуется писать SQL самому.
+
+Использование Dapper в микросервисах иногда более предпочтительно, чем
+использование полноценных ORM, таких как Entity Framework или NHibernate. Часто база данных для
+микросервиса проста, и в таких случаях проще всего добавить тонкий слой, подобный Dapper.
+Dapper помимо MSSQL может также работать с другими базами данных SQL, такими как PostgreSQL,
+MySQL или Azure SQL.
+
+#### EventStoreDB - a dedicated event database
+
+EventStoreDB - это сервер базы данных с открытым исходным кодом, разработанный специально
+для хранения событий. EventStoreDB хранит события в виде документов JSON.
+EventStoreDB широко используется и зарекомендовал себя в сценариях с большой нагрузкой.
+
+Помимо хранения событий, EventStoreDB имеет средства для чтения и подписки на них.
+Например, EventStoreDB предоставляет свои собственные каналы событий - такие как ATOM
+каналы (feeds), на которые могут подписаться клиенты.
+
+EventStoreDB для работы с ним предоставляет HTTP API - для хранения, чтения и подписки на
+события. Существует ряд клиентских библиотек EventStoreDB на разных языках,
+включая C#, F#, Java, Scala, Erlang, Haskell и JavaScript, которые упрощают
+работу с этой БД.
+
+### 6.3.1 Preparing a development setup
+
+Run the SQL Server on `localhost`, in a Docker container.
+
+1. Pull down the latest SQL Server docker image:
+
+```text
+docker pull mcr.microsoft.com/mssql/server
+```
+
+2. Запуск MSSQL server в docker:
+
+```text
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Some_password!' -p 1433:1433 -d mcr.microsoft.com/mssql/server
+```
+
+- `-e` - переменная окружения
+- `-p 1433:1433` - container exposes port 5001 and listens to traffic on
+that port. Any incoming traffic to port 5001 is forwarded to port 80 inside the
+container.
+- `-d` - запуск docker контейнера в фоновом режиме и возврат обратно в терминал.
+
+Примечания:
+
+- Если SQL Server не запускается, возможно надо использовать двойные кавычки вместо одинарных.
+- Пароль к MSSQL серверу должен быть минимум из 8 символов и сложным
+(большие и малые буквы, цифры, символы).
+- При таком запуске сервера БД в docker данные в БД не сохраняются после выключения контейнера.
+
+1. Проверка, что SQL Server запущен:
+
+```text
+docker ps
+```
+
+4. Остановка контейнера:
+
+```text
+docker stop container_ID
+```
+
+### 6.3.2 Storing data owned by a microservice. (Хранение данных микросервиса)
+
+Хранилище данных принадлежит исключительно самому микросервису и к нему осуществляется доступ
+только через этот микросервис.
+
+В качестве примера рассмотрим микросервис shopping cart (корзина покупок).
+Реализация микросервиса shopping cart была частично сделана в [главе 2](Chapter02.md).
+Будем использовать SQL Server, а для доступа к нему - Dapper.
+
+Шаги по реализации хранения для микросервиса shopping cart:
+
+1. Создание базы данных.
+2. Использование Dapper в коде для: чтения, записи и обновления
+
+#### Создание БД
+
+Используемые таблицы (2 шт.):
+
+`ShoppingCart`:
+
+| PK | ID     |
+|--- |--------|
+|    | UserId |
+
+`ShoppingCartItem`
+
+| PK | ID                 |
+|--- |--------------------|
+| FK | ShoppingCartId     |
+|    | ProductCatalogId   |
+|    | ProductName        |
+|    | ProductDescription |
+|    | Amount             |
+|    | Currency           |
+
+Создание таблиц в БД.
+Можно использовать SQL Management Studio и Visual Studio Code.
+Коннектимся к `localhost`, порт 1433, пользователь `sa`, пароль `Some_password!`
+(из параметров запуска). Файл
+[create-shopping-cart-db.sql](chapter06/ShoppingCart/database-scripts/create-shopping-cart-db.sql):
+
+```sql
+CREATE DATABASE ShoppingCart
+GO
+
+USE [ShoppingCart]
+GO
+
+CREATE TABLE dbo.ShoppingCart (
+    ID int IDENTITY(1,1) PRIMARY KEY,
+    UserId bigint NOT NULL,
+    CONSTRAINT ShoppingCartUnique UNIQUE(ID, UserId)
+)
+GO
+
+CREATE INDEX ShoppingCart_UserId
+ON [dbo].[ShoppingCart] (UserId)
+GO
+
+CREATE TABLE dbo.ShoppingCartItem (
+    ID int IDENTITY(1,1) PRIMARY KEY,
+    ShoppingCartId int NOT NULL,
+    ProductCatalogId bigint NOT NULL,
+    ProductName nvarchar(100) NOT NULL,
+    ProductDescription nvarchar(500) NULL,
+    Amount int NOT NULL,
+    Currency nvarchar(5) NOT NULL
+)
+GO
+
+ALTER TABLE dbo.ShoppingCartItem
+WITH CHECK ADD CONSTRAINT FK_ShoppingCart FOREIGN KEY (ShoppingCartId)
+REFERENCES dbo.ShoppingCart (ID)
+GO
+
+ALTER TABLE dbo.ShoppingCartItem
+CHECK CONSTRAINT FK_ShoppingCart
+GO
+
+CREATE INDEX ShoppingCartItem_ShoppingCartId
+ON dbo.ShoppingCartItem (ShoppingCartId)
+GO
+```
+
+#### Использование Dapper
+
+Проект [chapter06/ShoppingCart](chapter06/ShoppingCart/)
+
+Теперь надо добавить NuGet пакет `Dapper` в микросервис `ShoppingCart` (запускать из директории,
+где находится `ShoppingCart.csproj`):
+
+```text
+dotnet add package dapper
+```
+
+Dapper - это простой инструмент, который предоставляет несколько удобных методов расширения на
+`IDbConnection` для упрощения работы с SQL в C#. Он также предоставляет некоторые базовые
+возможности mapping. Например, когда строки, возвращаемые SQL-запросом, имеют имена столбцов,
+равные именам свойств в классе, Dapper может автоматически делать map на экземпляры класса.
+
+Еще надо добавить в `ShoppingCart` nuget-пакет `System.Data.SqlClient` (для доступа к MSSQL).
+
+Изменим `IShoppingCart` - сделаем асинхронными вызовы к БД:
+
+```csharp
+public interface IShoppingCartStore
+{
+    Task<ShoppingCart> Get(int userId);
+    Task Save(ShoppingCart shoppingCart);
+}
+```
+
+Реализация чтения из БД [`ShoppingCartStore`](chapter06/ShoppingCart/ShoppingCart/ShoppingCartStore.cs):
+
+```csharp
+// (1) - Connection string to the ShoppingCart database in the MSSQL Docker container.
+// (2) - Dapper expects and allows you to write your own SQL.
+// (3) - Opens a connection to the ShoppingCart database.
+// (4) - Uses a Dapper extension method to execute a SQL query.
+// (5) - The result set from the SQL query to ShoppingCartItem.
+public class ShoppingCartStore : IShoppingCartStore
+{
+    // (1)
+    private const string ConnectionString =
+        @"Data Source=localhost;Initial Catalog=ShoppingCart;
+          User Id=SA; Password=Some_password!";
+
+    // (2)
+    private const string ReadItemsSql = @"
+SELECT ShoppingCart.Id, ProductCatalogId, ProductName, ProductDescription, Currency, Amount
+FROM ShoppingCart, ShoppingCartItem
+WHERE ShoppingCartItem.ShoppingCartId = ShoppingCart.ID
+AND ShoppingCart.UserId = @UserId";
+
+    public async Task<ShoppingCart> Get(int userId)
+    {
+        await using var conn = new SqlConnection(ConnectionString);     // (3)
+
+        var query = await conn.QueryAsync(
+            ReadItemsSql, new { UserId = userId });     // (4)
+        var items = query.ToList();
+
+        return new ShoppingCart(
+            items.FirstOrDefault()?.ID,
+            userId,
+            items.Select(x => new ShoppingCartItem(     // (5)
+                (int)x.ProductCatalogId,
+                x.ProductName,
+                x.ProductDescription,
+                new Money(x.Currency, x.Amount))));
+    }
+
+    //...
+}
+```
+
+Реализация записи в БД [`ShoppingCartStore`](chapter06/ShoppingCart/ShoppingCart/ShoppingCartStore.cs):
+
+```csharp
+// (6) - Create a row in the ShoppingCart table if the shopping cart does not already have an Id.
+// (7) - Deletes all pre-existing shopping cart items.
+// (8) - Adds the current shopping cart items.
+// (9) - Commits all changes to the database.
+public class ShoppingCartStore : IShoppingCartStore
+{
+    // ...
+
+    private const string InsertShoppingCartSql = @"
+INSERT INTO ShoppingCart (UserId) OUTPUT inserted.ID VALUES (@UserId)";
+
+    private const string DeleteAllForShoppingCartSql = @"
+DELETE item FROM ShoppingCartItem item
+INNER JOIN ShoppingCart cart ON item.ShoppingCartId = cart.ID
+AND cart.UserId = @UserId";
+
+    private const string AddAllForShoppingCartSql = @"
+INSERT INTO ShoppingCartItem(
+    ShoppingCartId, ProductCatalogId, ProductName,
+    ProductDescription, Amount, Currency)
+VALUES(
+    @ShoppingCartId, @ProductCatalogId, @ProductName,
+    @ProductDescription, @Amount, @Currency)";
+
+    public async Task Save(ShoppingCart shoppingCart)
+    {
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using (var tx = conn.BeginTransaction())
+        {
+            var shoppingCartId = shoppingCart.Id        // (6)
+                ?? await conn.QuerySingleAsync<int>(
+                    InsertShoppingCartSql, new { shoppingCart.UserId }, tx);
+
+            await conn.ExecuteAsync(                    // (7)
+                DeleteAllForShoppingCartSql, new { UserId = shoppingCart.UserId }, tx);
+
+            await conn.ExecuteAsync(                    // (8)
+                AddAllForShoppingCartSql,
+                shoppingCart.Items.Select(x => new
+                {
+                    shoppingCartId,
+                    x.ProductCatalogId,
+                    ProductDescription = x.Description,
+                    x.ProductName,
+                    x.Price.Amount,
+                    x.Price.Currency
+                }), tx);
+
+            await tx.CommitAsync();                     // (9)
+        }
+    }
+}
+```
