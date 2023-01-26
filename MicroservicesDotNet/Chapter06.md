@@ -532,3 +532,199 @@ VALUES(
     }
 }
 ```
+
+### 6.3.3 Storing events raised by a microservice
+
+На рисунке 6.7 показан стандартный набор компонентов в микросервисе; domain model вызывает события. Обычно это происходит, когда происходит изменение или изменения состояния данных, за которые
+отвечает микросервис.
+
+![Shopping cart microservice.](images/38_shopping_eventstore.jpg)
+
+Например, в микросервисе корзины покупок, когда пользователь добавляет товар
+в свою корзину покупок, вызывается событие Item Added To Shopping Cart, а не RowAddedToShoppingCartTable. Разница в том, что первое означает событие, имеющее значение для системы — пользователь сделал что-то интересное с точки зрения бизнеса, — тогда как второе будет сообщать о технических деталях - часть программного обеспечения выполнила некоторые-
+вещь, потому что программист решил реализовать ее таким образом.
+
+События микросервиса должны соответствовать транзакциям бизнес-уровня, а не транзакциям базы данных.
+Т.е., например, когда пользователь добавляет товар в свою корзину покупок, вызывается событие
+`ItemAddedToShoppingCart`, а не `RowAddedToShoppingCartTable`.
+Одно событие микросервиса иногда может включать несколько изменений в БД.
+
+Всякий раз, когда логика домена в микросервисе вызывает событие, оно сохраняется в БД микросервиса.
+На рисунке 6.8 это делается с помощью компонента `EventStore`, который отвечает за взаимодействие с базой данных, в которой хранятся события.
+
+![When the domain model raises an event, the EventStore component code must write it to the database.](images/39_save_event_to_db.jpg)
+
+#### Storing events by hand
+
+Шаги по реализации компонента `EventStore`:
+
+1. Add an `EventStore` table to the `ShoppingCart` database. This table will contain
+a row for every event raised by the domain model.
+2. Use Dapper to implement the writing part of the `EventStore` component.
+3. Use Dapper to implement the reading part of the `EventStore` component.
+
+Напоммнание, событие микросервиса `ShoppingCart` выглядит так:
+
+```csharp
+public record Event(
+    long SequenceNumber, DateTimeOffset OccuredAt, string Name, object Content);
+```
+
+Этот тип событий будет сохранятся в отдельной таблице в БД `ShoppingCart`.
+
+Таблица `EventStore`:
+
+| PK | ID        |
+|--- |-----------|
+| FK | Name      |
+|    | OccuredAt |
+|    | Content   |
+
+Скрипт для создания таблицы
+(полный тут [create-shopping-cart-db.sql](chapter06/ShoppingCart/database-scripts/create-shopping-cart-db.sql)):
+
+```sql
+CREATE TABLE dbo.EventStore (
+    ID int IDENTITY(1,1) PRIMARY KEY,
+    Name nvarchar(100) NOT NULL,
+    OccuredAt datetimeoffset NOT NULL,
+    Content nvarchar(max) NOT NULL
+)
+GO
+```
+
+Часть реализации класса [EventStore.cs](chapter06/ShoppingCart/EventFeed/EventStore.cs)
+для записи событий в БД:
+
+```csharp
+public interface IEventStore
+{
+    // Filtering events based on the start and end points
+    Task <IEnumerable<Event>> GetEvents(
+        long firstEventSequenceNumber, long lastEventSequenceNumber);
+
+    Task Raise(string eventName, object content);
+}
+
+// (0) - Uses Dapper to execute a simple SQL insert statement.
+public class EventStore : IEventStore
+{
+    private const string ConnectionString =
+        @"Data Source=localhost;Initial Catalog=ShoppingCart;User Id=SA; Password=Some_password!";
+
+    private const string WriteEventSql = @"
+INSERT INTO EventStore(Name, OccuredAt, Content)
+VALUES (@Name, @OccuredAt, @Content)";
+
+    public async Task Raise(string eventName, object content)
+    {
+        var jsonContent = JsonSerializer.Serialize(content);
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.ExecuteAsync(                    // (0)
+            WriteEventSql,
+            new
+            {
+                Name = eventName,
+                OccuredAt = DateTimeOffset.Now,
+                Content = jsonContent
+            });
+    }
+
+    // Filtering events based on the start and end points
+    public Task<IEnumerable<Event>> GetEvents(
+        long firstEventSequenceNumber, long lastEventSequenceNumber) =>
+        throw new NotImplementedException();
+}
+```
+
+Cобытие после JSON-сериализации храниться в БД виде строки.
+
+Оставшаяся часть реализации класса [EventStore.cs](chapter06/ShoppingCart/EventFeed/EventStore.cs)
+для чтения событий из БД:
+
+```csharp
+// (1) - Maps EventStore table rows to Event objects.
+// (2) - Reads EventStore table rows between start and end
+public class EventStore : IEventStore
+{
+    private const string ConnectionString =
+        @"Data Source=localhost;Initial Catalog=ShoppingCart;User Id=SA; Password=Some_password!";
+
+    private const string ReadEventsSql = @"
+SELECT * FROM EventStore
+WHERE ID >= @Start AND ID <= @End";
+
+    public async Task<IEnumerable<Event>> GetEvents(
+        long firstEventSequenceNumber, long lastEventSequenceNumber)
+    {
+        await using var conn = new SqlConnection(ConnectionString);
+        return await conn.QueryAsync<Event>(            // (1)
+            ReadEventsSql,
+            new
+            {
+                Start = firstEventSequenceNumber,       // (2)
+                End = lastEventSequenceNumber
+            });
+    }
+}
+```
+
+Данная реализация хранилища событий очень проста и не готова для всех случаев использования
+в production. Например, когда микросервис начинает вызывать события из нескольких параллельных
+потоков, особенно при высокой нагрузке, это может привести к проблемам с блокировкой.
+
+Существует несколько высококачественных проектов с открытым исходным кодом, которые реализуют хранилище событий поверх реляционной базы данных, включая
+[SQLStreamStore (https://sqlstreamstore.readthedocs.io)](https://sqlstreamstore.readthedocs.io) и
+[Marten https://martendb.io/](https://martendb.io/).
+
+#### Storing events using the EventStoreDB system
+
+Здесь описана другая версия реализации хранения событий в микросервисе shopping cart.
+Здесь использется БД `EventStoreDB`. Преимущества использования EventStoreDB:
+
+- API специально предназначен для хранения и чтения событий, а также подписки на новые события.
+- У EventStoreDB открытый исходный код
+- EventStoreDB может масштабироваться и стабильно работать под нагрузкой.
+- Поставляется с некоторыми дополнительными функциями из коробки:
+  - Веб-интерфейс для проверки событий.
+  - Atom event feeds (каналы событий Atom).
+
+Шаги по реализации:
+
+1. Запуск EventStoreDB в контейнере Docker.
+2. Запись событий в EventStoreDB через компонент `EventStore`.
+3. Чтение событий из EventStoreDB с помощью компонента `EventStore`.
+
+>Дополнительная информация о EventStoreDB [https://eventstore.com/](https://eventstore.com/).
+
+1. Pull down the latest EventStoreDB docker image:
+
+```text
+docker pull eventstore/eventstore
+```
+
+2. Запуск контейнера с EventStoreDB:
+
+```text
+docker run --name eventstore-node -it -p 2113:2113 -p 1113:1113 --rm eventstore/eventstore:latest --run-projections All --enable-external-tcp --enable-atom-pub-over-http
+```
+
+- `--name` - assign a name to the container.
+- `-it` - instructs Docker to allocate a pseudo-TTY connected to the container’s stdin;
+creating an interactive bash shell in the container.
+- `-p` - port forward.
+- `--rm` - automatically remove the container when it exits.
+
+>Замечание
+>Если показывается сообщение об ошибке
+>"TLS is enabled on at least one TCP/HTTP interface - a certificate is required to run EventStoreDB"
+>то можно добавить параметр `--insecure` в команду Docker run. Это отключает защиту TLS,
+>и не должно использоваться в production.
+
+3. Проверка, запущен ли EventStoreDB
+
+На `http://127.0.0.1:2113/` должно быть приглашение для входа. Логин "admin", пароль "changeit".
+
+#### Добавление кода для работы с EventStoreDB
+
+В проект добавить nuget пакет `EventStore.Client`.

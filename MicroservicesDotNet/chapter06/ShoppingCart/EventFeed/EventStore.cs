@@ -1,34 +1,58 @@
-﻿namespace ShoppingCart.EventFeed;
+﻿using System.Data.SqlClient;
+using System.Text.Json;
+using Dapper;
 
-// (0) Gets a sequence number for the event
+namespace ShoppingCart.EventFeed;
 
 public interface IEventStore
 {
     // Filtering events based on the start and end points
-    IEnumerable<Event> GetEvents(
+    Task <IEnumerable<Event>> GetEvents(
         long firstEventSequenceNumber, long lastEventSequenceNumber);
 
-    void Raise(string eventName, object content);
+    Task Raise(string eventName, object content);
 }
 
+// (0) - Uses Dapper to execute a simple SQL insert statement.
+// (1) - Maps EventStore table rows to Event objects.
+// (2) - Reads EventStore table rows between start and end
 public class EventStore : IEventStore
 {
-    private static long _currentSequenceNumber = 0;
-    private static readonly IList<Event> Database = new List<Event>();
+    private const string ConnectionString =
+        @"Data Source=localhost;Initial Catalog=ShoppingCart;User Id=SA; Password=Some_password!";
 
-    // Filtering events based on the start and end points
-    public IEnumerable<Event> GetEvents(
-        long firstEventSequenceNumber, long lastEventSequenceNumber) =>
-        Database
-            .Where(e =>
-                e.SequenceNumber >= firstEventSequenceNumber &&
-                e.SequenceNumber <= lastEventSequenceNumber)
-            .OrderBy(e => e.SequenceNumber);
+    private const string WriteEventSql = @"
+INSERT INTO EventStore(Name, OccuredAt, Content)
+VALUES (@Name, @OccuredAt, @Content)";
 
-    public void Raise(string eventName, object content)
+    private const string ReadEventsSql = @"
+SELECT * FROM EventStore
+WHERE ID >= @Start AND ID <= @End";
+
+    public async Task Raise(string eventName, object content)
     {
-        var seqNumber = Interlocked.Increment(ref _currentSequenceNumber);
-        var ev = new Event(seqNumber, DateTimeOffset.UtcNow, eventName, content);
-        Database.Add(ev);
+        var jsonContent = JsonSerializer.Serialize(content);
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.ExecuteAsync(                    // (0)
+            WriteEventSql,
+            new
+            {
+                Name = eventName,
+                OccuredAt = DateTimeOffset.Now,
+                Content = jsonContent
+            });
+    }
+
+    public async Task<IEnumerable<Event>> GetEvents(
+        long firstEventSequenceNumber, long lastEventSequenceNumber)
+    {
+        await using var conn = new SqlConnection(ConnectionString);
+        return await conn.QueryAsync<Event>(            // (1)
+            ReadEventsSql,
+            new
+            {
+                Start = firstEventSequenceNumber,       // (2)
+                End = lastEventSequenceNumber
+            });
     }
 }
