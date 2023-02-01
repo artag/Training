@@ -4,19 +4,7 @@ using Dapper;
 
 namespace ShoppingCart.EventFeed;
 
-public interface IEventStore
-{
-    // Filtering events based on the start and end points
-    Task <IEnumerable<Event>> GetEvents(
-        long firstEventSequenceNumber, long lastEventSequenceNumber);
-
-    Task Raise(string eventName, object content);
-}
-
-// (0) - Uses Dapper to execute a simple SQL insert statement.
-// (1) - Maps EventStore table rows to Event objects.
-// (2) - Reads EventStore table rows between start and end
-public class EventStore : IEventStore
+public class SqlEventStore : IEventStore
 {
     private const string ConnectionString =
         @"Data Source=localhost;Initial Catalog=ShoppingCart;User Id=SA; Password=Some_password!";
@@ -29,6 +17,7 @@ VALUES (@Name, @OccuredAt, @Content)";
 SELECT * FROM EventStore
 WHERE ID >= @Start AND ID <= @End";
 
+    // (0) - Uses Dapper to execute a simple SQL insert statement.
     public async Task Raise(string eventName, object content)
     {
         var jsonContent = JsonSerializer.Serialize(content);
@@ -43,6 +32,8 @@ WHERE ID >= @Start AND ID <= @End";
             });
     }
 
+    // (1) - Maps EventStore table rows to Event objects.
+    // (2) - Reads EventStore table rows between start and end
     public async Task<IEnumerable<Event>> GetEvents(
         long firstEventSequenceNumber, long lastEventSequenceNumber)
     {

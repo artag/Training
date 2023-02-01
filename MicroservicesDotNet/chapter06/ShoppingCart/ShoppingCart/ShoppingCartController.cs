@@ -40,26 +40,26 @@ public class ShoppingCartController : ControllerBase    // (2)
         _eventStore = eventStore;
     }
 
-    [HttpGet("{userId:int}")]                   // (3)
-    public ShoppingCart Get(int userId) =>      // (4)
-        _shoppingCartStore.Get(userId);         // (5)
+    [HttpGet("{userId:int}")]                           // (3)
+    public Task<ShoppingCart> Get(int userId) =>        // (4)
+        _shoppingCartStore.Get(userId);                 // (5)
 
     [HttpPost("{userId:int}/items")]                                                    // (6)
     public async Task<ShoppingCart> Post(int userId, [FromBody] int[] productIds)       // (7)
     {
-        var cart = _shoppingCartStore.Get(userId);
+        var cart = await _shoppingCartStore.Get(userId);
         var cartItems = await _productCatalogClient.GetShoppingCartItems(productIds);   // (8)
         cart.AddItems(cartItems, _eventStore);                                          // (9)
-        _shoppingCartStore.Save(cart);                                                  // (10)
+        await _shoppingCartStore.Save(cart);                                            // (10)
         return cart;                                                                    // (11)
     }
 
-    [HttpDelete("{userId:int}/items")]                                      // (12)
-    public ShoppingCart Delete(int userId, [FromBody] int[] productIds)
+    [HttpDelete("{userId:int}/items")]                  // (12)
+    public async Task<ShoppingCart> Delete(int userId, [FromBody] int[] productIds)
     {
-        var cart = _shoppingCartStore.Get(userId);
-        cart.RemoveItems(productIds, _eventStore);                          // (13)
-        _shoppingCartStore.Save(cart);
+        var cart = await _shoppingCartStore.Get(userId);
+        cart.RemoveItems(productIds, _eventStore);      // (13)
+        await _shoppingCartStore.Save(cart);
         return cart;
     }
 }

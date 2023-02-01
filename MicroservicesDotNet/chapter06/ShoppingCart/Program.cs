@@ -15,7 +15,7 @@ using ShoppingCart.ShoppingCart;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();              // (1)
+builder.Services.AddControllers();                // (1)
 
 // Толком не заработало
 //builder.Services.Scan(selector => selector      // (2)
@@ -25,7 +25,8 @@ builder.Services.AddControllers();              // (1)
 //    .WithTransientLifetime());
 
 builder.Services.AddTransient<IShoppingCartStore, ShoppingCartStore>();
-builder.Services.AddTransient<IEventStore, EventStore>();
+builder.Services.AddTransient<IEventStore, ShoppingCart.EventFeed.SqlEventStore>();
+builder.Services.AddSingleton<ICache, Cache>();
 
 builder.Services
     .AddHttpClient<IProductCatalogClient, ProductCatalogClient>()   // (3)

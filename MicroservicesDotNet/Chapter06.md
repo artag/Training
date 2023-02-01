@@ -727,4 +727,481 @@ creating an interactive bash shell in the container.
 
 #### Добавление кода для работы с EventStoreDB
 
-В проект добавить nuget пакет `EventStore.Client`.
+В проект `ShoppingCart` добавить nuget пакет `EventStore.Client`:
+
+```text
+dotnet add package eventstore.client
+```
+
+Клиент [`EsEventStore`](chapter06/ShoppingCart/EventFeed/EsEventStore.cs) для EventStoreDb.
+
+Запись событий в БД:
+
+```csharp
+namespace ShoppingCart.EventFeed;
+
+public record EventMetadata(DateTimeOffset OccuredAt, string EventName);
+
+public class EsEventStore : IEventStore
+{
+    private const string ConnectionString =
+        "tcp://admin:changeit@localhost:1113";
+
+    // (1) - For local development only.In production, TLS should be enabled.
+    // (2) - Creates a connection to EventStore.
+    // (3) - Opens the connection to EventStore.
+    // (4) - Writes the event to EventStore.
+    // (5) - EventData is EventStore's representation of an event.
+    // (6) - Maps OccurredAt and EventName to metadata to be stored along with the event.
+    public async Task Raise(string eventName, object content)
+    {
+        var settings = ConnectionSettings.Create().DisableTls().Build();            // (1)
+        var uri = new Uri(ConnectionString);
+        using var connection = EventStoreConnection.Create(settings, uri);          // (2)
+
+        await connection.ConnectAsync();                                            // (3)
+
+        var jsonContent = JsonSerializer.Serialize(content);
+        var data = Encoding.UTF8.GetBytes(jsonContent);
+
+        var eventMetadata = new EventMetadata(DateTimeOffset.UtcNow, eventName);    // (6)
+        var jsonMetadata = JsonSerializer.Serialize(eventMetadata);
+        var metadata = Encoding.UTF8.GetBytes(jsonMetadata);
+
+        var events = new[]
+        {
+            new EventData(                                  // (5)
+                eventId: Guid.NewGuid(),
+                type: "ShoppingCartEvent",
+                isJson: true,
+                data: data,
+                metadata: metadata)
+        };
+
+        await connection.ConditionalAppendToStreamAsync(    // (4)
+            stream: "ShoppingCart",
+            expectedVersion: ExpectedVersion.Any,
+            events: events);
+    }
+
+    // ... Чтение событий из БД.
+}
+```
+
+Чтение событий из БД (см. [`EsEventStore`](chapter06/ShoppingCart/EventFeed/EsEventStore.cs)):
+
+```csharp
+namespace ShoppingCart.EventFeed;
+
+public record EventMetadata(DateTimeOffset OccuredAt, string EventName);
+
+public class EsEventStore : IEventStore
+{
+    private const string ConnectionString =
+        "tcp://admin:changeit@localhost:1113";
+
+    // ... Запись событий в БД.
+
+    // (7) - Reads events from the EventStoreDB.
+    // (8) - Accesses the events on the result from the EventStoreDB.
+    // (9) - Gets the content part of each event.
+    // (10) - Gets the metadata part of each event.
+    // (11) - Maps to events from EventStoreDB Event objects.
+    public async Task<IEnumerable<Event>> GetEvents(
+        long firstEventSequenceNumber, long lastEventSequenceNumber)
+    {
+        var settings = ConnectionSettings.Create().DisableTls().Build();
+        var uri = new Uri(ConnectionString);
+        using var connection = EventStoreConnection.Create(settings, uri);
+
+        await connection.ConnectAsync();
+
+        var count = (int)(lastEventSequenceNumber - firstEventSequenceNumber);
+        var result = await connection.ReadStreamEventsForwardAsync(     // (7)
+            stream: "ShoppingCart",
+            start: firstEventSequenceNumber,
+            count: count,
+            resolveLinkTos: false);
+
+        var options = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+        return result.Events        // (8)
+            .Select(e =>
+                new
+                {
+                    Content = Encoding.UTF8.GetString(e.Event.Data),            // (9)
+                    Metadata = JsonSerializer.Deserialize<EventMetadata>(       // (10)
+                        Encoding.UTF8.GetString(e.Event.Metadata), options)
+                })
+            .Select((e, i) =>       // (11)
+                new Event(
+                    SequenceNumber: i + firstEventSequenceNumber,
+                    OccuredAt: e.Metadata.OccuredAt,
+                    Name: e.Metadata.EventName,
+                    Content: e.Content));
+    }
+}
+```
+
+### 6.3.4 Setting cache headers in HTTP responses
+
+Еще раз рассмотрим рис. 6.2:
+
+![Partitioning data between microservices.](images/34_partitioning_data.jpg)
+
+Микросервис `ShoppingCart` запрашивает у `ProductCatalog` данные по endpoint'у `/products`.
+
+#### Проект `ProductCatalog`
+
+По сути, в данной главе реализованы только пара классов: `ProductCatalogController` и
+`ProductStore`.
+
+Создание проекта как было ранее в примерах (например, см. [главу 2](Chapter02.md)):
+
+```text
+dotnet new web -n ProductCatalog
+```
+
+Endpoint `/products` реализуется при помощи [`ProductCatalogController`](chapter06/ProductCatalog/ProductCatalogController.cs).
+В запросе указываются id продуктов, разделенные запятыми.
+
+Реализация [`ProductCatalogController`](chapter06/ProductCatalog/ProductCatalogController.cs):
+
+```csharp
+namespace ProductCatalog;
+
+[Route("/products")]
+public class ProductCatalogController : ControllerBase
+{
+    private readonly IProductStore _productStore;
+
+    public ProductCatalogController(IProductStore productStore)
+    {
+        _productStore = productStore;
+    }
+
+    // (1) - Adds a cache-control header, with max-age in seconds
+    [HttpGet("")]
+    [ResponseCache(Duration = 86400)]    // (1)
+    public IEnumerable<ProductCatalogProduct> Get([FromQuery] string productIds)
+    {
+        var products = _productStore.GetProductsByIds(
+            ParseProductIdsFromQueryString(productIds));
+        return products;
+    }
+
+    private static IEnumerable<int> ParseProductIdsFromQueryString(string productIdsString) =>
+        productIdsString
+            .Split(',')
+            .Select(s => s.Replace("[", "").Replace("]", ""))
+            .Select(int.Parse);
+}
+```
+
+Атрибут `ResponseCache` добавляет header `cache-control` в ответы и разрешает кэширование
+в течение 86400 секунд (24 часа). Заголовок ответа будет выглядеть так:
+
+```csharp
+cache-control: public,max-age:86400
+```
+
+В книге не показана реализация [`IProductStore`](chapter06/ProductCatalog/ProductStore.cs).
+Такая псевдо-реализация хранилища в данном микросервисе.
+
+```csharp
+namespace ProductCatalog;
+
+public record Money();
+public record ProductCatalogProduct(
+    int ProductId, string ProductName, string Description, Money Price);
+
+public interface IProductStore
+{
+    IEnumerable<ProductCatalogProduct> GetProductsByIds(IEnumerable<int> productIds);
+}
+
+public class ProductStore : IProductStore
+{
+    public IEnumerable<ProductCatalogProduct> GetProductsByIds(IEnumerable<int> productIds) =>
+        productIds.Select(id => new ProductCatalogProduct(id, "foo" + id, "bar", new Money()));
+}
+
+```
+
+### 6.3.5 Reading and using cache headers
+
+В [главе 2](Chapter02.md) в `ShoppingCart` был создан `ProductCatalogClient` для запросов
+endpoint'а `/products` у микросервиса `ProductCatalog`.
+
+В этой главе он был модернизирован
+[`ProductCatalogClient.cs`](chapter06/ShoppingCart/ProductCatalogClient.cs):
+
+```csharp
+namespace ShoppingCart;
+
+public interface IProductCatalogClient
+{
+    Task<IEnumerable<ShoppingCartItem>> GetShoppingCartItems(int[] productCatalogIds);
+}
+
+public class ProductCatalogClient : IProductCatalogClient
+{
+    // URL of the fake product catalog microservice
+    private static readonly string ProductCatalogBaseUrl = @"https://git.io/JeHiE";
+    private static readonly string GetProductPathTemplate = "?productIds=[{0}]";
+
+    private readonly HttpClient _client;
+    private readonly ICache _cache;
+
+    // (1) Configure the HttpClient to use the base address of the product catalog.
+    // (2) Configure the HttpClient to accept JSON responses from the product catalog.
+    public ProductCatalogClient(HttpClient client, ICache cache)
+    {
+        client.BaseAddress = new Uri(ProductCatalogBaseUrl);    // (1)
+        client.DefaultRequestHeaders.Accept                     // (2)
+            .Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+        _client = client;
+        _cache = cache;
+    }
+
+    // Fetching products and converting them to shopping cart items
+    public async Task<IEnumerable<ShoppingCartItem>> GetShoppingCartItems(
+        int[] productCatalogIds)
+    {
+        using var response = await RequestProductFromProductCatalog(productCatalogIds);
+        return await ConvertToShoppingCartItems(response);
+    }
+
+    // (3) Tries to retrieve a valid response from the cache.
+    // (4) Only makes the HTTP request if there’s no response in the cache.
+    // (5) Tells HttpClient to perform the HTTP GET asynchronously.
+    private async Task<HttpResponseMessage> RequestProductFromProductCatalog(
+        int[] productCatalogIds)
+    {
+        var productsResource = string.Format(
+            GetProductPathTemplate,
+            string.Join(",", productCatalogIds));
+        var response = _cache.Get(productsResource) as HttpResponseMessage;     // (3)
+        if (response is null)                                                   // (4)
+        {
+            response = await _client.GetAsync(productsResource);                // (5)
+            AddToCache(productsResource, response);
+        }
+
+        return response;
+    }
+
+    // (6) Reads the cache-control header from the response.
+    // (7) Parses the cache-control value and extracts max-age from it.
+    // (8) Adds the response to the cache if it has a max-age value.
+    private void AddToCache(string resource, HttpResponseMessage response)
+    {
+        var cacheHeader = response.Headers
+            .FirstOrDefault(h => h.Key == "cache-control");                 // (6)
+        if (!string.IsNullOrEmpty(cacheHeader.Key)
+            && CacheControlHeaderValue.TryParse(                            // (7)
+                cacheHeader.Value.ToString(), out var cacheControl)
+            && cacheControl?.MaxAge.HasValue is true)
+            _cache.Add(resource, response, cacheControl.MaxAge!.Value);     // (8)
+    }
+
+    // (9) Uses System.Text.Json to deserialize the JSON from the product catalog microservice.
+    // (10) Creates a ShoppingCartItem for each product in the response.
+    // (11) Uses a private record to represent the product data.
+    private static async Task<IEnumerable<ShoppingCartItem>> ConvertToShoppingCartItems(
+        HttpResponseMessage response)
+    {
+        response.EnsureSuccessStatusCode();
+        var stream = await response.Content.ReadAsStreamAsync();
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var products =
+            await JsonSerializer.DeserializeAsync<List<ProductCatalogProduct>>(stream, options)
+            ?? new List<ProductCatalogProduct>();   // (9)
+
+        return products.Select(p =>
+            new ShoppingCartItem(                   // (10)
+                p.ProductId,
+                p.ProductName,
+                p.ProductDescription,
+                p.Price));
+    }
+
+    private record ProductCatalogProduct(           // (11)
+        int ProductId, string ProductName, string ProductDescription, Money Price);
+}
+```
+
+Здесь появилась ссылка на использование кэша `ICache`. Теперь каждый раз при запросе данных
+у сервиса `ProductCatalog` все ответы будут кэшироваться и будут считаться действительными
+в течение заданного значения `max-age` в header'е `cache-control`.
+В этом примере значение `max-age` составляет 86400 секунд (24 часа).
+
+Вот тут идет обращение к кэшу перед вызовом удаленного `ProductCatalog`:
+
+```csharp
+// (3) Tries to retrieve a valid response from the cache.
+// (4) Only makes the HTTP request if there’s no response in the cache.
+// (5) Tells HttpClient to perform the HTTP GET asynchronously.
+private async Task<HttpResponseMessage> RequestProductFromProductCatalog(
+    int[] productCatalogIds)
+{
+    var productsResource = string.Format(
+        GetProductPathTemplate,
+        string.Join(",", productCatalogIds));
+    var response = _cache.Get(productsResource) as HttpResponseMessage;     // (3)
+    if (response is null)                                                   // (4)
+    {
+        response = await _client.GetAsync(productsResource);                // (5)
+        AddToCache(productsResource, response);
+    }
+
+    return response;
+}
+
+// (6) Reads the cache-control header from the response.
+// (7) Parses the cache-control value and extracts max-age from it.
+// (8) Adds the response to the cache if it has a max-age value.
+private void AddToCache(string resource, HttpResponseMessage response)
+{
+    var cacheHeader = response.Headers
+        .FirstOrDefault(h => h.Key == "cache-control");                 // (6)
+    if (!string.IsNullOrEmpty(cacheHeader.Key)
+        && CacheControlHeaderValue.TryParse(                            // (7)
+            cacheHeader.Value.ToString(), out var cacheControl)
+        && cacheControl?.MaxAge.HasValue is true)
+        _cache.Add(resource, response, cacheControl.MaxAge!.Value);     // (8)
+}
+```
+
+Реализация `ICache` в книге не показана. Лежит тут [`Cache.cs`](chapter06/ShoppingCart/Cache.cs):
+
+```csharp
+namespace ShoppingCart;
+
+public interface ICache
+{
+    // ttl means time to live.
+    void Add(string key, object value, TimeSpan ttl);
+    object? Get(string key);
+}
+
+public class Cache : ICache
+{
+    private readonly IDictionary<string, (DateTimeOffset, object)> _cache =
+        new ConcurrentDictionary<string, (DateTimeOffset, object)>();
+
+    public void Add(string key, object value, TimeSpan ttl) =>
+        _cache[key] = (DateTimeOffset.UtcNow.Add(ttl), value);
+
+    public object? Get(string productsResource)
+    {
+        if (_cache.TryGetValue(productsResource, out var value)
+            && value.Item1 > DateTimeOffset.UtcNow)
+            return value;
+
+        _cache.Remove(productsResource);
+        return null;
+    }
+}
+```
+
+## Запуск в Docker Compose
+
+*(В книге не упоминается)*
+
+Файл [`docker-compose.yaml`](chapter06/docker-compose.yaml) для запуска БД в Docker Compose:
+
+```yaml
+# Файл docker-compose должен начинаться с тега версии.
+version: '3.4'
+
+# docker-compose работает с сервисами.
+# 1 сервис = 1 контейнер.
+# Раздел, в котором будут описаны сервисы, начинается с 'services'.
+services:
+  # Первый сервис (контейнер).
+  # Назвать его можно так, как нужно разработчику.
+  eventstore.db:
+    image: eventstore/eventstore:latest
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_EXT_TCP_PORT=1113
+      - EVENTSTORE_HTTP_PORT=2113           # в книге EVENTSTORE_EXT_HTTP_PORT=2113
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    # [порт компьютера]:[порт контейнера]
+    ports:
+      - "1113:1113"
+      - "2113:2113"
+
+  # Второй сервис (контейнер).
+  sqlserver.db:
+    image: mcr.microsoft.com/mssql/server
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Some_password!
+    # [порт компьютера]:[порт контейнера]
+    ports:
+      - 1433:1433
+```
+
+Команда                                        | Описание
+-----------------------------------------------|------------------------------------
+`docker-compose build`                         | Сборка проекта
+`docker-compose up`                            | Запускает проект
+`docker-compose down`                          | Останавливает и удаляет контейнеры и другие ресурсы
+`docker-compose logs -f [service name]`        | Выводит журналы сервисов
+`docker-compose ps`                            | Выводит список контейнеров
+`docker-compose exec [service name] [command]` | Выполняет команду в выполняющемся контейнере
+`docker-compose images`                        | Выводит список образов
+`docker-compose rm`                            | Removes stopped service containers
+
+Примеры некоторых команд:
+
+```text
+docker-compose logs -f eventstore.db
+docker-compose exec sqlserver.db ls
+```
+
+Для `docker-compose up` ключи:
+
+`-d`, `--detach` - Detached mode: Run containers in the background
+
+## Summary
+
+- Микросервис хранит и владеет всеми данными, относящимися к функциям, реализуемым этим
+микросервисом.
+
+- Микросервис является authoritative (авторитетным) источником данных, которыми он владеет.
+
+- Микросервис хранит свои данные в собственной отдельной базе данных.
+
+- Микросервис часто кэширует данные, принадлежащие другим микросервисам, по следующим
+причинам:
+
+  - Чтобы уменьшить coupling (связносность/связь) с другими микросервисами.
+  Это делает работу всей системы более стабильной.
+
+  - Ускорение работы, при уменьшении частоты удаленных вызовов.
+
+  - Для создания собственных пользовательских представлений (известны как read models - данные
+  принадлежащие другому микросервису).
+
+  - Создавать read models на основе событий из других микросервисов, чтобы избежать использования
+  запросов к другим микросервисам. В [главе 5](Chapter05.md) было сказано, что взаимодействие
+  между микросервисами на основе событий предпочтительнее из-за уменьшения coupling.
+
+- Разные микросервисы могут использовать разные типы баз данных.
+
+- Хранение данных, принадлежащих микросервису, аналогично хранению данных в других
+видах/типах систем.
+
+- Можно использовать Dapper для чтения и записи данных в базу данных SQL .
+
+- Хранение событий - это, по сути, сохранение сериализованного события в базе данных.
+
+- Простая версия хранилища событий - это хранение событий в таблице в базе данных SQL.
+
+- Для хранения событий можно использовать EventStoreDB, который специально для этого разработан.
