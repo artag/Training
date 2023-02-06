@@ -25,7 +25,7 @@ builder.Services.AddControllers();                // (1)
 //    .WithTransientLifetime());
 
 builder.Services.AddTransient<IShoppingCartStore, ShoppingCartStore>();
-builder.Services.AddTransient<IEventStore, ShoppingCart.EventFeed.SqlEventStore>();
+builder.Services.AddTransient<IEventStore, SqlEventStore>();
 builder.Services.AddSingleton<ICache, Cache>();
 
 builder.Services

@@ -78,7 +78,7 @@ public class EsEventStore : IEventStore
                 })
             .Select((e, i) =>       // (11)
                 new Event(
-                    SequenceNumber: i + firstEventSequenceNumber,
+                    Id: i + firstEventSequenceNumber,
                     OccuredAt: e.Metadata.OccuredAt,
                     Name: e.Metadata.EventName,
                     Content: e.Content));

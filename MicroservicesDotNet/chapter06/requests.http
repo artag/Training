@@ -1,24 +1,64 @@
 @host = localhost
 
 @port=5000
+@port2=5002
 
 @user={{$randomInt 1 1000}}
 
-###
-GET http://{{host}}:{{port}}/shoppingcart/{{user}}
-
-####
-POST http://{{host}}:{{port}}/shoppingcart/{{user}}/items
+### Для пользователя id=1 добавить items id=1, id=2.
+POST http://{{host}}:{{port}}/shoppingcart/1/items
 Accept: application/json
 Content-Type: application/json
 
 [1, 2]
 
-###
+### Для пользователя id=2 добавить items id=3.
+POST http://{{host}}:{{port}}/shoppingcart/2/items
+Accept: application/json
+Content-Type: application/json
 
+[3]
+
+### Для пользователя id=3 добавить items id=2, id=4.
+POST http://{{host}}:{{port}}/shoppingcart/3/items
+Accept: application/json
+Content-Type: application/json
+
+[2,4]
+
+### Для пользователя id=4 добавить items id=1, id=2, id=5.
+POST http://{{host}}:{{port}}/shoppingcart/4/items
+Accept: application/json
+Content-Type: application/json
+
+[1,2,5]
+
+### Удалить у пользователя id=4 item id=2
+DELETE http://{{host}}:{{port}}/shoppingcart/4/items
+Accept: application/json
+Content-Type: application/json
+
+[2]
+
+### Получить информацию для пользователя id=1
+GET http://{{host}}:{{port}}/shoppingcart/1
+
+### Получить информацию для пользователя id=2
+GET http://{{host}}:{{port}}/shoppingcart/2
+
+### Получить информацию для пользователя id=3
+GET http://{{host}}:{{port}}/shoppingcart/3
+
+### Получить информацию для пользователя id=4
+GET http://{{host}}:{{port}}/shoppingcart/4
+
+### Получить информацию по событиям
 GET http://{{host}}:{{port}}/events?start=0&end=20
 Accept: application/json
 
-###
-GET http://{{host}}:{{port}}/products?productIds=[1,2,3,4]
+### Получить список товаров по одному или нескольким id
+GET http://{{host}}:{{port2}}/products?productIds=3
+Accept: application/json
+
+GET http://{{host}}:{{port2}}/products?productIds=[1,2,3,4,5]
 Accept: application/json

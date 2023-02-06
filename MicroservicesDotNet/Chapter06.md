@@ -566,8 +566,11 @@ a row for every event raised by the domain model.
 Напоммнание, событие микросервиса `ShoppingCart` выглядит так:
 
 ```csharp
+// Для успешного mapping'а в Dapper:
+// 1. Наименования свойств должны совпадать с наименованиями столбцов в БД.
+// 2. Типы данных свойств должны совпадать с типами данных в столбцах БД.
 public record Event(
-    long SequenceNumber, DateTimeOffset OccuredAt, string Name, object Content);
+    long Id, DateTimeOffset OccuredAt, string Name, string Content);
 ```
 
 Этот тип событий будет сохранятся в отдельной таблице в БД `ShoppingCart`.
@@ -585,7 +588,7 @@ public record Event(
 
 ```sql
 CREATE TABLE dbo.EventStore (
-    ID int IDENTITY(1,1) PRIMARY KEY,
+    ID bigint IDENTITY(1,1) PRIMARY KEY,
     Name nvarchar(100) NOT NULL,
     OccuredAt datetimeoffset NOT NULL,
     Content nvarchar(max) NOT NULL
@@ -834,7 +837,7 @@ public class EsEventStore : IEventStore
                 })
             .Select((e, i) =>       // (11)
                 new Event(
-                    SequenceNumber: i + firstEventSequenceNumber,
+                    Id: i + firstEventSequenceNumber,
                     OccuredAt: e.Metadata.OccuredAt,
                     Name: e.Metadata.EventName,
                     Content: e.Content));

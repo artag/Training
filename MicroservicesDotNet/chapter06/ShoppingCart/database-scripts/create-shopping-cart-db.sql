@@ -40,7 +40,7 @@ ON dbo.ShoppingCartItem (ShoppingCartId)
 GO
 
 CREATE TABLE dbo.EventStore (
-    ID int IDENTITY(1,1) PRIMARY KEY,
+    ID bigint IDENTITY(1,1) PRIMARY KEY,
     Name nvarchar(100) NOT NULL,
     OccuredAt datetimeoffset NOT NULL,
     Content nvarchar(max) NOT NULL

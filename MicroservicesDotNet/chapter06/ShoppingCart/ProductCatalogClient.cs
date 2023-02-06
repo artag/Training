@@ -12,8 +12,12 @@ public interface IProductCatalogClient
 
 public class ProductCatalogClient : IProductCatalogClient
 {
-    // URL of the fake product catalog microservice
-    private static readonly string ProductCatalogBaseUrl = @"https://git.io/JeHiE";
+    // URL of the fake product catalog microservice. Remote service.
+    //private static readonly string ProductCatalogBaseUrl = @"https://git.io/JeHiE";
+
+    // My product catalog microservice.
+    private static readonly string ProductCatalogBaseUrl = @"https://localhost:5003/products";
+
     private static readonly string GetProductPathTemplate = "?productIds=[{0}]";
 
     private readonly HttpClient _client;
