@@ -65,3 +65,16 @@
 
     - Implementing data storage in microservices.
     (Реализация хранения данных в микросервисах).
+
+  - [Chapter 7. Designing for robustness](Chapter07.md)
+    - Communicating robustly between microservices.
+    (Надежная связь между микросервисами).
+
+    - Letting the calling side take responsibility for robustness in the face of failure.
+    (Вызывающая сторона берет на себя ответственность за надежность при failure (отказе)).
+
+    - Rolling back versus rolling forward.
+    (Откат назад против отката вперед).
+
+    - Implementing robust communication.
+    (Внедрение надежного взаимодействия).
