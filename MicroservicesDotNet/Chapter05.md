@@ -1102,6 +1102,7 @@ of the month.
 | Sample schedule                              | Cron job format
 |----------------------------------------------|-----------------------
 | Every minute                                 | `* * * * *`
+| Every hour                                   | `0 * * * *`
 | Every Saturday at 23:45 (11:45 PM)           | `45 23 * * 6`
 | Every Monday at 09:00 (9:00 AM)              | `0 9 * * 1`
 | Every Sunday at 04:05 (4:05 AM)              | `5 4 * * SUN`

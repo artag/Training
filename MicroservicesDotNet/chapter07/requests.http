@@ -1,0 +1,129 @@
+##############
+# Добавить пользователя 0
+
+POST http://localhost:5001/users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Christian",
+  "loyaltyPoints": 10,
+  "settings": {
+    "interests":["whisky", "cycling"]
+  }
+}
+
+##############
+# Добавить пользователя 1
+
+POST http://localhost:5001/users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "John",
+  "loyaltyPoints": 11,
+  "settings": {
+    "interests":["swimming", "painting", "drinking"]
+  }
+}
+
+##############
+# Добавить пользователя 2
+
+POST http://localhost:5001/users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Bill",
+  "loyaltyPoints": 19,
+  "settings": {
+    "interests":["programming"]
+  }
+}
+
+##############
+# Изменить пользователя 2
+
+PUT http://localhost:5001/users/2
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Bill",
+  "loyaltyPoints": 21,
+  "settings": {
+    "interests":["programming", "bodybuilding"]
+  }
+}
+
+##############
+# Получить определенного пользователя
+
+GET http://localhost:5001/users/1
+Accept: application/json
+
+##############
+# Добавить специальное предложение (2 раза)
+
+POST http://localhost:5002/offers
+Accept: application/json
+Content-Type: application/json
+
+{
+  "Description": "Nice deal"
+}
+
+##############
+# Изменить специальное предложение 1
+
+PUT http://localhost:5002/offers/1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "Description": "Best deal ever - JUST GOT BETTER"
+}
+
+##############
+# Получить специальное предложение 1
+
+GET http://localhost:5002/offers/1
+Accept: application/json
+Content-Type: application/json
+
+##############
+# Удалить специальное предложение 0
+
+DELETE http://localhost:5002/offers/0
+Accept: application/json
+Content-Type: application/json
+
+##############
+# Добавить специальные предложения
+
+# POST1
+POST http://localhost:5002/offers
+Accept: application/json
+Content-Type: application/json
+
+{
+  "Description": "Sale. Only this weekend."
+}
+
+# POST2
+POST http://localhost:5002/offers
+Accept: application/json
+Content-Type: application/json
+
+{
+  "Description": "Christmas sale."
+}
+
+##############
+# Получить события из special-offers
+
+GET http://localhost:5002/events?start=0&end=10
+Accept: application/json
+Content-Type: application/json

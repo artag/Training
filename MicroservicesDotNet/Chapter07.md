@@ -594,3 +594,121 @@ public class Startup
 
 Код из [главы 5](Chapter05.md) обрабатывает один пакет событий и настроен на вызов Kubernetes
 по расписанию. Фактически уже реализована slow-paced retry (медленная повторная попытка).
+
+Повтор кода [`EventConsumer/Program.cs`](chapter07/LoyaltyProgram/EventConsumer/Program.cs):
+
+```csharp
+public record SpecialOfferEvent(
+    long SequenceNumber, DateTimeOffset OccuredAt, string Name, object Content);
+
+var start = await GetStartIdFromDatastore();    // (1)
+var end = 100;
+
+var client = new HttpClient();
+client.DefaultRequestHeaders
+    .Accept
+    .Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+
+using var resp = await client.GetAsync(         // (2)
+    new Uri($"http://special-offers:5002/events?start={start}&end={end}"));
+
+await ProcessEvents(await resp.Content.ReadAsStreamAsync());    // (3)
+await SaveStartIdToDataStore(start);                            // (4)
+
+// Fake implementation. Should get from a real database
+Task<long> GetStartIdFromDatastore() => Task.FromResult(0L);
+
+// Fake implementation. Should save to a real database
+Task SaveStartIdToDataStore(long startId) => Task.CompletedTask;
+
+// Fake implementation. Should apply business rules to events
+// (5) This is where the event would be processed.
+// (6) Keeps track of the highest event number handled.
+async Task ProcessEvents(Stream content)
+{
+    var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var events = await JsonSerializer.DeserializeAsync<SpecialOfferEvent[]>(content, options)
+        ?? Array.Empty<SpecialOfferEvent>();
+
+    foreach (var ev in events)
+    {
+        Console.WriteLine(ev);                                  // (5)
+        start = Math.Max(start, ev.SequenceNumber + 1);         // (6)
+    }
+}
+
+```
+
+Эта программа вызывается по расписанию и обрабатывает чтение одного пакета событий. Как только
+пакет был прочитан, каждое событие должно быть обработано с помощью кода, подобного следующему
+(в данной главе меняется обработка событий):
+
+```csharp
+// Fake implementation. Should apply business rules to events
+// (1) All events were assumed to be successfully handled,
+//     and "start" was updated for each one.
+async Task ProcessEvents(Stream content)
+{
+    var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var events = await JsonSerializer.DeserializeAsync<SpecialOfferEvent[]>(content, options)
+        ?? Array.Empty<SpecialOfferEvent>();
+
+    foreach (var ev in events)
+    {
+        dynamic eventData = ev.Content;
+        if (ShouldSendNotification(eventData))
+            await SendNotification(eventData);
+
+        start = ev.SequenceNumber + 1;         // (1)
+    }
+}
+
+// Decide if notification should be sent based on business rules.
+bool ShouldSendNotification(dynamic eventData) =>
+    true;
+
+// Use HttpClient to send command to notification microservice.
+Task SendNotification(dynamic eventData) =>
+    Task.CompletedTask;
+```
+
+
+Специфика кода обработки событий будет отличаться в каждой конкретной ситуации - именно
+там реализуется бизнес-логика.
+
+Заключительная часть - настройка CronJob в Kubernetes для вызова программы по расписанию раз в час.
+Это делается с помощью YAML [`LoyaltyProgram/loyalty-program.yaml`](chapter07/LoyaltyProgram/loyalty-program.yaml):
+
+```yaml
+# (1) The Kubernetes API version needed to specify a CronJob
+# (2) Indicate that this is a CronJob.
+# (3) Define the schedule for this job. (Run once every minute).
+# (4) Point to the event consumer dll.
+# (5) Make sure consumer runs only one copy at the time of the event.
+apiVersion: batch/v1                # (1)
+kind: CronJob                       # (2)
+metadata:
+  name: loyalty-program-consumer
+spec:
+  schedule: "*/1 * * * *"           # (3)
+  startingDeadlineSeconds: 30
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: loyalty-program
+              image: loyalty-program
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: STARTUPDLL
+                  value: "consumer/EventConsumer.dll"   # (4)
+          restartPolicy: Never
+  concurrencyPolicy: Forbid                             # (5)
+```
+
+*(Примечание: `yaml` в книге и исходниках к ней оставлен без изменений. Здесь все еще стоит время повтора через каждую минуту).*
+
+Запуск каждый час должен быть: `schedule: "0 * * * *"` (см. [главу 5](Chapter05.md))
+
+### 7.3.4 Logging all unhandled exceptions

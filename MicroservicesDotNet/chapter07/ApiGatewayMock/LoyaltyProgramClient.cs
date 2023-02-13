@@ -55,7 +55,9 @@ public class LoyaltyProgramClient
                 _httpClient.PutAsync($"/users/{user.Id}", CreateBody(user)));  // (1)
 
     public Task<HttpResponseMessage> QueryUser(string arg) =>
-        _httpClient.GetAsync($"/users/{int.Parse(arg)}");
+        ExponentialRetryPolicy
+            .ExecuteAsync(() =>
+                _httpClient.GetAsync($"/users/{int.Parse(arg)}"));
 
     // (1) Serializes user as JSON
     // (2) Sets the Content-Type header
