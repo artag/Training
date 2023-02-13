@@ -382,3 +382,215 @@ retryStrategy.Execute(() => DoHttpRequest());       // (3)
 Polly поставляется с рядом встроенных policies, включая варианты стратегий retry
 и различных стратегий circuit breaker. Все стратегии представлены как в асинхронном,
 так и в синхронном вариантах.
+
+### 7.3.1 Implementing a fast-paced retry (быстрые повторы) strategy with Polly
+
+Изменение вносится в сервис [`ApiGatewayMock`](chapter07/ApiGatewayMock/),
+[`LoyaltyProgramClient`](chapter07/ApiGatewayMock/LoyaltyProgramClient.cs).
+
+1. Добавить nuget пакеты `Polly` и `Microsoft.Extensions.Http.Polly`.
+
+2. Настроить для Polly retry policy [`LoyaltyProgramClient`](chapter07/ApiGatewayMock/LoyaltyProgramClient.cs):
+
+2.1. Объявление/создание policy
+
+```csharp
+public class LoyaltyProgramClient
+{
+    // (1) Code executed under this policy should return an HttpResponseMessage.
+    // (2) Handles all HTTP exceptions
+    // (3) Handle timeouts and server errors (5XX and 408 status codes).
+    // (4) Chooses an async policy because you'll use it with async code later.
+    // (5) Number of retries.
+    // (6) Time span to wait before the next retry.
+    private static readonly IAsyncPolicy<HttpResponseMessage> ExponentialRetryPolicy =
+        Policy<HttpResponseMessage>             // (1)
+            .Handle<HttpRequestException>()     // (2)
+            .OrTransientHttpStatusCode()        // (3)
+            .WaitAndRetryAsync(                 // (4)
+                3,                              // (5)
+                attempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, attempt))  // (6)
+            );
+    // ...
+}
+```
+
+2.2. Использование fast-paced retry policy в HttpClient
+
+Было:
+
+```csharp
+public Task<HttpResponseMessage> RegisterUser(string name)
+{
+    var user = new { name, Settings = new { } };
+    return _httpClient.PostAsync("/users/", CreateBody(user));
+}
+
+public Task<HttpResponseMessage> UpdateUser(LoyaltyProgramUser user) =>
+    _httpClient.PutAsync($"/users/{user.Id}", CreateBody(user));
+```
+
+Стало:
+
+```csharp
+// (1) Executes an action with the retry policy.
+// (2) Sends the command to loyalty program (makes HTTP request).
+public Task<HttpResponseMessage> RegisterUser(string name)
+{
+    var user = new { name, Settings = new { } };
+    return ExponentialRetryPolicy
+        .ExecuteAsync(() =>                                         // (1)
+            _httpClient.PostAsync("/users/", CreateBody(user)));    // (2)
+}
+
+public Task<HttpResponseMessage> UpdateUser(LoyaltyProgramUser user) =>
+    ExponentialRetryPolicy
+        .ExecuteAsync(() =>
+            _httpClient.PutAsync($"/users/{user.Id}", CreateBody(user)));
+```
+
+#### Пример объявления Polly в Startup проекта (fast-paced retry)
+
+*Примечание: (в коде не показано)*
+
+```csharp
+public class Startup
+{
+    // (1) The retry policy.
+    // (2) Tell the service collection that LoyaltyProgramClient wraps an HttpClient.
+    // (3) Add retry policy to the HttpClient.
+    // (4) Add other configuration to the HttpClient.
+    private static readonly IAsyncPolicy<HttpResponseMessage> ExponentialRetryPolicy =  // (1)
+        Policy<HttpResponseMessage>
+            .Handle<HttpRequestException>()
+            .OrTransientHttpStatusCode()
+            .WaitAndRetryAsync(
+                3,
+                attempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, attempt)));
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddHttpClient<LoyaltyProgramClient>()                  // (2)
+            .AddPolicyHandler(_ => ExponentialRetryPolicy)              // (3)
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(host));   // (4)
+        //...
+    }
+    //...
+}
+```
+
+Этот код:
+
+- Регистрирует `LoyaltyProgramClient` в коллекции сервисов. Это позволяет
+ASP.NET внедрять `LoyaltyProgramClient` в другие типы в качестве зависимости.
+
+- В `LoyaltyProgramClient` ко всем HTTP-запросам через `HttpClient` будет применяться `ExponentialRetryPolicy`.
+
+- `ExponentialRetryPolicy` будет также применяться ко всем queries (запросам) в
+`LoyaltyProgramClient`. *(Этот побочный эффект будет удален в главе 7.3.2).*
+
+### 7.3.2 Implementing a circuit breaker with Polly
+
+Продолжение внесения изменений в сервис [`ApiGatewayMock`](chapter07/ApiGatewayMock/),
+[`LoyaltyProgramClient`](chapter07/ApiGatewayMock/LoyaltyProgramClient.cs).
+
+1. Объявление/создание circuit breaker policy
+
+```csharp
+public class LoyaltyProgramClient
+{
+    // (1) Handles the same errors as the retry policy.
+    // (2) Sets the failure limit to 5 events and
+    //     the time-in-open-state limit to 1 minute
+    private static readonly IAsyncPolicy<HttpResponseMessage> CircuitBreakerPolicy =
+        Policy<HttpResponseMessage>
+            .Handle<HttpRequestException>()                     // (1)
+            .OrTransientHttpStatusCode()
+            .CircuitBreakerAsync(5, TimeSpan.FromMinutes(1));   // (2)
+    // ...
+}
+```
+
+2. Использование policy в HttpClient
+
+Было:
+
+```csharp
+public Task<HttpResponseMessage> QueryUser(string arg) =>
+    _httpClient.GetAsync($"/users/{int.Parse(arg)}");
+```
+
+Стало:
+
+```csharp
+public Task<HttpResponseMessage> QueryUser(string arg) =>
+    ExponentialRetryPolicy
+        .ExecuteAsync(() =>
+            _httpClient.GetAsync($"/users/{int.Parse(arg)}"));
+```
+
+#### Пример объявления Polly в Startup проекта (fast-paced retry и circuit breaker)
+
+*Примечание: (в коде не показано)*
+
+```csharp
+public class Startup
+{
+    private static readonly IAsyncPolicy<HttpResponseMessage> ExponentialRetryPolicy =
+        Policy<HttpResponseMessage>
+            .Handle<HttpRequestException>()
+            .OrTransientHttpStatusCode()
+            .WaitAndRetryAsync(
+                3,
+                attempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, attempt)));
+
+    private static readonly IAsyncPolicy<HttpResponseMessage> CircuitBreakerPolicy =
+        Policy<HttpResponseMessage>
+            .Handle<HttpRequestException>()
+            .OrTransientHttpStatusCode()
+            .CircuitBreakerAsync(5, TimeSpan.FromMinutes(1));
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // (1) Check which HTTP method. A GET is a query; everything else is a command
+        // (2) Use circuit breaker for queries.
+        // (3) Use retry for commands.
+        services.AddHttpClient<LoyaltyProgramClient>()
+            .AddPolicyHandler(request =>
+                request.Method == HttpMethod.Get                        // (1)
+                    ? CircuitBreakerPolicy                              // (2)
+                    : ExponentialRetryPolicy)                           // (3)
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(host));
+        //...
+    }
+    //...
+}
+```
+
+К HTTP-GET запросам будет применяться circuit breaker policy, ко всем остальным - retry policy.
+
+### 7.3.3 Implementing a slow-paced retry (медленный повтор) strategy
+
+Микросервис loyalty program подписывается на события микросервиса special offers.
+Основываясь на событиях, loyalty program отправляет команды микросервису notifications,
+прося его уведомить пользователей о новых специальных предложениях.
+Если отправка команды в notifications завершается неудачей, то можно повторить попытку
+отправки команды. Поскольку отправка уведомлений не особенно важна по времени, можно
+не повторять попытку немедленно - повторить попытку в следующий раз, когда loyalty program
+будет запрашивать новые события. Все, что нужно для этого сделать, это отслеживать последнее
+успешное событие.
+
+Из [главы 5](Chapter05.md): подписчик на события периодически пробуждается и опрашивает event feed
+на наличие новых событий. В каждом таком цикле считывается и обрабатывается следующий
+пакет событий. Следующий пакет событий начнется через одно событие после последнего успешно
+обработанного события.
+
+Это означает что:
+
+- все неудачные события повторяются повторно.
+
+- можно прервать оставшуюся часть пакета, как только произойдет сбой одного события - остальные
+все равно будут повторены позже.
+
+Код из [главы 5](Chapter05.md) обрабатывает один пакет событий и настроен на вызов Kubernetes
+по расписанию. Фактически уже реализована slow-paced retry (медленная повторная попытка).
