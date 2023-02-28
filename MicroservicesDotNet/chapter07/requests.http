@@ -127,3 +127,8 @@ Content-Type: application/json
 GET http://localhost:5002/events?start=0&end=10
 Accept: application/json
 Content-Type: application/json
+
+##############
+# Вызвать исключение на стороне микросервиса
+
+GET http://localhost:5001/users/fail

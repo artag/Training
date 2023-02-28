@@ -7,6 +7,9 @@ public class UsersController : ControllerBase
 {
     private static readonly Dictionary<int, LoyaltyProgramUser> RegisteredUsers = new();
 
+    [HttpGet("fail")]
+    public IActionResult Fail() => throw new NotImplementedException();
+
     // (1) The request must include a LoyaltyProgramUser in the body.
     // (2) Uses the 201 Created status code for the response.
     // (3) Adds a location header to the response because this is expected
