@@ -107,7 +107,7 @@ failure сценариев.
 Контрактный тест - это тест для определения, реализует ли
 вызываемый микросервис контракт, ожидаемый вызывающей стороной (другим микросервисом).
 
-Статья о contract tests: https://martinfowler.com/bliki/ContractTest.html
+Статья о contract tests: <https://martinfowler.com/bliki/ContractTest.html>
 
 Контрактные тесты:
 
@@ -138,5 +138,135 @@ failure сценариев.
 ## 8.2 Testing libraries: `Microsoft.AspNetCore.TestHost` and `xUnit`
 
 ### 8.2.3 xUnit and Microsoft.AspNetCore.TestHost working together
+
+Пример можно посмотреть тут: [chapter08/TestExample/](chapter08/TestExample/)
+
+Тест вызывает endpoint GET в `TestController` и проверяет, что код возврата `200 OK`.
+
+Тестируемый контроллер [TestController.cs](chapter08/TestExample/Sut/TestController.cs):
+
+```csharp
+public class TestController : ControllerBase
+{
+    // Endpoint used in the test
+    [HttpGet("/")]
+    public Task<OkResult> Get() => Task.FromResult(Ok());
+}
+```
+
+Тесты [TestController_should.cs](chapter08/TestExample/SutTests/TestController_should.cs):
+
+```csharp
+public class TestController_should : IDisposable
+{
+    private readonly IHost _host;
+    private readonly HttpClient _sut;
+
+    // (1) - Create an ASP.NET host for the test endpoint.
+    // (2) - Explicitly add the test controller to the service collection
+    //       using a custom extension method.
+    // (3) - Map all endpoints in the test controller.
+    public TestController_should()
+    {
+        _host = new HostBuilder()           // (1)
+            .ConfigureWebHost(host =>
+                host.ConfigureServices(services =>
+                    services.AddControllersByType(typeof(TestController)))  // (2)
+            .Configure(appBuilder =>
+                appBuilder
+                    .UseRouting()
+                    .UseEndpoints(opt => opt.MapControllers()))     // (3)
+            .UseTestServer())
+        .Start();
+
+        _sut = _host.GetTestClient();
+    }
+
+    // (1) - Call the endpoint in the test controller.
+    // (2) - Assert that the call succeeded.
+    [Fact]
+    public async Task respond_ok_to_request_to_root()
+    {
+        var actual = await _sut.GetAsync("/");                  // (1)
+        Assert.Equal(HttpStatusCode.OK, actual.StatusCode);     // (2)
+    }
+
+    // (1) - Stop and dispose the ASP.NET host after the test is done.
+    public void Dispose()
+    {
+        _host?.Dispose();       // (1)
+        _sut?.Dispose();
+    }
+}
+```
+
+### Уточнения
+
+1. Тестовый проект использует nuget `Microsoft.AspNetCore.TestHost`:
+
+```text
+dotnet add package Microsoft.AspNetCore.TestHost --version 6.0.4
+```
+
+2. `Dispose` в Xunit тестах вызывается после каждого теста. Если не сделать dispose для
+`_host`, то тест может повиснуть.
+
+3. Тест запускается из консоли при помощи `dotnet test`.
+
+4. Вызов `_sut.GetAsync("/")` выполняет вызов endpoint контроллера `TestController`
+через настоящий ASP.NET pipeline.
+
+5. Строковый аргумент `"/"` - это относительный URL-адрес, на который делается fake
+запрос.
+
+6. В конфигурации теста используются самодельный метод расширения
+`AddControllersByType` и класс `FixedControllerProvider`.
+
+Метод `AddControllersByType` определяет, что является контроллером в MVC.
+Создается `ControllerFeatureProvider`, который замещает дефолтную реализацию
+`ControllerFeatureProvider` для MVC.
+
+MVC использует `ControllerFeatureProvider` для распознавания контроллера.
+
+[`MvcBuilderExtensions.cs`](chapter08/TestExample/SutTests/MvcBuilderExtensions.cs):
+
+```csharp
+public static class MvcBuilderExtensions
+{
+    // (1) - Make the service collection aware (знающие о) of controllers.
+    // (2) - Get access to feature providers.
+    // (3) - Remove the default controller provider feature.
+    // (4) - Add a custom controller provider feature.
+    public static IMvcBuilder AddControllersByType(
+        this IServiceCollection services,
+        params Type[] controllerTypes) =>
+        services
+            .AddControllers()                           // (1)
+            .ConfigureApplicationPartManager(mgr =>     // (2)
+            {
+                mgr.FeatureProviders.Remove(            // (3)
+                    mgr.FeatureProviders.First(f => f is ControllerFeatureProvider));
+                mgr.FeatureProviders.Add(               // (4)
+                    new FixedControllerProvider(controllerTypes));
+            });
+}
+```
+
+[`FixedControllerProvider.cs`](chapter08/TestExample/SutTests/FixedControllerProvider.cs):
+
+```csharp
+// Custom implementation of the controller provider.
+public class FixedControllerProvider : ControllerFeatureProvider
+{
+    private readonly Type[] _controllerTypes;
+
+    public FixedControllerProvider(params Type[] controllerTypes) =>
+        _controllerTypes = controllerTypes;
+
+    // Override the method used to identify controllers.
+    protected override bool IsController(TypeInfo typeInfo) =>
+        _controllerTypes.Contains(typeInfo);
+}
+```
 
 <img src="images/54_service-level_test.jpg" alt="A service-level test" width=600/>
