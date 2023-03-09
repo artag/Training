@@ -270,3 +270,143 @@ public class FixedControllerProvider : ControllerFeatureProvider
 ```
 
 <img src="images/54_service-level_test.jpg" alt="A service-level test" width=600/>
+
+## 8.3 Writing unit tests using Microsoft.AspNetCore.TestHost
+
+Тестовый solution: [Ch08.sln](chapter08/main/Ch08.sln).
+
+Здесь приведен пример написания unit тестов для [`LoyaltyProgram`](chapter08/main/LoyaltyProgram/).
+
+Будут написаны тесты для 3-х endpoints:
+
+- `GET /users/{userId}`. Получает представление `user`.
+- `POST /users`. Ожидает представление `user` в body request'а и регистрирует его
+в loyalty program.
+- `PUT /users/{userId}`. Ожидает представление `user` в body request'а и обновляет уже
+зарегистрированного пользователя в loyalty program.
+
+Еще будут написаны тесты для event feed микросервиса loyalty program.
+
+Что будет сделано:
+
+- Создан тестовый проект для микросервиса loyalty program.
+- Будут написаны тесты для endpoints с использованием `Microsoft.AspNetCore.TestHost`.
+
+### 8.3.1 Setting up a unit-test project
+
+1. Создание нового проекта
+[`LoyaltyProgramUnitTests`](chapter08/main/LoyaltyProgramUnitTests/):
+
+```text
+dotnet new xunit -n LoyaltyProgramUnitTests
+```
+
+1. Структура всего [solution](chapter08/main/):
+
+```text
+Ch08.sln
+Dockerfile
+loyalty-program.yaml
+|
+|---EventConsumer
+|       EventConsumer.csproj
+|       Program.cs
+|
+|---LoyaltyProgram
+|       appsettings.Development.json
+|       appsettings.json
+|       LoyaltyProgram.csproj
+|       Program.cs
+|       Startup.cs
+|
+|-------EventFeed
+|           EventFeedController.cs
+|           EventStore.cs
+|-------Users
+|           LoyaltyProgramSettings.cs
+|           LoyaltyProgramUser.cs
+|           UsersController.cs
+|
+|---LoyaltyProgramUnitTests
+        LoyaltyProgramUnitTests.csproj
+        UnitTest1.cs
+```
+
+3. Запуск тестов:
+
+```text
+dotnet test
+```
+
+4. В проект тестов добавить nuget пакеты:
+
+- `Microsoft.AspNetCore.TestHost`
+- `Microsoft.AspNetCore.Mvc.Testing` (для .NET 6, чтобы использовать `WebApplicationFactory`)
+
+Reference на тестируемый проект:
+
+```xml
+<ItemGroup>
+    <ProjectReference Include="..\LoyaltyProgram\LoyaltyProgram.csproj" />
+</ItemGroup>
+```
+
+5. Дополнительно, для .NET 6. Добавить в [LoyaltyProgram.csproj](chapter08/main/LoyaltyProgram/LoyaltyProgram.csproj):
+
+```xml
+<ItemGroup>
+    <InternalsVisibleTo Include="LoyaltyProgramUnitTests" />
+</ItemGroup>
+```
+
+### 8.3.2 Using the TestServer and HttpClient to unit-test endpoints
+
+Пример тестов endpoint. Здесь показана только инициализация тестового сервера и
+тестового клиента. Полный код тестов см. в
+['UserEndpoints_should.cs'](chapter08/main/LoyaltyProgramUnitTests/UserEndpoints_should.cs):
+
+```csharp
+// (1) - Real LoyaltyProgram startup.
+// (2) - Use the test server so requests are in process.
+// (3) - The host uses the test server to create a test HttpClient.
+public class UserEndpoints_should : IDisposable
+{
+    // private readonly IHost _host;  // .NET 5.0
+    private readonly WebApplicationFactory<Program> _app;
+    private readonly HttpClient _sut;
+
+    public UserEndpoints_should()
+    {
+        //// For NET 5.0
+        // _host = new HostBuilder()
+        //     .ConfigureWebHost(x => x
+        //         .UseStartup<Program>()                   // (1)
+        //         .UseTestServer())                        // (2)
+        //     .Start();
+        //
+        // _sut = _host.GetTestClient();                    // (3)
+
+        // For NET 6.0
+        _app = new WebApplicationFactory<Program>()         // (1)
+            .WithWebHostBuilder(x => x.UseTestServer());    // (2)
+
+        _sut = _app.CreateClient();                         // (3)
+    }
+
+    // Тесты
+
+    public void Dispose()
+    {
+        //// For NET 5.0
+        // _host?.Dispose();
+        // _sut?.Dispose();
+
+        // For NET 6.0
+        _app?.Dispose();
+        _sut?.Dispose();
+    }
+}
+```
+
+### 8.3.3 Injecting mocks into endpoints
+
