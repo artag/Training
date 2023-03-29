@@ -71,10 +71,26 @@
     (Надежная связь между микросервисами).
 
     - Letting the calling side take responsibility for robustness in the face of failure.
-    (Вызывающая сторона берет на себя ответственность за надежность при failure (отказе)).
+    (Вызывающая сторона берет на себя ответственность за надежность при failure (отказе).
 
     - Rolling back versus rolling forward.
     (Откат назад против отката вперед).
 
     - Implementing robust communication.
     (Внедрение надежного взаимодействия).
+
+  - [Chapter 8. Writing tests for microservices](Chapter08.md)
+    - Writing good automated tests.
+    (Написание хороших автоматизированных тестов).
+
+    - Understanding the test pyramid and how it applies to microservices.
+    (Понимание тестовой пирамиды и ее применимость к микросервисам).
+
+    - Testing microservices from the outside.
+    (Тестирование микросервисов извне).
+
+    - Writing fast, in-process tests for endpoints
+    (Написание быстрых in-process (внутрипроцесных) тестов для endpoints).
+
+    - Using `Microsoft.AspNetCore.TestHost` for integration and unit tests
+    (Использование `Microsoft.AspNetCore.TestHost` для интеграционых и юнит тестов).

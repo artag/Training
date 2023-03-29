@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventConsumer", "EventConsumer\EventConsumer.csproj", "{8CF08DB0-604F-4B64-A5E9-D471E30478DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoyaltyProgram", "LoyaltyProgram\LoyaltyProgram.csproj", "{8D1A1007-42F5-426E-B9D6-F2F5FBF73D95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoyaltyProgramUnitTests", "LoyaltyProgramUnitTests\LoyaltyProgramUnitTests.csproj", "{79B1623F-4B7E-49DD-BB8B-6A545E1F30B9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8CF08DB0-604F-4B64-A5E9-D471E30478DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CF08DB0-604F-4B64-A5E9-D471E30478DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CF08DB0-604F-4B64-A5E9-D471E30478DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CF08DB0-604F-4B64-A5E9-D471E30478DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D1A1007-42F5-426E-B9D6-F2F5FBF73D95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D1A1007-42F5-426E-B9D6-F2F5FBF73D95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D1A1007-42F5-426E-B9D6-F2F5FBF73D95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D1A1007-42F5-426E-B9D6-F2F5FBF73D95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79B1623F-4B7E-49DD-BB8B-6A545E1F30B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79B1623F-4B7E-49DD-BB8B-6A545E1F30B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79B1623F-4B7E-49DD-BB8B-6A545E1F30B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79B1623F-4B7E-49DD-BB8B-6A545E1F30B9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
