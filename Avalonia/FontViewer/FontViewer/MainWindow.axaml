@@ -1,0 +1,85 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:fontViewer="clr-namespace:FontViewer"
+    mc:Ignorable="d"
+    x:Class="FontViewer.MainWindow"
+    Title="Font Viewer"
+    d:DesignWidth="600"
+    d:DesignHeight="480"
+    Height="600"
+    Width="480">
+
+    <DockPanel
+        Margin="8">
+        <Border
+            DockPanel.Dock="Top"
+            CornerRadius="6"
+            BorderThickness="1"
+            BorderBrush="Gray"
+            Background="LightGray"
+            Padding="8"
+            Margin="0 0 0 8">
+            <TextBlock
+                FontSize="14"
+                TextWrapping="Wrap">
+                Select a font to view from the list below. You can change the text by typing in the region at the bottom.
+            </TextBlock>
+        </Border>
+
+        <ListBox
+            x:Name="FontList"
+            DockPanel.Dock="Left"
+            Items="{x:Static fontViewer:Static.Fonts}"
+            SelectedIndex="0"
+            SelectionMode="Single"
+            Width="160"
+            SelectionChanged="FontList_OnSelectionChanged">
+        </ListBox>
+
+        <TextBox
+            x:Name="SampleText"
+            DockPanel.Dock="Bottom"
+            Margin="8 0"
+            MinHeight="32"
+            ToolTip.Tip="Type here to change the preview text."
+            TextWrapping="Wrap">
+            The quick brown fox jumps over the lazy dog.
+        </TextBox>
+
+        <StackPanel
+            Margin="8 0 8 8">
+            <TextBlock
+                x:Name="TextBlock1"
+                Margin="0 0 0 4"
+                FontSize="10"
+                TextWrapping="Wrap"
+                Text="{Binding ElementName=SampleText, Path=Text}">
+            </TextBlock>
+            <TextBlock
+                x:Name="TextBlock2"
+                Margin="0 0 0 4"
+                FontSize="16"
+                TextWrapping="Wrap"
+                Text="{Binding ElementName=SampleText, Path=Text}">
+            </TextBlock>
+            <TextBlock
+                x:Name="TextBlock3"
+                Margin="0 0 0 4"
+                FontSize="24"
+                TextWrapping="Wrap"
+                Text="{Binding ElementName=SampleText, Path=Text}">
+            </TextBlock>
+            <TextBlock
+                x:Name="TextBlock4"
+                Margin="0 0 0 4"
+                FontSize="32"
+                TextWrapping="Wrap"
+                Text="{Binding ElementName=SampleText, Path=Text}">
+            </TextBlock>
+        </StackPanel>
+
+    </DockPanel>
+</Window>
