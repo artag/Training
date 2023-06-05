@@ -2,7 +2,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:fontViewer="clr-namespace:FontViewer"
     mc:Ignorable="d"
     x:Class="FontViewer.MainWindow"
@@ -12,44 +12,103 @@
     Height="600"
     Width="480">
 
-    <DockPanel
+    <Grid
         Margin="8">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
         <Border
-            DockPanel.Dock="Top"
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
             CornerRadius="6"
             BorderThickness="1"
             BorderBrush="Gray"
             Background="LightGray"
             Padding="8"
             Margin="0 0 0 8">
-            <TextBlock
-                FontSize="14"
-                TextWrapping="Wrap">
-                Select a font to view from the list below. You can change the text by typing in the region at the bottom.
-            </TextBlock>
+            <StackPanel
+                Orientation="Vertical">
+                <TextBlock
+                    FontSize="14"
+                    TextWrapping="Wrap"
+                    FontWeight="Bold"
+                    FontStyle="Italic">
+                    Instructions:
+                </TextBlock>
+                <StackPanel
+                    Orientation="Horizontal">
+                    <TextBlock
+                        FontSize="14"
+                        TextWrapping="Wrap"
+                        VerticalAlignment="Bottom">
+                        Select a font to view from the list below.
+                    </TextBlock>
+                    <TextBlock
+                        FontSize="14"
+                        VerticalAlignment="Bottom"
+                        Text=" "/>
+                    <TextBlock
+                        FontSize="10"
+                        TextWrapping="Wrap"
+                        VerticalAlignment="Bottom">
+                        You can change the text by typing in the region at the bottom.
+                    </TextBlock>
+                    </StackPanel>
+            </StackPanel>
         </Border>
 
         <ListBox
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.RowSpan="3"
             x:Name="FontList"
-            DockPanel.Dock="Left"
             Items="{x:Static fontViewer:Static.Fonts}"
             SelectedIndex="0"
             SelectionMode="Single"
-            Width="160"
             SelectionChanged="FontList_OnSelectionChanged">
         </ListBox>
 
+        <GridSplitter
+            Grid.Row="1"
+            Grid.Column="1"
+            Grid.RowSpan="3"
+            Width="8"
+            ResizeDirection="Columns"
+            ResizeBehavior="PreviousAndNext">
+        </GridSplitter>
+
+        <GridSplitter
+            Grid.Row="2"
+            Grid.Column="2"
+            Height="8"
+            ResizeDirection="Rows"
+            ResizeBehavior="PreviousAndNext">
+        </GridSplitter>
+
         <TextBox
+            Grid.Row="3"
+            Grid.Column="2"
             x:Name="SampleText"
-            DockPanel.Dock="Bottom"
             Margin="8 0"
-            MinHeight="32"
             ToolTip.Tip="Type here to change the preview text."
             TextWrapping="Wrap">
             The quick brown fox jumps over the lazy dog.
         </TextBox>
 
         <StackPanel
+            Grid.Row="1"
+            Grid.Column="2"
             Margin="8 0 8 8">
             <TextBlock
                 x:Name="TextBlock1"
@@ -81,5 +140,5 @@
             </TextBlock>
         </StackPanel>
 
-    </DockPanel>
+    </Grid>
 </Window>
