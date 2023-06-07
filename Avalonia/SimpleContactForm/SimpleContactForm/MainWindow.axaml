@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="600"
+        d:DesignHeight="600"
+        x:Class="SimpleContactForm.MainWindow"
+        Title="SimpleContactForm"
+        MinWidth="400"
+        MinHeight="300"
+        Width="600"
+        Height="600">
+
+    <Grid ShowGridLines="False">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Label
+            Margin="5"
+            Grid.Row="0"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Content="_First Name:"
+            Target="{Binding ElementName=FirstName}">
+        </Label>
+        <TextBox
+            Margin="5"
+            Grid.Row="0"
+            Grid.Column="1"
+            x:Name="FirstName">
+        </TextBox>
+
+        <Label
+            Margin="5"
+            Grid.Row="1"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Content="_Last Name:"
+            Target="{Binding ElementName=LastName}">
+        </Label>
+        <TextBox
+            Margin="5"
+            Grid.Row="1"
+            Grid.Column="1"
+            x:Name="LastName">
+        </TextBox>
+
+        <Label
+            Margin="5"
+            Grid.Row="2"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Content="Sex:">
+        </Label>
+        <WrapPanel
+            Grid.Row="2"
+            Grid.Column="1"
+            VerticalAlignment="Center">
+            <RadioButton
+                Margin="5"
+                x:Name="Male"
+                Content="Male"
+                GroupName="sex">
+            </RadioButton>
+            <RadioButton
+                Margin="5"
+                x:Name="Female"
+                Content="Female"
+                GroupName="sex">
+            </RadioButton>
+        </WrapPanel>
+
+        <Label
+            Margin="5"
+            Grid.Row="3"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Content="Education">
+        </Label>
+        <WrapPanel
+            Grid.Row="3"
+            Grid.Column="1">
+            <CheckBox
+                Margin="5"
+                x:Name="HighSchool"
+                Content="High School"/>
+            <CheckBox
+                Margin="5"
+                Content="Bachelor's"/>
+            <CheckBox
+                Margin="5"
+                Content="Master's"/>
+            <CheckBox
+                Margin="5"
+                Content="Doctorate"/>
+        </WrapPanel>
+
+        <Label
+            Margin="5"
+            Grid.Row="4"
+            Grid.Column="0"
+            Content="Additional _Notes:"
+            Target="{Binding ElementName=AdditionalNotes}"/>
+        <TextBox
+            Margin="5"
+            Grid.Row="4"
+            Grid.Column="1"
+            x:Name="AdditionalNotes"
+            AcceptsReturn="True"
+            AcceptsTab="True"
+            TextWrapping="Wrap"
+            VerticalAlignment="Stretch"/>
+
+        <Button
+            Margin="5"
+            Grid.Row="5"
+            Grid.Column="1"
+            HorizontalAlignment="Right"
+            Click="Button_OnClick">
+            <AccessText>_Save</AccessText>
+        </Button>
+
+    </Grid>
+
+</Window>
