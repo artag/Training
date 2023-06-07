@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="SliderOneWayBinding.MainWindow"
+        Title="SliderOneWayBinding"
+        mc:Ignorable="d"
+        d:DesignWidth="600"
+        d:DesignHeight="600"
+        MinHeight="200"
+        MinWidth="400"
+        Height="200"
+        Width="600">
+    <StackPanel>
+        <Slider
+            Margin="10"
+            x:Name="MySlider"
+            Minimum="8"
+            Maximum="64"/>
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Text="This is fun!"
+            FontSize="{Binding ElementName=MySlider, Path=Value}"/>
+    </StackPanel>
+</Window>
