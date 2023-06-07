@@ -8,9 +8,11 @@
     x:Class="FontViewer.MainWindow"
     Title="Font Viewer"
     d:DesignWidth="600"
-    d:DesignHeight="480"
-    Height="600"
-    Width="480">
+    d:DesignHeight="600"
+    MinHeight="500"
+    MinWidth="500"
+    Height="700"
+    Width="700">
 
     <Grid
         Margin="8">
@@ -22,9 +24,9 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition />
+            <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
 
         <Border
@@ -73,10 +75,17 @@
             Grid.Column="0"
             Grid.RowSpan="3"
             x:Name="FontList"
-            Items="{x:Static fontViewer:Static.Fonts}"
+            DataContext="{x:Static fontViewer:Static.Fonts}"
+            Items="{Binding}"
             SelectedIndex="0"
             SelectionMode="Single"
             SelectionChanged="FontList_OnSelectionChanged">
+            <ToolTip.Tip>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Path=Length, Mode=OneTime}" />
+                    <TextBlock Text=" fonts are installed."/>
+                </StackPanel>
+            </ToolTip.Tip>
         </ListBox>
 
         <GridSplitter
