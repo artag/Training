@@ -20,8 +20,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition />
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -73,7 +71,7 @@
         <ListBox
             Grid.Row="1"
             Grid.Column="0"
-            Grid.RowSpan="3"
+            Grid.RowSpan="2"
             x:Name="FontList"
             DataContext="{x:Static fontViewer:Static.Fonts}"
             Items="{Binding}"
@@ -91,63 +89,16 @@
         <GridSplitter
             Grid.Row="1"
             Grid.Column="1"
-            Grid.RowSpan="3"
+            Grid.RowSpan="2"
             Width="8"
             ResizeDirection="Columns"
             ResizeBehavior="PreviousAndNext">
         </GridSplitter>
 
-        <GridSplitter
-            Grid.Row="2"
-            Grid.Column="2"
-            Height="8"
-            ResizeDirection="Rows"
-            ResizeBehavior="PreviousAndNext">
-        </GridSplitter>
-
-        <TextBox
-            Grid.Row="3"
-            Grid.Column="2"
-            x:Name="SampleText"
-            Margin="8 0"
-            ToolTip.Tip="Type here to change the preview text."
-            TextWrapping="Wrap">
-            The quick brown fox jumps over the lazy dog.
-        </TextBox>
-
-        <StackPanel
+        <fontViewer:TextPreviewControl
+            x:Name="TextPreview"
             Grid.Row="1"
-            Grid.Column="2"
-            Margin="8 0 8 8">
-            <TextBlock
-                x:Name="TextBlock1"
-                Margin="0 0 0 4"
-                FontSize="10"
-                TextWrapping="Wrap"
-                Text="{Binding ElementName=SampleText, Path=Text}">
-            </TextBlock>
-            <TextBlock
-                x:Name="TextBlock2"
-                Margin="0 0 0 4"
-                FontSize="16"
-                TextWrapping="Wrap"
-                Text="{Binding ElementName=SampleText, Path=Text}">
-            </TextBlock>
-            <TextBlock
-                x:Name="TextBlock3"
-                Margin="0 0 0 4"
-                FontSize="24"
-                TextWrapping="Wrap"
-                Text="{Binding ElementName=SampleText, Path=Text}">
-            </TextBlock>
-            <TextBlock
-                x:Name="TextBlock4"
-                Margin="0 0 0 4"
-                FontSize="32"
-                TextWrapping="Wrap"
-                Text="{Binding ElementName=SampleText, Path=Text}">
-            </TextBlock>
-        </StackPanel>
+            Grid.Column="2"/>
 
     </Grid>
 </Window>

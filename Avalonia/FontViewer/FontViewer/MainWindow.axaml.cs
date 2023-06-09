@@ -19,13 +19,24 @@ public partial class MainWindow : Window
         if (font == null)
             return;
 
-        if (TextBlock1 == null)
+        if (TextPreview == null)
             return;
 
         // FontFamily="{Binding ElementName=FontList,Path=SelectedItem}" not worked
-        TextBlock1.FontFamily = font;
-        TextBlock2.FontFamily = font;
-        TextBlock3.FontFamily = font;
-        TextBlock4.FontFamily = font;
+        var textBlock1 = TextPreview.Find<TextBlock>("TextBlock1");
+        if (textBlock1 != null)
+            textBlock1.FontFamily = font;
+
+        var textBlock2 = TextPreview.FindControl<TextBlock>("TextBlock2");
+        if (textBlock2 != null)
+            textBlock2.FontFamily = font;
+
+        var textBlock3 = TextPreview.FindControl<TextBlock>("TextBlock3");
+        if (textBlock3 != null)
+            textBlock3.FontFamily = font;
+
+        var textBlock4 = TextPreview.FindControl<TextBlock>("TextBlock4");
+        if (textBlock4 != null)
+            textBlock4.FontFamily = font;
     }
 }

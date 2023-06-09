@@ -1,0 +1,80 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Class="FontViewer.TextPreviewControl">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel
+            Margin="8 0 8 8">
+            <TextBlock
+                Margin="0 10 0 10"
+                x:Name="TextBlock1"
+                FontSize="10"
+                TextWrapping="Wrap"
+                Text="{Binding ElementName=SampleText, Path=Text}">
+            </TextBlock>
+            <TextBlock
+                Margin="0 10 0 10"
+                x:Name="TextBlock2"
+                FontSize="16"
+                TextWrapping="Wrap"
+                Text="{Binding ElementName=SampleText, Path=Text}">
+            </TextBlock>
+            <TextBlock
+                Margin="0 10 0 10"
+                x:Name="TextBlock3"
+                FontSize="24"
+                TextWrapping="Wrap"
+                Text="{Binding ElementName=SampleText, Path=Text}">
+            </TextBlock>
+            <TextBlock
+                Margin="0 10 0 10"
+                x:Name="TextBlock4"
+                FontSize="32"
+                TextWrapping="Wrap"
+                Text="{Binding ElementName=SampleText, Path=Text}">
+            </TextBlock>
+        </StackPanel>
+
+        <GridSplitter
+            Grid.Row="1"
+            Grid.Column="0"
+            Height="8"
+            ResizeDirection="Rows"
+            ResizeBehavior="PreviousAndNext">
+        </GridSplitter>
+
+        <TextBox
+            Margin="8 0"
+            Grid.Row="2"
+            Grid.Column="0"
+            x:Name="SampleText"
+            TextWrapping="Wrap">
+            <ToolTip.Tip>
+                <StackPanel
+                    Orientation="Horizontal">
+                    <TextBlock
+                        Foreground="Red"
+                        FontStyle="Italic"
+                        Text="Instructions: "/>
+                    <TextBlock
+                        Foreground="Red"
+                        Text="Type here to change the preview text."/>
+                </StackPanel>
+            </ToolTip.Tip>
+            The quick brown fox jumps over the lazy dog.
+        </TextBox>
+    </Grid>
+</UserControl>
