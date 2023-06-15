@@ -1,0 +1,38 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Class="TextEditor.TextEditorMenu"
+    mc:Ignorable="d"
+    d:DesignWidth="800"
+    d:DesignHeight="100">
+
+    <Menu>
+        <MenuItem Header="_File">
+            <MenuItem Header="_New"/>
+            <MenuItem Header="_Open"/>
+            <MenuItem Header="_Save"/>
+            <MenuItem Header="Save As"/>
+            <Separator/>
+            <MenuItem Header="_Print"/>
+            <Separator/>
+            <MenuItem Header="Close"/>
+        </MenuItem>
+        <MenuItem Header="_Edit">
+            <MenuItem Header="_Undo"/>
+            <MenuItem Header="_Redo"/>
+            <Separator/>
+            <MenuItem Header="C_ut"/>
+            <MenuItem Header="_Copy"/>
+            <MenuItem Header="_Paste"/>
+            <MenuItem Header="_Delete"/>
+        </MenuItem>
+        <MenuItem Header="_Help">
+            <MenuItem
+                Header="_About"
+                Click="About_OnClick"/>
+        </MenuItem>
+    </Menu>
+
+</UserControl>

@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextEditor", "TextEditor\TextEditor.csproj", "{8C4E8D79-E8A2-4AD1-B748-86271891046F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C4E8D79-E8A2-4AD1-B748-86271891046F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C4E8D79-E8A2-4AD1-B748-86271891046F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C4E8D79-E8A2-4AD1-B748-86271891046F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C4E8D79-E8A2-4AD1-B748-86271891046F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,144 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:TextEditor"
+    x:Class="TextEditor.TextEditorToolbar"
+    mc:Ignorable="d"
+    d:DesignWidth="800"
+    d:DesignHeight="64"
+    Initialized="TextEditorToolbar_OnInitialized">
+
+    <UserControl.Resources>
+        <Bitmap x:Key="Open">
+            <x:Arguments>
+                <x:String>Icons/open.png</x:String>
+            </x:Arguments>
+        </Bitmap>
+        <Bitmap x:Key="Save">
+            <x:Arguments>
+                <x:String>Icons/save.png</x:String>
+            </x:Arguments>
+        </Bitmap>
+        <Bitmap x:Key="Cut">
+            <x:Arguments>
+                <x:String>Icons/cut.png</x:String>
+            </x:Arguments>
+        </Bitmap>
+        <Bitmap x:Key="Copy">
+            <x:Arguments>
+                <x:String>Icons/copy.png</x:String>
+            </x:Arguments>
+        </Bitmap>
+        <Bitmap x:Key="Paste">
+            <x:Arguments>
+                <x:String>Icons/paste.png</x:String>
+            </x:Arguments>
+        </Bitmap>
+        <Bitmap x:Key="Bold">
+            <x:Arguments>
+                <x:String>Icons/bold.png</x:String>
+            </x:Arguments>
+        </Bitmap>
+        <Bitmap x:Key="Italic">
+            <x:Arguments>
+                <x:String>Icons/italic.png</x:String>
+            </x:Arguments>
+        </Bitmap>
+        <Bitmap x:Key="Underline">
+            <x:Arguments>
+                <x:String>Icons/underline.png</x:String>
+            </x:Arguments>
+        </Bitmap>
+    </UserControl.Resources>
+
+    <Border>
+        <StackPanel
+            Orientation="Horizontal">
+            <Button
+                Width="36"
+                Height="36"
+                ToolTip.Tip="Open"
+                Click="OpenButton_OnClick">
+                <Image Source="{StaticResource Open}"/>
+            </Button>
+            <Button
+                Width="36"
+                Height="36"
+                ToolTip.Tip="Save"
+                Click="SaveButton_OnClick">
+                <Image Source="{StaticResource Save}"/>
+            </Button>
+
+            <Separator
+                Margin="5 0 5 0"
+                Width="2"
+                Background="Gray"
+                IsVisible="True"/>
+
+            <Button
+                Width="36"
+                Height="36"
+                ToolTip.Tip="Cut">
+                <Image Source="{StaticResource Cut}"/>
+            </Button>
+            <Button
+                Width="36"
+                Height="36"
+                ToolTip.Tip="Copy">
+                <Image Source="{StaticResource Copy}"/>
+            </Button>
+            <Button
+                Width="36"
+                Height="36"
+                ToolTip.Tip="Paste">
+                <Image Source="{StaticResource Paste}"/>
+            </Button>
+
+            <Separator
+                Margin="5 0 5 0"
+                Width="2"
+                Background="Gray"
+                IsVisible="True"/>
+
+            <Button
+                Width="36"
+                Height="36"
+                ToolTip.Tip="Bold">
+                <Image Source="{StaticResource Bold}"/>
+            </Button>
+            <Button
+                Width="36"
+                Height="36"
+                ToolTip.Tip="Italic">
+                <Image Source="{StaticResource Italic}"/>
+            </Button>
+            <Button
+                Width="36"
+                Height="36"
+                ToolTip.Tip="Underline">
+                <Image Source="{StaticResource Underline}"/>
+            </Button>
+
+            <Separator
+                Margin="5 0 5 0"
+                Width="2"
+                Background="Gray"
+                IsVisible="True"/>
+
+            <ComboBox
+                x:Name="Fonts"
+                VerticalAlignment="Stretch"
+                MinWidth="100"
+                Items="{x:Static local:Static.Fonts}"/>
+            <ComboBox
+                Margin="5 0 5 0"
+                x:Name="FontSizes"
+                VerticalAlignment="Stretch"
+                MinWidth="100"/>
+
+        </StackPanel>
+    </Border>
+
+</UserControl>
