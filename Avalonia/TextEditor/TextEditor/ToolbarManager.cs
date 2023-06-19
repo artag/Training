@@ -8,7 +8,7 @@ namespace TextEditor;
 public class ToolbarManager : INotifyPropertyChanged
 {
     private readonly IFont _font;
-    private double _fontSize = 12;
+    private double _fontSize = 8;
 
     public ToolbarManager(IFont font)
     {
