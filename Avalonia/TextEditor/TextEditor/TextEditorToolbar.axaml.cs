@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -49,5 +50,40 @@ public partial class TextEditorToolbar : UserControl
     {
         var documentManager = Data.DocumentManager;
         var saveTask = documentManager.SaveDocument();
+    }
+
+    private void Fonts_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_data == null)
+            return;
+
+        var items = e.AddedItems as ICollection<object>;
+        var selection = items?.FirstOrDefault();
+        if (selection == null)
+            return;
+
+        var selectedFont = selection as string;
+        if (selectedFont == null)
+            return;
+
+        _data.ToolbarManager.Font.SetFont(selectedFont);
+    }
+
+    private void FontSizes_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_data == null)
+            return;
+
+        var items = e.AddedItems as ICollection<object>;
+        var selection = items?.FirstOrDefault();
+        if (selection == null)
+            return;
+
+        if (selection is not double)
+            return;
+
+        var selectedFontSize = (double)selection;
+
+        _data.ToolbarManager.FontSize = selectedFontSize;
     }
 }

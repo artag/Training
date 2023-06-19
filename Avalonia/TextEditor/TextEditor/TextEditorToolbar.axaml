@@ -131,12 +131,14 @@
                 x:Name="Fonts"
                 VerticalAlignment="Stretch"
                 MinWidth="100"
-                Items="{x:Static local:Static.Fonts}"/>
+                Items="{x:Static local:Static.Fonts}"
+                SelectionChanged="Fonts_OnSelectionChanged"/>
             <ComboBox
                 Margin="5 0 5 0"
                 x:Name="FontSizes"
                 VerticalAlignment="Stretch"
-                MinWidth="100"/>
+                MinWidth="100"
+                SelectionChanged="FontSizes_OnSelectionChanged"/>
 
         </StackPanel>
     </Border>
