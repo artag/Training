@@ -1,0 +1,28 @@
+@using SiteProduct.Models
+@model IEnumerable<Product>
+
+<html lang="ru-RU">
+<head>
+    <title>Товары</title>
+</head>
+<body>
+    <table>
+        <tr>
+            <td>Id</td>
+            <td>Наименование</td>
+            <td>Цена</td>
+            <td>Дата изготовления</td>
+        </tr>
+
+        @foreach (var product in @Model)
+        {
+            <tr>
+                <td>@product.Id</td>
+                <td>@product.Name</td>
+                <td>@product.Price.ToString("C")</td>
+                <td>@product.ProductionDate.ToString("dd.MM.yyyy")</td>
+            </tr>
+        }
+    </table>
+</body>
+</html>
