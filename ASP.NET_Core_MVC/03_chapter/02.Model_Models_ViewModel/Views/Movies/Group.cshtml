@@ -1,0 +1,30 @@
+@using Model_Models_ViewModel.Models
+@using Model_Models_ViewModel.ViewModels
+
+@model MoviesViewModel
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Фильмы</title>
+</head>
+<body>
+    <h1>Комедии</h1>
+    @foreach (var comedy in @Model.ComedyList)
+    {
+        <h2>@comedy.Title</h2>
+        <p>Формат видео: @comedy.VideoFormat</p>
+    }
+    <hr/>
+    <h1>Драмы</h1>
+    @foreach (var drama in @Model.DramaList)
+    {
+        <h2>@drama.Title</h2>
+        <p>
+            Формат видео: @drama.VideoFormat<br/>
+            Формат звука: @drama.SoundFormat
+        </p>
+    }
+</body>
+</html>

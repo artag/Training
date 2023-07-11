@@ -1,0 +1,19 @@
+@using Model_Models_ViewModel.Models
+@model IEnumerable<Movie>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Фильмы</title>
+</head>
+<body>
+    @foreach (var item in Model ?? Enumerable.Empty<Movie>())
+    {
+        <h2>Заголовок: @item.Title</h2>
+        <p>
+            Жанр: @item.Genre<br/>
+            Длительность эпизода: @item.Duration минут
+            <hr/>
+        </p>
+    }
+</body>
+</html>
