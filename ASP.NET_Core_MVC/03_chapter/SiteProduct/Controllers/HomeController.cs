@@ -51,6 +51,9 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult Create(Product product)
     {
+        if (!ModelState.IsValid)
+            return View();
+
         var newId = _products.Add(product);
         return RedirectToAction(nameof(Details), new { id = newId });
     }

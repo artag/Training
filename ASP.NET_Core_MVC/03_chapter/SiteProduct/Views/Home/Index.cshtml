@@ -1,5 +1,6 @@
 @using SiteProduct.ViewModels
 @model IEnumerable<ProductViewModel>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <html lang="ru-RU">
 <head>
@@ -26,5 +27,11 @@
             </tr>
         }
     </table>
+<div>
+    <form method="get" asp-action="Create">
+        <input type="submit" value="Добавить новый товар"/>
+    </form>
+
+</div>
 </body>
 </html>
