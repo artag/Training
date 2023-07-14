@@ -4,7 +4,7 @@ namespace SiteProduct.Services;
 
 public class MockProductData : IProductData
 {
-    private readonly IReadOnlyCollection<Product> _products = new[]
+    private readonly List<Product> _products = new List<Product>
     {
         new Product
         {
@@ -41,5 +41,13 @@ public class MockProductData : IProductData
     {
         return _products.FirstOrDefault(product => product.Id.Equals(id))
             ?? new Product() { Id = -1 };
+    }
+
+    public int Add(Product product)
+    {
+        var id = _products.Max(p => p.Id) + 1;
+        var newProduct = product.WithId(id);
+        _products.Add(newProduct);
+        return id;
     }
 }

@@ -2,8 +2,8 @@ using SiteProduct.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMvc();
-builder.Services.AddScoped<IProductData, MockProductData>();
-builder.Services.AddScoped<IProductTypeData, MockProductTypeData>();
+builder.Services.AddSingleton<IProductData, MockProductData>();
+builder.Services.AddSingleton<IProductTypeData, MockProductTypeData>();
 
 var app = builder.Build();
 app.MapControllerRoute(

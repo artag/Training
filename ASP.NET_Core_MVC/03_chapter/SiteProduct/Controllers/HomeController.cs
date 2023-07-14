@@ -42,4 +42,16 @@ public class HomeController : Controller
         var vm = product.MapToViewModel(allCategories);
         return View(vm);
     }
+
+    public IActionResult Create()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult Create(Product product)
+    {
+        var newId = _products.Add(product);
+        return RedirectToAction(nameof(Details), new { id = newId });
+    }
 }
