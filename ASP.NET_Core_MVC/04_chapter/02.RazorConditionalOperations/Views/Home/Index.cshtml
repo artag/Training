@@ -1,0 +1,92 @@
+<html>
+<head>
+    <title>Примеры условных конструкций в Razor</title>
+</head>
+<body>
+@*Условные конструкции*@
+@{
+    var welcome = "Добрый день, уважаемый пользователь!\n";
+    welcome += "Добро пожаловать на наш сайт!";
+
+    var denied = "Доступ запрещен. Мы сожалеем об этом.";
+}
+<p>if-else. Выбор if:</p>
+@{
+    bool isEnabled = true;
+}
+@if (isEnabled)
+{
+    <p>@welcome</p>
+}
+else
+{
+    <p>@denied</p>
+}
+
+<p>if-else. Выбор else:</p>
+@{
+    isEnabled = false;
+}
+@if (isEnabled)
+{
+    <p>@welcome</p>
+}
+else
+{
+    <p>@denied</p>
+}
+
+<hr/>
+
+<p>switch. case 0: val = 0</p>
+@{
+    var val = 0;
+}
+@switch (val)
+{
+    case 0:
+        <p>case0: @val</p>
+        break;
+    case 1:
+        <p>case1: @val</p>
+        break;
+    default:
+        <p>default: @(val * val)</p>
+        break;
+}
+
+<p>switch. case 1: val = 1</p>
+ @{
+     val = 1;
+ }
+ @switch (val)
+ {
+     case 0:
+         <p>case0: @val</p>
+         break;
+     case 1:
+         <p>case1: @val</p>
+         break;
+     default:
+         <p>default: @(val * val)</p>
+         break;
+ }
+
+ <p>switch. default: val = 2 * 2</p>
+ @{
+     val = 2;
+ }
+ @switch (val)
+ {
+     case 0:
+         <p>case0: @val</p>
+         break;
+     case 1:
+         <p>case1: @val</p>
+         break;
+     default:
+         <p>default: @(val * val)</p>
+         break;
+ }
+</body>
+</html>

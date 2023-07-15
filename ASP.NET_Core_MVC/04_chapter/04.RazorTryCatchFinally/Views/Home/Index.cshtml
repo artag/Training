@@ -1,0 +1,35 @@
+<html>
+<head>
+    <title>try-catch-finally in Razor</title>
+</head>
+<body>
+@*Try-Catch-Finally*@
+@try
+{
+    var root = AppDomain.CurrentDomain.BaseDirectory;
+    <p>try. Application directory: @root</p>
+
+    <p>Files in applicaion directory:<br/>
+        @{
+            var files = Directory.GetFiles(root);
+            foreach (var file in files)
+            {
+                <span>@file</span><br/>
+            }
+        }
+    </p>
+
+    throw new Exception("Что-то пошло не так...");
+}
+catch (Exception ex)
+{
+    <p>
+        catch. Сообщение об ошибке: @ex.Message
+    </p>
+}
+finally
+{
+    <p>finally. Завершение работы</p>
+}
+</body>
+</html>

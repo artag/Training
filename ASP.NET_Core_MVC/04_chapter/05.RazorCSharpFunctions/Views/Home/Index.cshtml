@@ -1,0 +1,44 @@
+<html>
+<head>
+    <title>Пример код вставок в Razor</title>
+</head>
+<body>
+@*Функции*@
+    @functions
+    {
+        internal double GetArea(double r)
+        {
+            var result = Math.PI * r * r;
+            return result;
+        }
+    }
+<div>
+    @{
+        var radius = 10;
+    }
+    Площадь круга радиусом @radius метров: @GetArea(radius).ToString("N4") квадратных метра
+</div>
+
+    @functions
+    {
+        internal class DisposableGuidGenerator : IDisposable
+        {
+            public Guid Generate()
+            {
+                return Guid.NewGuid();
+            }
+
+            public void Dispose()
+            {
+                Console.WriteLine("Call Dispose method from DisposableGuidGenerator");
+            }
+        }
+    }
+    @{
+        using var generator = new DisposableGuidGenerator();
+        <p>
+            Уникальный идентификатор: @generator.Generate().ToString("D")
+        </p>
+    }
+</body>
+</html>
