@@ -1,0 +1,41 @@
+@using System.Text
+@using RazorRuntimeCompilation.Services
+@inject IAlert AlertService
+<html lang="ru-Ru">
+<head>
+    <title>Измени Razor без перекомпиляции</title>
+</head>
+<body>
+<p>
+    Поменяй что-нибудь в разметке Razor без перекомпиляции и перезапуска приложения<br/>
+</p>
+<p>
+    Изменения в injected сервисе не учитываются, но сам вызов в Razor можно поменять.<br/>
+    @AlertService.GetMessage()<br/>
+
+</p>
+<p>
+    Можно вставлять выражения:
+    3 + 42 = @(3 + 42)<br/>
+</p>
+<p>
+    Можно вставить C# код и вызвать его.<br/>
+    @functions
+    {
+        public string GenerateRepeatedMessage(string message, uint numberOfRepeat)
+        {
+            var text = new StringBuilder();
+            for (int i = 0; i < numberOfRepeat; i++)
+            {
+                text.Append($"#{i + 1}.");
+                text.Append($"\"{message}\"");
+                text.AppendLine("; ");
+            }
+            return text.ToString();
+        }
+    }
+    Вызов функции 'GenerateRepeatedMessage':<br/>
+    @GenerateRepeatedMessage("Cообщение для повтора", 3)
+</p>
+</body>
+</html>

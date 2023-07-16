@@ -1,0 +1,13 @@
+@using DependencyInjectionInView.Services
+@inject IAlert MessageService
+<html>
+<head>
+    <title>Пример внедрения зависимостей</title>
+</head>
+<body>
+<p>
+    Пример сообщения из внедренного сервиса:<br/>
+    @MessageService.GetMessage()
+</p>
+</body>
+</html>
