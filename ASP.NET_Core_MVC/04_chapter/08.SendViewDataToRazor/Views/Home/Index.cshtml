@@ -1,0 +1,34 @@
+@using SendViewDataToRazor.Models
+<html>
+<head>
+    <title>Передача ViewData в Razor</title>
+</head>
+<body>
+<p>
+    Передача через ViewData string:<br/>
+    @ViewData["stringData"]
+</p>
+<p>
+    Передача через ViewData long:<br/>
+    @ViewData["longData"]
+</p>
+<p>
+    Передача через ViewData DateTime:<br/>
+    @ViewData["dateTimeData"]
+</p>
+<p>
+    Передача через ViewData record:<br/>
+    @{
+        var person = (Person)(ViewData["recordData"]);
+    }
+    Name: @person.Name<br/>
+    Birthday: @person.Birthday.ToString("d")<br/>
+    City: @person.City<br/>
+</p>
+<p>
+    Попытка получить из ViewData отсутствующее значение:<br/>
+    @{ var value = ViewData["unknownData"]; }
+    Значение: '@value' - null
+</p>
+</body>
+</html>

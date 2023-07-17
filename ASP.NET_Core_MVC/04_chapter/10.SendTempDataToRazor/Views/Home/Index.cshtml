@@ -1,0 +1,13 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<html>
+<head>
+    <title>Передача TempData в Razor</title>
+</head>
+<body>
+<form asp-action="Default" asp-controller="Home">
+    <input type="submit" value="Передать TempData в другой View -> Default"/>
+</form>
+</body>
+</html>

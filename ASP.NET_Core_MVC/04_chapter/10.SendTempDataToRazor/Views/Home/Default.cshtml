@@ -1,0 +1,27 @@
+@using SendTempDataToRazor.Extensions
+@using SendViewBagToRazor.Models
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<html>
+<head>
+    <title>Прием TempData из соседнего View</title>
+</head>
+<body>
+<p>
+    Данные из TempData. Можно считать только раз:<br/>
+    string: @(TempData["StringData"] ?? "Ничего не было передано")<br/>
+    long: @(TempData["LongData"] ?? "Ничего не было передано")<br/>
+    DateTime: @(TempData["DateTimeData"] ?? "Ничего не было передано")<br/>
+    Передача через TempData record:<br/>
+    @{
+        var person = TempData.Get<Person>("RecordData");
+    }
+    Name: @(person?.Name ?? "Ничего не было передано")<br/>
+    Birthday: @(person?.Birthday.ToString("d") ?? "Ничего не было передано")<br/>
+    City: @(person?.City ?? "Ничего не было передано")<br/>
+</p>
+<form asp-action="Next" asp-controller="Home">
+    <input type="submit" value="Еще раз передать TempData в другой View -> Next"/>
+</form>
+</body>
+</html>

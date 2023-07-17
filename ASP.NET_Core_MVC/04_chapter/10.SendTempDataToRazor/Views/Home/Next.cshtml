@@ -1,0 +1,22 @@
+@using SendTempDataToRazor.Extensions
+@using SendViewBagToRazor.Models
+<html>
+<head>
+    <title>Второй прием TempData из соседнего View</title>
+</head>
+<body>
+<p>
+    Данные из TempData. Вторая попытка считать данные (можно только раз):<br/>
+    string: @(TempData["StringData"] ?? "Ничего не было передано")<br/>
+    long: @(TempData["LongData"] ?? "Ничего не было передано")<br/>
+    DateTime: @(TempData["DateTimeData"] ?? "Ничего не было передано")<br/>
+    Передача через TempData record:<br/>
+    @{
+        var person = TempData.Get<Person>("RecordData");
+    }
+    Name: @(person?.Name ?? "Ничего не было передано")<br/>
+    Birthday: @(person?.Birthday.ToString("d") ?? "Ничего не было передано")<br/>
+    City: @(person?.City ?? "Ничего не было передано")<br/>
+</p>
+</body>
+</html>

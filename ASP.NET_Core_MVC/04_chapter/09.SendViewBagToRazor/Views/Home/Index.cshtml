@@ -1,0 +1,34 @@
+@using SendViewBagToRazor.Models
+<html>
+<head>
+    <title>Передача ViewBag в Razor</title>
+</head>
+<body>
+<p>
+    Передача через ViewBag string:<br/>
+    @ViewBag.StringData
+</p>
+<p>
+    Передача через ViewBag long:<br/>
+    @ViewBag.LongData
+</p>
+<p>
+    Передача через ViewBag DateTime:<br/>
+    @ViewBag.DateTimeData
+</p>
+<p>
+    Передача через ViewBag record:<br/>
+    @{
+        var person = (Person)(ViewBag.RecordData);
+    }
+    Name: @person.Name<br/>
+    Birthday: @person.Birthday.ToString("d")<br/>
+    City: @person.City<br/>
+</p>
+<p>
+    Попытка получить из ViewBag отсутствующее свойство:<br/>
+    @{ var value = ViewBag.UnknownData; }
+    Значение: '@value' - null
+</p>
+</body>
+</html>
