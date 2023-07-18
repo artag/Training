@@ -1,0 +1,13 @@
+@{
+    ViewBag.Title = "Домашняя страница";
+    <!-- Layout = "_Layout"; во _ViewStart.cshtml -->
+}
+<h3>Какое-то содержимое на начальной странице</h3>
+Сообщение из сервиса: "@MessageService.GetMessage()"<br/>
+@Html.Label("Текст в Html-helper'е")
+@section another_footer
+{
+    <p>
+        Содержимое обязательного нижнего колонтитула
+    </p>
+}

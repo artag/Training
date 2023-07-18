@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <!--
+    <title>@ViewData["Title"]</title>
+    -->
+    <title>@ViewBag.Title</title>
+</head>
+<body>
+<div>
+    @@RenderBody:<br/>
+    @RenderBody()
+    <hr/>
+</div>
+<footer>
+    Необязательный нижний колонтитул. @@RenderSection:<br/>
+    @RenderSection(name: "footer", required: false)
+    <hr/>
+</footer>
+<another_footer>
+    Обязательный нижний колонтитул. @@RenderSection:<br/>
+    @RenderSection(name: "another_footer", required: true)
+</another_footer>
+</body>
+</html>

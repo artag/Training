@@ -1,0 +1,40 @@
+@model IEnumerable<ProductViewModel>
+
+@{
+    ViewBag.Title = "Домашняя страница";
+}
+
+<h2>Товары</h2>
+<table>
+    <tr>
+        <td>Id</td>
+        <td>Наименование</td>
+        <td>Цена</td>
+        <td>Дата изготовления</td>
+        <td>Категория</td>
+    </tr>
+
+    @foreach (var product in @Model)
+    {
+        <tr>
+            <td>@Html.ActionLink(product.Id.ToString(), "Details", new { id = product.Id })</td>
+            <td>@product.Name</td>
+            <td>@product.Price.ToString("C")</td>
+            <td>@product.ProductionDate.ToString("dd.MM.yyyy")</td>
+            <td>@product.Category</td>
+        </tr>
+    }
+</table>
+<div>
+    <form method="get" asp-action="Create">
+        <input type="submit" value="Добавить новый товар"/>
+    </form>
+</div>
+
+@section footer
+{
+    <hr/>
+    <div>
+        Это нижний колонтитул домашней страницы
+    </div>
+}
