@@ -1,0 +1,12 @@
+@model Student
+
+Id: @Model.StudentId<br/>
+Имя: @Model.Name<br/>
+Возраст, лет: @Model.Age<br/>
+Вес, кг: @Model.Weight<br/>
+Описание: @(Model.Description ?? "отсутствует")<br/>
+Активен: @Model.IsActive<br/>
+Пол: @(Model.Gender ?? "не указан")<br/>
+Любимый цвет: @Model.FavouriteColor<br/>
+Любимые напитки: @Html.List(@Model.FavouriteDrinks.Select(d => d.ToString("G")).ToArray())<br/>
+Пароль: @Model.Password<br/>

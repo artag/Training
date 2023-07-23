@@ -1,0 +1,24 @@
+@model Book
+<h2>Переданные данные через параметры метода контроллера</h2>
+<p>
+    Переданное сообщение из предыдущей страницы: @(ViewBag.Message ?? "ничего не передано")
+</p>
+<p>
+    Переданное магическое число из предыдущей страницы: @(ViewBag.MagicNumber ?? "ничего не передано")
+</p>
+
+<h2>Пример использования Html helpers для ввода данных</h2>
+@using (Html.BeginForm("Add", "Home", FormMethod.Post))
+{
+    <p>
+        @Html.LabelFor(m => m.Title)<br/>
+        @Html.TextBoxFor(m => m.Title)
+    </p>
+    <p>
+        @Html.LabelFor(m => m.Copies)<br/>
+        @Html.TextBoxFor(m => m.Copies, "", new { type = "number" })
+    </p>
+    <p>
+        <input type="submit" value="Добавить" />
+    </p>
+}

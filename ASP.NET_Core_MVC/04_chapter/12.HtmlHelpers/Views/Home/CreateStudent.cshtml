@@ -1,0 +1,76 @@
+@model Student
+
+<h2>Html-хелперы</h2>
+
+@using (Html.BeginForm("ViewNewStudent", "Home", FormMethod.Post))
+{
+
+    <b>1. @@Html.TextBox(), @@Html.TextBoxFor(), @@Html.Label() и @@Html.LabelFor()</b><br/>
+    <p>
+        @Html.Label("Name", "Имя:")
+        @Html.TextBox(expression: "Name")<br/>
+
+        @Html.LabelFor(m => m.Age, "Возраст:")
+        @Html.TextBoxFor(m => m.Age, "1", new { type = "number", min = 1, max = 255 })<br/>
+
+        @Html.LabelFor(m => m.Weight, "Вес:")
+        @Html.TextBoxFor(m => m.Weight, "0.0", new { type = "number", step = 0.1 })<br/>
+    </p>
+
+    <b>2. @@Html.TextArea() и @@Html.TextAreaFor()</b><br/>
+    <p>
+        Description or bio: @Html.TextArea(expression: "Description")
+    </p>
+
+    <b>3. @@Html.CheckBox() и @@Html.CheckBoxFor()</b><br/>
+    <p>
+        Enabled: @Html.CheckBox("IsActive", true)
+    </p>
+
+    <b>4. @@Html.RadioButton() и @@Html.RadioButtonFor()</b><br/>
+    <p>
+        Male: @Html.RadioButton("Gender", "Male")
+        Female: @Html.RadioButton("Gender", "Female")
+    </p>
+
+    <b>5. @@Html.DropDownList() и @@Html.DropDownListFor()</b><br/>
+    <p>
+        @Html.DropDownList(
+            expression: "Color",
+            new SelectList(Enum.GetValues(typeof(Color))),
+            "Select favourite color",
+            new { @class = "form-control" })
+    </p>
+
+    <b>6. @@Html.ListBox() и @@Html.ListBoxFor()</b><br/>
+    <p>
+        @Html.ListBoxFor(
+            m => m.FavouriteDrinks,
+            Model.AllDrinks,
+            new { @class = "form-control", multiple = "single" })
+    </p>
+
+    <b>7. @@Html.Hidden() и @@Html.HiddenFor()</b><br/>
+    <p>
+        Не отображается, но оно есть...
+        @Html.HiddenFor(m => m.StudentId)
+    </p>
+
+    <b>8. @@Html.Password() и @@Html.PasswordFor()</b><br/>
+    <p>
+        @Html.PasswordFor(m => m.Password)
+    </p>
+
+    <hr/>
+    <p>
+        <input type="submit" value="Создать"/>
+    </p>
+}
+
+<b>12. @@Html.ActionLink()</b><br/>
+<p>
+    @Html.ActionLink(
+        linkText: "На главную",
+        actionName: "Index",
+        controllerName: "Home")
+</p>

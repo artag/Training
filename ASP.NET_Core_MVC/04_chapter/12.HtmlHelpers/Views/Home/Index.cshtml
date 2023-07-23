@@ -1,0 +1,39 @@
+<p>
+    @Html.Raw(ViewBag.Message)
+</p>
+
+<h2>Пример использования кастомных Html helpers</h2>
+<p>
+    @Html.TextFontStrong("Hello, world!")
+</p>
+<h3>Имена</h3>
+<p>
+    @Html.List("Алексей", "Дмитрий", "Анна")
+</p>
+
+<h2>Пример использования @@Url.RouteUrl</h2>
+<p>
+    Значение @@Url.RouteUrl: @Url.RouteUrl(new { controller = "Home", action = "Book", message = "Hi!"})
+</p>
+
+<h2>Пример использования @@Url.Action</h2>
+@{
+    var action = @Url.Action(
+        action: "Book",
+        controller: "Home",
+        values: new { message = "Message From Index View", magicNumber = 42 },
+        protocol: null);
+}
+<p>
+    Значение @@Url.Action: @action
+</p>
+<p>
+    Использование значения @@Url.Action для ссылки:<br/>
+    <a href='@action'>Перейти к добавлению книги</a><br/>
+    <a href='@Url.Action("CreateStudent", "Home")'>Перейти к созданию Student</a>
+</p>
+
+<h2>Пример использования @@Url.Content</h2>
+<p>
+    Значение @@Url.Content: @Url.Content("~/Home/index.html")
+</p>
