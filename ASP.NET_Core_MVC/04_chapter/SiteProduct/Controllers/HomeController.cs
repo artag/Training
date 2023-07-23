@@ -57,4 +57,25 @@ public class HomeController : Controller
         var newId = _products.Add(product);
         return RedirectToAction(nameof(Details), new { id = newId });
     }
+
+    [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        var product = _products.Get(id);
+        if (product.Id < 1)
+            return RedirectToAction("Index");
+        return View(product);
+    }
+
+    [HttpPost]
+    public IActionResult Edit(Product model)
+    {
+        var product = _products.Get(model.Id);
+        if (product.Id < 1 || !ModelState.IsValid)
+            return View(model);
+
+        var changedProduct = product.WithProduct(model);
+        _products.Save(changedProduct);
+        return RedirectToAction("Details", new { id = product.Id });
+    }
 }

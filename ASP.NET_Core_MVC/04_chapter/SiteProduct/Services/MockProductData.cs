@@ -50,4 +50,14 @@ public class MockProductData : IProductData
         _products.Add(newProduct);
         return id;
     }
+
+    public void Save(Product product)
+    {
+        for (var i = 0; i < _products.Count; i++)
+        {
+            var p = _products[i];
+            if (p.Id.Equals(product.Id))
+                _products[i] = p.WithProduct(product);
+        }
+    }
 }

@@ -14,6 +14,16 @@ public static class ProductExtensions
             CategoryId = product.CategoryId,
         };
 
+    public static Product WithProduct(this Product product, Product changedProduct) =>
+        new Product
+        {
+            Id = product.Id,
+            Name = changedProduct.Name,
+            Price = changedProduct.Price,
+            ProductionDate = changedProduct.ProductionDate,
+            CategoryId = changedProduct.CategoryId,
+        };
+
     public static ProductViewModel MapToViewModel(this Product product, IReadOnlyCollection<ProductType> allCategories) =>
         new ProductViewModel
         {
