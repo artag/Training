@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+
+@RenderBody()
+
+</body>
+
+<footer>
+    @await RenderSectionAsync(name: "footer", required: false)
+    @await Component.InvokeAsync("ContentFooter")
+</footer>
+</html>
