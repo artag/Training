@@ -11,6 +11,8 @@
 </div>
 </body>
 <footer>
-    @RenderSection(name: "footer", required: false)
+    <hr/>
+    @await RenderSectionAsync(name: "footer", required: false)
+    @await Component.InvokeAsync("ContentFooter")
 </footer>
 </html>

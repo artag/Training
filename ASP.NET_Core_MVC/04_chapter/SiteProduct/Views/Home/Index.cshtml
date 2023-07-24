@@ -5,34 +5,17 @@
 }
 
 <h2>Товары</h2>
-<table>
-    <tr>
-        <td>Наименование</td>
-        <td>Цена</td>
-        <td>Дата изготовления</td>
-        <td>Категория</td>
-        <td colspan="2">Действия</td>
-    </tr>
+@foreach (var product in @Model)
+{
+    <partial name="_Product" model="@product"/>
+}
 
-    @foreach (var product in @Model)
-    {
-        <tr>
-            <td>@product.Name</td>
-            <td>@product.Price.ToString("C")</td>
-            <td>@product.ProductionDate.ToString("dd.MM.yyyy")</td>
-            <td>@product.Category</td>
-            <td><a asp-action="Details" asp-route-id="@product.Id">Подробности</a></td>
-            <td><a asp-action="Edit" asp-route-id="@product.Id">Изменить</a></td>
-        </tr>
-    }
-</table>
 <div>
     <a asp-action="Create" asp-controller="Home">Добавить</a>
 </div>
 
 @section footer
 {
-    <hr/>
     <div>
         Это нижний колонтитул домашней страницы
     </div>
