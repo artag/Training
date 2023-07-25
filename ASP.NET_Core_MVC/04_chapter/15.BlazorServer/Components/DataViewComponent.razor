@@ -1,0 +1,29 @@
+@using Microsoft.AspNetCore.Components.Web
+<div>
+    <h3>Компонент для получения данных</h3>
+    <input @bind-value="@UserName" placeholder="Введите ваше имя"/>
+    <button @onclick="GetData">Нажмите, чтобы получить данные</button>
+</div>
+
+<div>
+    <br/>
+    <div style="@Style">@Data</div>
+</div>
+
+@code
+{
+    string UserName = string.Empty;
+
+    string Data { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
+
+    void GetData()
+    {
+        var timeNow = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
+        var name = string.IsNullOrEmpty(UserName) ? "незнакомец" : UserName;
+        Data = $"Привет, {name}! Текущее время {timeNow}";
+        Style = "color:green";
+    }
+}

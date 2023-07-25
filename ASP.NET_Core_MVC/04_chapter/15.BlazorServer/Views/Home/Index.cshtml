@@ -1,0 +1,18 @@
+@using BlazorServer.Components
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+    <title>Компонент Blazor</title>
+    <base href="~/"/>
+</head>
+<body>
+    <h1>Hello Blazor Server!</h1>
+    <app>
+        <component type="typeof(DataViewComponent)" render-mode="ServerPrerendered"/>
+    </app>
+    <script src="~/_framework/blazor.server.js"></script>
+</body>
+</html>
