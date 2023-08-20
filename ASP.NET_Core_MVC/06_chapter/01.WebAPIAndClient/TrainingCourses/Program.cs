@@ -22,7 +22,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Перенаправление HTTP к HTTPS запросам.
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 // Маршрутизация контроллеров на основе атрибутов.
 // (Настройка маршрутизации непосредственно в параметрах контроллера).

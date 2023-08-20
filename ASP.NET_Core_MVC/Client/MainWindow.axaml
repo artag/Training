@@ -1,0 +1,72 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="600"
+        d:DesignHeight="480"
+        x:Class="Client.MainWindow"
+        Width="600"
+        Height="480"
+        Title="Courses API Client">
+
+    <StackPanel
+        Margin="10"
+        Orientation="Vertical">
+
+        <StackPanel
+            Margin="10"
+            Orientation="Horizontal">
+            <Label
+                Margin="10 0 0 0"
+                Name="LabelTitle"
+                VerticalAlignment="Center"
+                Content="Курс"/>
+            <TextBox
+                Margin="10 0 0 0"
+                Name="TextBoxTitle"
+                VerticalAlignment="Center"/>
+            <Label
+                Margin="10 0 0 0"
+                Name="LabelHours"
+                VerticalAlignment="Center"
+                Content="Часы"/>
+            <TextBox
+                Margin="10 0 0 0"
+                Name="TextBoxHours"
+                VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel
+            Margin="10"
+            Orientation="Horizontal">
+            <Button
+                Margin="10 0 0 0"
+                Name="ButtonAdd"
+                Content="Добавить"
+                VerticalAlignment="Center"/>
+            <Button
+                Margin="20 0 0 0"
+                Name="ButtonEdit"
+                Content="Изменить"
+                VerticalAlignment="Center"/>
+            <Button
+                Margin="20 0 0 0"
+                Name="ButtonDelete"
+                Content="Удалить"
+                VerticalAlignment="Center"/>
+            <Button
+                Margin="20 0 0 0"
+                Name="ButtonReload"
+                Content="Перезагрузить"
+                VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <DataGrid
+            Margin="10"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="Gray"/>
+
+    </StackPanel>
+</Window>

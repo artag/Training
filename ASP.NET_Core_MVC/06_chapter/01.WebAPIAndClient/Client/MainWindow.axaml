@@ -1,0 +1,114 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignWidth="800"
+    d:DesignHeight="600"
+    x:Class="Client.MainWindow"
+    Width="800"
+    Height="600"
+    Title="Courses API Client">
+
+    <LayoutTransformControl>
+        <LayoutTransformControl.LayoutTransform>
+            <ScaleTransform ScaleX="1.4" ScaleY="1.4" />
+        </LayoutTransformControl.LayoutTransform>
+
+        <Grid
+            Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid
+                Grid.Row="0"
+                Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Label
+                    Grid.Column="0"
+                    Margin="10 0 0 0"
+                    Name="LabelTitle"
+                    VerticalAlignment="Center"
+                    Content="Курс" />
+                <TextBox
+                    Grid.Column="1"
+                    Margin="10 0 0 0"
+                    Name="TextBoxTitle"
+                    VerticalAlignment="Center" />
+                <Label
+                    Grid.Column="2"
+                    Margin="10 0 0 0"
+                    Name="LabelHours"
+                    VerticalAlignment="Center"
+                    Content="Часы" />
+                <TextBox
+                    Grid.Column="3"
+                    Margin="10 0 0 0"
+                    Name="TextBoxHours"
+                    VerticalAlignment="Center" />
+            </Grid>
+
+            <StackPanel
+                Grid.Row="1"
+                Margin="10"
+                Orientation="Horizontal">
+                <Button
+                    Margin="10 0 0 0"
+                    Name="ButtonAdd"
+                    Content="Добавить"
+                    VerticalAlignment="Center"
+                    Click="ButtonAdd_OnClick" />
+                <Button
+                    Margin="20 0 0 0"
+                    Name="ButtonEdit"
+                    Content="Изменить"
+                    VerticalAlignment="Center"
+                    Click="ButtonEdit_OnClick" />
+                <Button
+                    Margin="20 0 0 0"
+                    Name="ButtonDelete"
+                    Content="Удалить"
+                    VerticalAlignment="Center"
+                    Click="ButtonDelete_OnClick" />
+                <Button
+                    Margin="20 0 0 0"
+                    Name="ButtonReload"
+                    Content="Перезагрузить"
+                    VerticalAlignment="Center"
+                    Click="ButtonReload_OnClick" />
+            </StackPanel>
+
+            <DataGrid
+                Grid.Row="2"
+                Name="DataGridCourses"
+                Margin="10"
+                SelectionChanged="DataGridCourses_OnSelectionChanged"
+                IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Название курса"  Binding="{Binding Title}"/>
+                    <DataGridTextColumn Header="Количество часов" Binding="{Binding Hours}" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border
+                Grid.Row="3"
+                BorderBrush="Gray">
+                <TextBlock
+                    Margin="10"
+                    x:Name="StatusBar"
+                    VerticalAlignment="Center"/>
+            </Border>
+
+        </Grid>
+    </LayoutTransformControl>
+</Window>
