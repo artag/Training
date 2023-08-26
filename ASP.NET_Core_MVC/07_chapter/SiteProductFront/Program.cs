@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Net.Mime;
 using Microsoft.EntityFrameworkCore;
 using SiteProduct.Db;
 using SiteProduct.Services;
@@ -23,5 +25,11 @@ app.UseStaticFiles();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=home}/{action=index}");
+
+// Установка культуры для отображения цены (выключено - плохо работает с валидацией)
+// var cultureInfo = new CultureInfo("ru-RU");
+// //cultureInfo.NumberFormat.CurrencySymbol = "Руб";
+// CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+// CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 app.Run();
