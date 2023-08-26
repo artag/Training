@@ -4,15 +4,37 @@
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
+    <environment include="Development">
+        <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap-grid.min.css"
+              asp-fallback-test-class="sr-only"
+              asp-fallback-test-property="position"
+              asp-fallback-test-value="absolute"/>
+    </environment>
 </head>
 <body>
-<div>
-    @RenderBody()
-</div>
+    <div class="p-2">
+        <nav class="navbar navbar-light bg-light">
+            <div class="container-fluid">
+                <div class="navbar-brand">
+                    <a href="~/">Товары</a>
+                </div>
+            </div>
+        </nav>
+        <div>
+            @RenderBody()
+        </div>
+
+        <footer>
+            <hr/>
+            @await RenderSectionAsync(name: "footer", required: false)
+            @await Component.InvokeAsync("ContentFooter")
+        </footer>
+    </div>
+    <partial name="_ValidationScriptsPartial"/>
 </body>
-<footer>
-    <hr/>
-    @await RenderSectionAsync(name: "footer", required: false)
-    @await Component.InvokeAsync("ContentFooter")
-</footer>
 </html>

@@ -16,6 +16,10 @@ builder.Services.AddSingleton<IProductData, MockProductData>();
 builder.Services.AddSingleton<IProductTypeData, MockProductTypeData>();
 
 var app = builder.Build();
+
+// Загрузка статических файлов (.css и .js).
+app.UseStaticFiles();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=home}/{action=index}");

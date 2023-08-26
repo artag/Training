@@ -1,40 +1,45 @@
 @model Product
 
 @{
-    ViewBag.Title = $"Изменить {Model?.Name}";
+    ViewBag.Title = $"Изменить";
 }
 
-<form asp-action="Edit" method="post">
-    <div asp-validation-summary="All"></div>
-    <input asp-for="Id" type="hidden" value="@Model?.Id" />
-    <table>
-        <tr>
-            <td><label asp-for="Name"></label></td>
-            <td><input asp-for="Name"></td>
-            <td><span asp-validation-for="Name"></span></td>
-        </tr>
-        <tr>
-            <td><label asp-for="Price"></label></td>
-            <td><input asp-for="Price" step="0.01"/></td>
-            <td><span asp-validation-for="Price"></span></td>
-        </tr>
-        <tr>
-            <td><label asp-for="ProductionDate"></label></td>
-            <td><input asp-for="ProductionDate" type="date"/></td>
-            <td><span asp-validation-for="ProductionDate"></span></td>
-        </tr>
-        <tr>
-            <td><label asp-for="CategoryId"></label></td>
-            <td>
-                <select asp-for="CategoryId"
-                        asp-items="@(new SelectList(Categories.GetAll(), nameof(ProductType.Id), nameof(ProductType.TypeName)))">
-                </select>
-            </td>
-            <td><span asp-validation-for="CategoryId"></span></td>
-        </tr>
-    </table>
-    <input type="submit" value="Сохранить" />
-</form>
+<div class="card">
+    <div class="card-header">Изменить товар '@Model.Name'</div>
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <div asp-validation-summary="All"></div>
+            <input asp-for="Id" type="hidden" value="@Model?.Id"/>
+            <table>
+                <tr>
+                    <td><label asp-for="Name"></label></td>
+                    <td><input asp-for="Name"></td>
+                    <td><span asp-validation-for="Name"></span></td>
+                </tr>
+                <tr>
+                    <td><label asp-for="Price"></label></td>
+                    <td><input asp-for="Price" step="0.01"/></td>
+                    <td><span asp-validation-for="Price"></span></td>
+                </tr>
+                <tr>
+                    <td><label asp-for="ProductionDate"></label></td>
+                    <td><input asp-for="ProductionDate" type="date"/></td>
+                    <td><span asp-validation-for="ProductionDate"></span></td>
+                </tr>
+                <tr>
+                    <td><label asp-for="CategoryId"></label></td>
+                    <td>
+                        <select asp-for="CategoryId"
+                                asp-items="@(new SelectList(Categories.GetAll(), nameof(ProductType.Id), nameof(ProductType.TypeName)))">
+                        </select>
+                    </td>
+                    <td><span asp-validation-for="CategoryId"></span></td>
+                </tr>
+            </table>
+            <input class="p-2 btn btn-primary" type="submit" value="Сохранить"/>
+        </form>
+    </div>
+</div>
 <div>
     <a asp-action="Index" asp-controller="Home">Назад к списку</a>
 </div>

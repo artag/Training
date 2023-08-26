@@ -4,14 +4,15 @@
     ViewBag.Title = "Домашняя страница";
 }
 
-<h2>Товары</h2>
 @foreach (var product in @Model)
 {
-    <partial name="_Product" model="@product"/>
+    <div class="p-1">
+        <partial name="_Product" model="@product"/>
+    </div>
 }
 
-<div>
-    <a asp-action="Create" asp-controller="Home">Добавить</a>
+<div class="p-1">
+    <a class="btn btn-success" asp-action="Create" asp-controller="Home">Добавить</a>
 </div>
 
 @section footer
