@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Новости</title>
+</head>
+
+<body>
+    <!-- Кнопка. По нажатии вызывает функцию ajaxload -->
+    <button onclick="ajaxload();">Получить</button>
+    <!-- В данный элемент будут загружаться данные. id - идентификатор элемента. -->
+    <div id="content">
+        <h3>Нет новостей</h3>
+    </div>
+</body>
+</html>
+
+<!-- JavaScript-функция -->
+<script type="text/javascript">
+    function ajaxload() {
+        let xhr = new XMLHttpRequest();
+        // Обработка ответа выполняется в обработчике события (возникает при каждом изменении XMLHttpRequest).
+        xhr.onreadystatechange = function () {
+            // readyState = 4 - запрошенная информация полностью получена.
+            if (this.readyState === 4) {
+                // Статус-код ответа. Успешный запрос имеет статус-код от 200 до 299.
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Содержимое ответа передается в элемент div (идентификатор 'content').
+                    document.getElementById('content').innerHTML = this.responseText;
+                }
+            }
+        }
+        // Установка метод пересылки данных (GET) и url-адрес ресурса, к которому будет идти запрос.
+        xhr.open('GET', '/Home/Hello');
+        // Отправка запроса.
+        xhr.send();
+    }
+</script>
