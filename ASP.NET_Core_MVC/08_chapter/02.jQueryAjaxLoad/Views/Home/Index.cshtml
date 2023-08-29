@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Новости</title>
+</head>
+
+<body>
+    <!-- Кнопка. По нажатии вызывает функцию ajaxload -->
+    <button>Получить</button>
+    <!-- В данный элемент будут загружаться данные. id - идентификатор элемента. -->
+    <div id="content">
+        <h3>Нет новостей</h3>
+    </div>
+</body>
+</html>
+
+<script src="js/jquery/jquery.min.js"></script>
+
+<!-- JavaScript-функция -->
+<script type="text/javascript">
+    $(function() {
+        $('button').click(function() {
+            // Загрузка данных для блока div по его id ('content').
+            $('#content').load('/Home/Hello');
+        });
+    });
+</script>
