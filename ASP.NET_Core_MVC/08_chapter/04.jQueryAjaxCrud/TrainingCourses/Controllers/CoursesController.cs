@@ -15,6 +15,7 @@ public class CoursesController : Controller
         _repository = repository;
     }
 
+    // GET api/courses
     [HttpGet]
     public ICollection<Course> Get()
     {
