@@ -38,6 +38,6 @@ app.UseStaticFiles();
 // (Настройка маршрутизации непосредственно в параметрах контроллера).
 app.MapControllers();
 
-app.MapControllerRoute(name: default, pattern: "{controller=Home}/{action=Index}");
+app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}");
 
 app.Run();

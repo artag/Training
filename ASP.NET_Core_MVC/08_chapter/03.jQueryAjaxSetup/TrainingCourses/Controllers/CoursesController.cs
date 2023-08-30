@@ -1,4 +1,3 @@
-using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using TrainingCourses.Models;
 using TrainingCourses.Services;
@@ -7,7 +6,6 @@ namespace TrainingCourses.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[FormatFilter]      // задать формат XML ответа для всех методов контроллера
 public class CoursesController : ControllerBase
 {
     private readonly ICoursesRepository _repository;
@@ -17,10 +15,8 @@ public class CoursesController : ControllerBase
         _repository = repository;
     }
 
-    // GET api/courses                  для возврата ответа в формате JSON
-    // GET api/courses?format=xml       для возврата ответа в формате XML
+    // GET api/courses
     [HttpGet]
-    // [FormatFilter]                   можно задать формат XML только для определенных методов
     public ICollection<Course> Get()
     {
         return _repository.GetAll();
