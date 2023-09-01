@@ -1,6 +1,6 @@
 $(document).ready(function() {
 
-    // Успещный запрос.
+    // Успешный запрос.
     $(".request").click(function() {
         $.ajax({
             url: "/api/courses/3",
