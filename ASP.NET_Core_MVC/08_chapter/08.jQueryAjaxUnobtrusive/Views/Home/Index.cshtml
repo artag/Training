@@ -1,0 +1,144 @@
+@model Person
+
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>Отправка данных</title>
+    <partial name="_StylesPartial"/>
+</head>
+
+<body>
+<div>
+    <h2>Атрибуты jQuery Unobtrusive AJAX</h2>
+    <ul>
+        <li>
+            <b>data-ajax</b> - должен быть установлен в <code>true</code>, чтобы активировать
+            "ненавязчивый AJAX" для целевого элемента.
+        </li>
+        <li>
+            <b>data-ajax-confirm</b> - получает или задает сообщение для отображения в окне
+            подтверждения перед отправкой запроса.
+        </li>
+        <li>
+            <b>data-ajax-method</b> - получает или задает метод HTTP-запроса
+            (<code>GET</code> или <code>POST</code>).
+        </li>
+        <li>
+            <b>data-ajax-mode</b> - получает или задает режим, указывающий, как вставить ответ
+            в целевой элемент DOM. Допустимые значения <code>before</code>, <code>after</code>
+            и <code>replace</code>. По умолчанию - <code>replace</code>.
+        </li>
+        <li>
+            <b>data-ajax-loading-duration</b> - получает или задает значение в миллисекундах,
+            которое управляет продолжительностью анимации при отображении или скрытии
+            элемента загрузки.
+        </li>
+        <li>
+            <b>data-ajax-loading</b> - получает или задает атрибут <code>id</code> элемента
+            HTML, который отображается во время загрузки функции AJAX.
+        </li>
+        <li>
+            <b>data-ajax-begin</b> - получает или задает имя функции JavaScript для вызова непосредственно
+            перед обновлением страницы.
+        </li>
+        <li>
+            <b>data-ajax-complete</b> - получает или задает функцию JavaScript для вызова после создания
+            экземпляра данных ответа, но до обновления страницы.
+        </li>
+        <li>
+            <b>data-ajax-failure</b> - получает или задает функцию JavaScript для вызова в случае сбоя обновления
+            страницы.
+        </li>
+        <li>
+            <b>data-ajax-success</b> - получает или задает функцию JavaScript для вызова после успешного обновления
+            страницы.
+        </li>
+        <li>
+            <b>data-ajax-update</b> - получает или задает идентификатор элемента DOM для обновления, используя
+            ответ сервера.
+        </li>
+        <li>
+            <b>data-ajax-url</b> - получает или задает URL-адрес для отправки запроса.
+        </li>
+    </ul>
+</div>
+<br/>
+<div>
+    <!--
+    data-ajax="true" - объявление form как AJAX.
+    data-ajax-method="POST" - для отправки формы будет использован метод POST.
+    data-ajax-begin="OnBegin" - функция, будет выполнена после нажатия на кнопку "Отправить".
+    data-ajax-complete="OnComplete" - функция, будет выполнена после завершения запроса.
+    data-ajax-success="OnSuccess" - функция, будет выполнена после успешного завершения запроса.
+    data-ajax-failure="OnFailure" - функция, будет выполнена после завершения запроса с ошибкой.
+    -->
+    <form asp-action="SendData" asp-controller="Home"
+          data-ajax="true"
+          data-ajax-method="POST"
+          data-ajax-begin="OnBegin"
+          data-ajax-failure="OnFailure"
+          data-ajax-success="OnSuccess"
+          data-ajax-complete="OnComplete">
+
+        <div class="container">
+            <h2>Заполните форму для отправки данных</h2>
+            <table class="table table-condensed">
+                <tr>
+                    <td>Имя:</td>
+                    <td>
+                        <input type="text" asp-for="FirstName" class="form-control">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Страна:</td>
+                    <td>
+                        <input type="text" asp-for="Country" class="form-control">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Тест ошибки:</td>
+                    <td>
+                        <select class="form-select sel-option" asp-for="TestError">
+                            <option value="false">Без ошибок</option>
+                            <option value="true">Эмулировать ошибку</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" halign="left">
+                        <input class="btn btn-primary" type="submit" value="Отправить"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </form>
+</div>
+<div id="progress" class="modal">
+    <div class="center">
+        <img src="~/images/loader.gif" alt="Loading..."/>
+    </div>
+</div>
+
+</body>
+</html>
+
+<script type="text/javascript">
+    function OnBegin() {
+        $("#progress").show();
+    }
+    function OnFailure(response) {
+        alert("Произошла ошибка.");
+    }
+    function OnSuccess(response) {
+        var message = "Имя: " + response.firstName;
+        message += "\nСтрана: " + response.country;
+        alert(message);
+    }
+    function OnComplete() {
+        $("#progress").hide();
+    }
+</script>
+
+<partial name="_ScriptsPartial"/>
