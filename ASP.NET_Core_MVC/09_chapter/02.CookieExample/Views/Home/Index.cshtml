@@ -1,0 +1,37 @@
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+    <title>Cookie</title>
+</head>
+<body>
+<div>
+    <h2>Управление Cookie</h2>
+    <a asp-controller="Home" asp-action="Create">Создать (добавить) Cookie</a>
+    <br/>
+    <a asp-controller="Home" asp-action="Delete">Удалить Cookie</a>
+</div>
+    <hr/>
+<div>
+    <h2>Cookies value</h2>
+    <p>
+        Value: @ViewBag?.CookiesValue<br/>
+    </p>
+</div>
+<div>
+    <h2>Cookies options</h2>
+    <p>
+        Domain: @ViewBag?.OptionsDomain<br/>
+        Path: @ViewBag?.OptionsPath<br/>
+        Expires: @ViewBag?.OptionsExpires<br/>
+        HttpOnly: @ViewBag?.OptionsHttpOnly<br/>
+        Secure: @ViewBag?.OptionsSecure<br/>
+        MaxAge: @ViewBag?.OptionsMaxAge<br/>
+        IsEssential: @ViewBag?.OptionsIsEssential<br/>
+        SameSite: @ViewBag?.OptionsSameSite<br/>
+    </p>
+</div>
+</body>
+</html>
