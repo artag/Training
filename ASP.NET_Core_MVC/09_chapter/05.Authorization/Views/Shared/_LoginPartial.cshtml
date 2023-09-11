@@ -1,0 +1,31 @@
+@using Authorization.Models
+@using Authorization.Services
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IUsersPortalRepository UsersRepository
+
+@{
+    var userId = HttpContextAccessor.HttpContext?.Session.GetString(Constants.UserId);
+    if (userId == null)
+    {
+        <a class="btn btn-danger"
+           asp-action="Login">Войти</a>
+    }
+    else
+    {
+        var id = Convert.ToInt32(userId);
+        var user = UsersRepository.UsersPortal.FirstOrDefault(u => u.Id == id);
+        if (user == null)
+        {
+            <a class="btn btn-danger"
+               asp-action="Login">Войти</a>
+        }
+        else
+        {
+            <form method="post" asp-action="Logout">
+                @user.UserName
+                <button class="btn btn-danger"
+                        type="submit">Выйти</button>
+            </form>
+        }
+    }
+}
