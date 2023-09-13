@@ -1,0 +1,66 @@
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using Dropdownlist.ViewModels
+@model CountryView
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Города</title>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <h1>Выберите страну из списка</h1>
+        <form asp-action="Select" method="post">
+            <div class="form-group">
+                <label>Страна:</label>
+                <!-- Наименование name должно полностью совпадать с параметром метода Search в контроллере. -->
+                <select name="countryId"
+                        asp-items="@ViewBag.Countries"
+                        asp-for="CountryId"
+                        class="form-select"
+                        onchange="this.form.submit();">
+                </select>
+            </div>
+        </form>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <h2>Города</h2>
+        <div>
+            <table class="table table-bordered table-stripped">
+                <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Город</th>
+                    <th>Популяция</th>
+                </tr>
+                </thead>
+                <tbody>
+                @{
+                    var i = 0;
+                    foreach (var city in Model.Cities)
+                    {
+                        i++;
+                        <tr>
+                            <td>@i</td>
+                            <td>@city.Name</td>
+                            <td>@city.PopulationSize</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="2">Общая численность:</td>
+                    <td>@Model.Cities.Sum(c => c.PopulationSize).ToString()</td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
