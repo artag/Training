@@ -45,6 +45,12 @@ public class HomeController : Controller
             _ => people.OrderBy(p => p.Id)
         };
 
-        return View(sorted);
+        var viewModel = new PersonView
+        {
+            Persons = sorted,
+            SortStatus = orderBy,
+        };
+
+        return View(viewModel);
     }
 }

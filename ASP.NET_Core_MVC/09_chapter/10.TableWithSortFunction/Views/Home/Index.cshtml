@@ -1,6 +1,7 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using TableSort.Infrastructure
 @using TableSort.Models
-@model IEnumerable<Person>
+@model PersonView
 
 <!DOCTYPE html>
 
@@ -21,23 +22,35 @@
                         <a asp-action="Index"
                            asp-controller="Home"
                            asp-route-orderBy=@ViewBag.IdSort>Код</a>
+                        <img src="@Url.Content(SelectIcon(SortStatus.IdDesc, SortStatus.IdAsc))"
+                             height="16"
+                             alt="Sort by Id"/>
                     </th>
                     <th><a asp-action="Index"
                            asp-controller="Home"
                            asp-route-orderBy="@ViewBag.FirstNameSort">Имя</a>
+                        <img src="@Url.Content(SelectIcon(SortStatus.FirstNameDesc, SortStatus.FirstNameAsc))"
+                             height="16"
+                             alt="Sort by First Name"/>
                     </th>
                     <th><a asp-action="Index"
                            asp-controller="Home"
                            asp-route-orderBy="@ViewBag.LastNameSort">Фамилия</a>
+                        <img src="@Url.Content(SelectIcon(SortStatus.LastNameDesc, SortStatus.LastNameAsc))"
+                             height="16"
+                             alt="Sort by Last Name"/>
                     </th>
                     <th><a asp-action="Index"
                            asp-controller="Home"
                            asp-route-orderBy="@ViewBag.BirthDateSort">Дата рождения</a>
+                        <img src="@Url.Content(SelectIcon(SortStatus.BirthDateDesc, SortStatus.BirthDateAsc))"
+                             height="16"
+                             alt="Sort by Birth Date"/>
                     </th>
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var row in Model)
+                @foreach (var row in Model.Persons)
                 {
                     <tr>
                         <td>@row.Id</td>
@@ -50,7 +63,7 @@
                 <tfoot>
                 <tr>
                     <td colspan="3">Всего:</td>
-                    <td>@Model.Count().ToString()</td>
+                    <td>@Model.Persons.Count().ToString()</td>
                 </tr>
                 </tfoot>
             </table>
@@ -59,3 +72,17 @@
 </div>
 </body>
 </html>
+
+@functions
+{
+    string SelectIcon(SortStatus desc, SortStatus asc)
+    {
+        if (Model.SortStatus == desc)
+            return "~/icons/arrow-up.svg";
+
+        if (Model.SortStatus == asc)
+            return "~/icons/arrow-down.svg";
+
+        return "~/icons/arrows-v.svg";
+    }
+}
