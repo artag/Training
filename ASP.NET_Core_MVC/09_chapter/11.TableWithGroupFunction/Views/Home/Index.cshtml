@@ -1,0 +1,96 @@
+﻿@using TableGroup.Models
+@using TableGroup.Services
+@model IEnumerable<Office>
+@inject IPersons Persons
+
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+    <title>Офисы</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css"/>
+    <style>
+        .grid_node {
+            width:  50px;
+        }
+    </style>
+</head>
+<body>
+<div class="m-1 p-1">
+    <h2>Список офисов</h2>
+    <table class="table table-bordered">
+        <thead class="table-primary">
+        <tr>
+            <th class="grid_node"></th>
+            <th>Наименование офиса</th>
+            <th>Страна</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td>
+                    <img src="images/plus.png"/>
+                    <div style="display: none">
+                        <table class="table table-striped table-bordered">
+                            <thead class="table-warning">
+                            <tr>
+                                <th>№ п/п</th>
+                                <th>Логин</th>
+                                <th>Вход</th>
+                                <th>Выход</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @{
+                                int i = 1;
+                                var persons = Persons
+                                    .GetAll()
+                                    .Where(p => p.OfficeId == row.Id)
+                                    .OrderBy(p => p.Id)
+                                    .ToArray();
+                            }
+                            @foreach (var rowPerson in persons)
+                            {
+                                <tr>
+                                    <td>@i</td>
+                                    <td>@rowPerson.Login</td>
+                                    <td>@rowPerson.LoginTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>@rowPerson.ExitTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                </tr>
+                                i++;
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </td>
+                <td>@row.Name</td>
+                <td>@row.Country</td>
+            </tr>
+        }
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="2" class="text-end">Всего офисов:</td>
+            <td class="text-start">@Model.Count().ToString()</td>
+        </tr>
+        </tfoot>
+    </table>
+</div>
+</body>
+</html>
+
+<script src="~/lib/jquery/jquery.min.js"></script>
+<script>
+    // Назначаем событие click для изображения plus.png
+    $("body").on("click", "img[src*='plus.png']", function () {
+        $(this).closest("tr").after("<tr><td></td><td colspan = '999'>" + $(this).next().html() + "</td></tr>");
+        $(this).attr("src", "/images/minus.png");
+    });
+    // Назначаем событие click для изображения minus.png
+    $("body").on("click", "img[src*='minus.png']", function () {
+        $(this).attr("src", "/images/plus.png");
+        $(this).closest("tr").next().remove();
+    });
+</script>
