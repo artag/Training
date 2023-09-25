@@ -12,29 +12,18 @@
     <title>Страны</title>
     <style type="text/css">
         /* Стили для хелпера валидации */
-        .field-validation-error {
-            color: #ff0000;
-        }
-        .field-validation-valid {
-            display: none;
-        }
-        .input-validation-error {
-            border: 1px solid #ff0000 !important;
-            background-color: #ffeeee !important;
-        }
         .validate-summary-errors {
             font-weight: bold; !important;
             color: #ff0000 !important;
-        }
-        .validation-summary-valid {
-            display: none;
         }
     </style>
 </head>
 <body>
 <div class="m-1 p-1">
     <h2>Список стран</h2>
-    <div asp-validation-summary="All" form="FormForEdit">
+    <div class="validate-summary-errors"
+         asp-validation-summary="All"
+         form="FormForEdit">
     </div>
     <form asp-action="Add"
           asp-controller="Home"

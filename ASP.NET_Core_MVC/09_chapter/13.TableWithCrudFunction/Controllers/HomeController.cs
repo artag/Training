@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Microsoft.AspNetCore.Mvc;
+using TableCrud.Extensions;
 using TableCrud.Models;
 using TableCrud.Services;
 
@@ -17,6 +18,11 @@ public class HomeController : Controller
     [HttpGet]
     public IActionResult Index(int rowUpdate = 0)
     {
+        var errors = TempData.GetModelStateError();
+        if (errors.Any())
+            foreach (var error in errors)
+                ViewData.ModelState.AddModelError("", error);
+
         ViewBag.RowUpdate = rowUpdate;
         return View(GetAllOrderedCountries());
     }
@@ -33,15 +39,15 @@ public class HomeController : Controller
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", ex.Message);
-                return View(nameof(Index), GetAllOrderedCountries());
+                TempData.PutModelStateError(ex.Message);
+                return RedirectToAction(nameof(Index));
             }
 
             return RedirectToAction(nameof(Index), "Home");
         }
 
-        ModelState.AddModelError("", "Выберите запись, чтобы сохранить изменение.");
-        return View(nameof(Index), GetAllOrderedCountries());
+        TempData.PutModelStateError("Выберите запись, чтобы сохранить изменение.");
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
@@ -84,15 +90,15 @@ public class HomeController : Controller
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", ex.Message);
-                return View(nameof(Index), GetAllOrderedCountries());
+                TempData.PutModelStateError(ex.Message);
+                return RedirectToAction(nameof(Index));
             }
 
             return RedirectToAction(nameof(Index), "Home");
         }
 
-        ModelState.AddModelError("", "Введите наименование страны.");
-        return View(nameof(Index), GetAllOrderedCountries());
+        TempData.PutModelStateError("Введите наименование страны.");
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]

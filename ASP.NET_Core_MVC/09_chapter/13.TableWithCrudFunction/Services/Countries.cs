@@ -40,7 +40,10 @@ public class Countries : ICountries
         if (exists)
             throw new InvalidOperationException($"Страна {country.Name} уже существует в списке");
 
-        country.Id = _data.Max(d => d.Id) + 1;
+        country.Id = _data.Any()
+            ? _data.Max(d => d.Id) + 1
+            : 1;
+
         _data.Add(country);
 
         return country.Id;
