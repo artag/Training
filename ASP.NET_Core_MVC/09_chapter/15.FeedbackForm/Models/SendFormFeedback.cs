@@ -49,5 +49,5 @@ public class SendFormFeedback
     /// <summary>
     /// Ошибки заполнения полей на форме.
     /// </summary>
-    public string ModelError { get; set; }
+    public string? ModelError { get; set; }
 }

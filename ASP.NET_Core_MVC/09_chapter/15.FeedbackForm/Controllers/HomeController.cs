@@ -30,6 +30,12 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult Send(SendFormFeedback sendForm)
     {
+        if (!ModelState.IsValid)
+        {
+            sendForm.ModelError = "Не введено одно или несколько обязательных значений";
+            return RedirectToAction(nameof(Index), sendForm);
+        }
+
         if (!sendForm.IsAssent)
         {
             sendForm.ModelError = "Не отмечено согласие на обработку данных.";
@@ -44,11 +50,6 @@ public class HomeController : Controller
         if (err.Length > 0)
         {
             sendForm.ModelError = err;
-            return RedirectToAction(nameof(Index), sendForm);
-        }
-
-        if (!ModelState.IsValid)
-        {
             return RedirectToAction(nameof(Index), sendForm);
         }
 
