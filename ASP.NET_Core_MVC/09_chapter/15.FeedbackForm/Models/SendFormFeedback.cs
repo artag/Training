@@ -46,5 +46,8 @@ public class SendFormFeedback
     /// </summary>
     public bool IsAssent { get; set; } = false;
 
+    /// <summary>
+    /// Ошибки заполнения полей на форме.
+    /// </summary>
     public string ModelError { get; set; }
 }
