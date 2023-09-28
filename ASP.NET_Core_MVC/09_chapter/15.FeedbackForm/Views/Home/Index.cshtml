@@ -1,0 +1,65 @@
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using Feedback.Models;
+@model SendFormFeedback;
+
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="styles/styles.css"/>
+    <title>Обратная связь</title>
+</head>
+<body>
+<div class="m-1 p-1">
+    @if (@TempData["SendMessage"] != null)
+    {
+        <div class="alert alert-info mt-1">
+            @TempData["SendMessage"]
+        </div>
+    }
+    <form asp-action="Send" method="post">
+        <div asp-validation-summary="ModelOnly"></div>
+        <div class="form-group">
+            <label asp-for="Name">Ваше имя*:</label>
+            <div><span asp-validation-for="Name" class="text-danger"></span></div>
+            <input asp-for="Name" class="form-control" placeholder="Ваше имя"/>
+        </div>
+        <div class="form-group">
+            <label asp-for="Email">Ваш email*:</label>
+            <div><span asp-validation-for="Email" class="text-danger"></span></div>
+            <input asp-for="Email" class="form-control" placeholder="Ваш email"/>
+        </div>
+        <div class="form-group">
+            <label asp-for="Subject">Тема*:</label>
+            <div><span asp-validation-for="Subject" class="text-danger"></span></div>
+            <input asp-for="Subject" class="form-control" placeholder="Тема"/>
+        </div>
+        <div class="form-group">
+            <label asp-for="Message">Ваше сообщение*:</label>
+            <div><span asp-validation-for="Message" class="text-danger"></span></div>
+            <textarea rows="5" asp-for="Message" class="form-control" placeholder="Ваше сообщение">
+            </textarea>
+        </div>
+        <div class="form-check mt-2">
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="flexCheck"
+                   asp-for="IsAssent"/>
+            <label class="form-check-label"
+                   for="flexCheck">
+                Согласен на обработку данных
+            </label>
+        </div>
+        <em>Поля, отмеченные знаком *, обязательны к заполнению</em>
+        <div class="text-center">
+            <button type="submit"
+                    class="btn btn-primary">
+                Отправить сообщение
+            </button>
+        </div>
+    </form>
+</div>
+</body>
+</html>
