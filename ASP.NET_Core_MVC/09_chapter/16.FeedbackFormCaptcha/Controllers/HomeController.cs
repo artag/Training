@@ -35,12 +35,10 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult Send(SendFormFeedback sendForm)
     {
-        if (!ModelState.IsValid)
+        var (modelValid, error) = ModelStateIsValid(sendForm);
+        if (!modelValid)
         {
-            var captcha = HttpContext.Session.GetString(CaptchaCodeKey);
-            sendForm.ModelError = sendForm.CaptchaCode == captcha
-                ? "Не введено одно или несколько обязательных значений."
-                : "Ошибочный код: попробуйте еще раз.";
+            sendForm.ModelError = error;
             return RedirectToAction(nameof(Index), sendForm);
         }
 
@@ -70,6 +68,18 @@ public class HomeController : Controller
         var stream = captchaImage.Encode();
         stream.Position = 0;
         return new FileStreamResult(stream, MediaTypeNames.Image.Jpeg);
+    }
+
+    private (bool, string) ModelStateIsValid(SendFormFeedback sendForm)
+    {
+        if (!ModelState.IsValid)
+            return (false, "Не введено одно или несколько обязательных значений.");
+
+        var captcha = HttpContext.Session.GetString(CaptchaCodeKey);
+        if (sendForm.CaptchaCode != captcha)
+            return (false, "Ошибочный код: попробуйте еще раз.");
+
+        return (true, string.Empty);
     }
 
     private string GenerateRandomCode()
