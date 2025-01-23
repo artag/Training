@@ -1,6 +1,5 @@
 ﻿class Program
 {
-
     public static bool done;
 
     static void Main()

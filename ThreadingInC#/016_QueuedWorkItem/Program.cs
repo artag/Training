@@ -1,12 +1,13 @@
-﻿
-
-public class Program
+﻿public class Program
 {
     static void Main()
     {
         ThreadPool.QueueUserWorkItem(Go);
         ThreadPool.QueueUserWorkItem(Go, 123);
-        ThreadPool.QueueUserWorkItem<string>(GoParametrized, "hello world", false);
+
+        // true, чтобы предпочитать ставить рабочий элемент в очередь близко к текущему потоку;
+        // false, чтобы предпочитать ставить рабочий элемент в общую очередь пула потоков.
+        ThreadPool.QueueUserWorkItem<string>(GoParametrized, "hello world", preferLocal: false);
 
         ThreadPool.QueueUserWorkItem(obj =>
         {
