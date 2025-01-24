@@ -1,13 +1,12 @@
 ﻿public class Program
 {
-    public static void Main()
+    public static void Main(string[] args)
     {
-        var thread = new Thread(() => ThreadUnsafe.Go("Thread"));
+        var sleepTimeMs = args.Length == 0 ? 0 : 500;
+        var thread = new Thread(() => ThreadUnsafe.Go("Thread", sleepTimeMs));
 
         thread.Start();
-        ThreadUnsafe.Go("Main thread");
-
-        Console.WriteLine("End");
+        ThreadUnsafe.Go("Main thread", sleepTimeMs);
     }
 }
 
@@ -19,7 +18,7 @@ public static class ThreadUnsafe
     static int _val1 = 1;
     static int _val2 = 1;
 
-    public static void Go(string name)
+    public static void Go(string name, int sleepTimeMs)
     {
         var lockTaken = false;
         try
@@ -29,8 +28,10 @@ public static class ThreadUnsafe
             {
                 Console.WriteLine($"{name}: Lock acquired");
 
+                Thread.Sleep(sleepTimeMs);
+
                 if (_val2 != 0)
-                    Console.WriteLine(_val1 / _val2);
+                    Console.WriteLine($"    Result from {name}: {_val1 / _val2}");
                 _val2 = 0;
             }
             else
@@ -41,7 +42,10 @@ public static class ThreadUnsafe
         finally
         {
             if (lockTaken)
-                Monitor.Exit(_locker);
+                {
+                    Monitor.Exit(_locker);
+                    Console.WriteLine($"{name}: Release lock");
+                }
         }
     }
 }
