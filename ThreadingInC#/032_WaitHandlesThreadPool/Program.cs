@@ -22,8 +22,9 @@
         reg.Unregister(waitObject: _starter);
     }
 
-    private static void Go(object data, bool timeOut)
+    private static void Go(object data, bool timeout)
     {
-        Console.WriteLine($"Started thread. Passed data: '{data}', timeout: {timeOut}");
+        Console.WriteLine($"Started thread. Passed data: '{data}', timeout: {timeout}");
+        Console.WriteLine($"Finish thread");
     }
 }

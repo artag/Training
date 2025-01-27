@@ -1,4 +1,6 @@
-﻿public class Program
+﻿using System.Threading;
+using System;
+public class Program
 {
     private static ManualResetEvent _wh = new ManualResetEvent(initialState: false);
 
@@ -15,40 +17,41 @@
             new Thread(() => GoNoWait(num)).Start();
         }
 
-        Console.WriteLine("Main thread start.");
+        Console.WriteLine($"{Now()}: Main. Start sleep.");
         Thread.Sleep(3000);
+        Console.WriteLine($"{Now()}: Main. Finish sleep.");
 
-        Console.WriteLine("Main thread call Set()");
+        Console.WriteLine($"{Now()}: Main. Call Set()");
         _wh.Set();
 
-        Console.WriteLine("Main thread finish. Press 'Enter' to quit.");
+        Console.WriteLine($"{Now()}: Main. Finish. Press 'Enter' to quit.");
         Console.ReadLine();
     }
 
     private static void GoWithWait(int number)
     {
-        Console.WriteLine($"Thread {number} start.");
+        Console.WriteLine($"{Now()}: WaitOne. Thread {number} start.");
         MethodWithWait(number);
-        Console.WriteLine($"Thread {number} finish.");
+        Console.WriteLine($"{Now()}: WaitOne. Thread {number} finish.");
     }
 
     private static void MethodWithWait(int number)
     {
-        Console.WriteLine($"AppServerMethod {number} start.");
+        Console.WriteLine($"    {Now()}: WaitOne. AppServerMethod {number} start.");
         _wh.WaitOne();
-        Console.WriteLine($"AppServerMethod {number} finish.");
+        Console.WriteLine($"    {Now()}: WaitOne. AppServerMethod {number} finish.");
     }
 
     private static void GoNoWait(int number)
     {
-        Console.WriteLine($"Thread {number} start.");
+        Console.WriteLine($"{Now()}: RegisterWait. Thread {number} start.");
         MethodNoWait(number);
-        Console.WriteLine($"Thread {number} finish.");
+        Console.WriteLine($"{Now()}: RegisterWait. Thread {number} finish.");
     }
 
     private static void MethodNoWait(int number)
     {
-        Console.WriteLine($"AppServerMethod {number} start.");
+        Console.WriteLine($"    {Now()}: RegisterWait. AppServerMethod {number} start.");
         var reg = ThreadPool.RegisterWaitForSingleObject(
             waitObject: _wh,
             callBack: Resume!,
@@ -60,6 +63,9 @@
     private static void Resume(object data, bool timeOut)
     {
         var number = (int)data;
-        Console.WriteLine($"AppServerMethod {number} finish.");
+        Console.WriteLine($"    {Now()}: RegisterWait. AppServerMethod {number} finish.");
     }
+
+    private static string Now() =>
+        DateTime.Now.ToString("ss.fff");
 }
