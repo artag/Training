@@ -4,7 +4,7 @@ public class Program
 {
     public static void Main()
     {
-        // Obsolete
+        // Obsolete. Устарел, рекомендуется использовать HttpClient
         var wc = new WebClient();
         wc.DownloadStringCompleted += (sender, args) =>
         {

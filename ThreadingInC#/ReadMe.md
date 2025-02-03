@@ -195,3 +195,49 @@ wait handle.
 Ожидание завершения всех threads.
 
 Использование `WaitHandle.WaitAll()` и нескольких `AutoResetEvent`.
+
+- [036_SignalAndWait](036_SignalAndWait/ReadMe.md)
+
+Толком непонятно, что делает `WaitHandle.SignalAndWait`.
+
+- [037_WebClientAsEAP](037_WebClientAsEAP/ReadMe.md)
+
+Пример использования `WebClient` (устарел) как event-based asynchronous pattern (EAP).
+Здесь `WebClient` скачивает в фоне строку через метод `DownloadStringAsync`.
+По завершении скачивания вызывается событие `wc.DownloadStringCompleted`.
+
+Здесь клиенту не требуется явно вызывать или управлять thread'ами.
+
+Task'и поддерживают похожую функциональность, поэтому сейчас EAP применяется мало.
+
+- [038_BackgroundWorkerBasics](038_BackgroundWorkerBasics/ReadMe.md)
+
+Использование `BackgroundWorker` как основу для реализации EAP.
+Использует thread pool.
+
+Инструкция по применению.
+
+1) Создать экземпляр `BackgroundWorker`.
+
+2) Определить обработчик события `DoWork` - выполнение кода в фоновом потоке.
+
+3) Определить обработчик события `RunWorkerCompleted` - выполенение кода после завершения
+фонового потока.
+
+- [039_BackgroundWorkerAdvanced](039_BackgroundWorkerAdvanced/ReadMe.md)
+
+Продвинутое использование `BackgroundWorker`. Возможности:
+
+0) Возможности из предыдущего примера, плюс
+
+1) Возможность прервать работу `BackgroundWorker` (через `CancelAsync()` и т.д.)
+
+2) Отслеживание прогресса выполнения (через `ReportProgress()` и `ProgressChanged` и т.д.)
+
+3) Передача результата из фонового потока в последующий код (через `DoWorkEventArgs` и т.д.)
+
+- [040_BackgroundWorkerSubclassing](040_BackgroundWorkerSubclassing/ReadMe.md)
+
+Пример реализации класса на основе `BackgroundWorker` (subclassing, наследник).
+
+**Применение**: требуется реализовать только один асинхронный метод в классе через EAP.
