@@ -241,3 +241,44 @@ Task'и поддерживают похожую функциональность
 Пример реализации класса на основе `BackgroundWorker` (subclassing, наследник).
 
 **Применение**: требуется реализовать только один асинхронный метод в классе через EAP.
+
+- [041_InterruptThread](041_InterruptThread/ReadMe.md)
+
+`Interrupt` для thread используется редко, `Abort` используется чаще.
+
+На **заблокрованном** thread вызов `Interrupt()` рпинудительно освобождает его, кидается
+`ThreadInterruptedException`.
+
+`Abort` на .NET Core имеет статус **obsolete** и кидает `PlatformNotSupportedException`.
+
+Рекомендуется не использовать `Interrupt`, а пользоваться либо signaling construct, либо
+cancellation tokens.
+
+- [042_SafeCancellationImplementing](042_SafeCancellationImplementing/ReadMe.md)
+
+Пример реализации концепции `CancellationToken` "руками".
+
+Исключение `OperationCanceledException` используется именно для таких целей. Правда ничто не мешало
+сделать реализацию safe cancellation, используя другой вид исключения.
+
+- [043_UsingCancellationToken](043_UsingCancellationToken/ReadMe.md)
+
+Пример использования `CancellationTokenSource` и `CancellationToken`.
+
+- [044_LazyInitializationImplementing](044_LazyInitializationImplementing/ReadMe.md)
+
+Пример **Lazy Initialization**.
+
+Используется `lock` внутри свойства для вызова конструктора. Объект создается только раз.
+Thread-safe вызов.
+
+Рекомендуется использовать `Lazy<T>` (подход из 045 примера).
+
+- [045_LazyThreadSafeUsing](045_LazyThreadSafeUsing/ReadMe.md)
+
+Пример **Lazy Initialization**.
+
+Используется `Lazy<T>` для вызова конструктора. Объект создается только раз.
+Thread-safe вызов.
+
+Более эффективен, чем в случае примера 044, т.к. использует double-checked locking.
