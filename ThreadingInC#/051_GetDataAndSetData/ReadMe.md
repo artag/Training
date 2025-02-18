@@ -62,6 +62,8 @@ public class Test
 }
 ```
 
+Вывод:
+
 ```text
 Thread 1. Security level 0
 Main. Security level 0

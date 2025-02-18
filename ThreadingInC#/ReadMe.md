@@ -331,3 +331,10 @@ Thread-safe вызов.
 
 Способ 3 из 3. Использование `LocalDataStoreSlot`. Через `Thread.GetData(_slot)` можно прочитать
 значение из определенного слота, через `Thread.SetData(_slot, value)` записать значение в слот.
+
+- [052_UsingThreadAsTimer](052_UsingThreadAsTimer/ReadMe.md)
+
+Пример реализации функционала таймера через `ThreadPool.QueueUserWorkItem`.
+
+**Не рекомендуется** использовать thread в качестве таймера. Лучще использовать специализированные
+классы `Timer` (есть разные реализации).

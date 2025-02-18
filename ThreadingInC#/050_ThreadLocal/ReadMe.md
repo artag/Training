@@ -33,6 +33,8 @@ public class A
 }
 ```
 
+Вывод:
+
 ```text
 ThreadMain: 6
 Thread1: 15
