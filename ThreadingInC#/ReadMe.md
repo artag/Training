@@ -282,3 +282,52 @@ Thread-safe вызов.
 Thread-safe вызов.
 
 Более эффективен, чем в случае примера 044, т.к. использует double-checked locking.
+
+- [046_LazyInitializerUsing](046_LazyInitializerUsing/ReadMe.md)
+
+Пример **Lazy Initialization**.
+
+Пример использования `LazyInitializer`. Более быстрый по сравнению `Lazy`, но код менее читаем.
+Если добавить дополнительный аргумент `lock`, то можно использовать в multi-core окружении.
+
+- [047_DoubleCheckedLocking](047_DoubleCheckedLocking/ReadMe.md)
+
+Пример **Lazy Initialization**.
+
+Аналог `LazyInitializer` - ручная реализация похожего поведения через double-checked locking
+Используется `lock`.
+Работает также, как и предыдущий пример.
+
+- [048_RaceToInitializePattern](048_RaceToInitializePattern/ReadMe.md)
+
+Пример **Lazy Initialization**.
+
+Аналог `LazyInitializer` - ручная реализация похожего поведения через race-to-initialize pattern.
+Используется `Interlocked.CompareExchange` и `volatile` переменная класса.
+
+Работает также, как и предыдущий пример.
+
+- [049_ThreadStatic](049_ThreadStatic/ReadMe.md)
+
+Пример **Thread local storage**.
+
+Каждый thread имеет доступ к глобальной переменной. Каждый thread при взаимодействии с этой переменной
+получает ее копию. Т.е. изменения данной переменной не видны в других thread'ах.
+
+Способ 1 из 3. Пометка глобальной статической переменной
+при помощи атрибута `[ThreadStatic]`
+
+- [050_ThreadLocal](050_ThreadLocal/ReadMe.md)
+
+Пример **Thread local storage**.
+
+Способ 2 из 3. Создание thread-local storage для статической/класса переменной.
+Можно задать начальное значение переменной.
+Используется обертка `ThreadLocal<T>` вокруг этой переменной.
+
+- [051_GetDataAndSetData](051_GetDataAndSetData/ReadMe.md)
+
+Пример **Thread local storage**.
+
+Способ 3 из 3. Использование `LocalDataStoreSlot`. Через `Thread.GetData(_slot)` можно прочитать
+значение из определенного слота, через `Thread.SetData(_slot, value)` записать значение в слот.
